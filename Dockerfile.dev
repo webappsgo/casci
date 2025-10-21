@@ -1,0 +1,79 @@
+# Development Dockerfile for CASCI
+# Multi-stage build for optimized image size
+
+# Build stage
+FROM golang:1.21-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache \
+    git \
+    make \
+    gcc \
+    musl-dev \
+    ca-certificates
+
+WORKDIR /app
+
+# Copy dependency files first for better caching
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build the binary
+# CGO is needed for SQLite support
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
+    go build -tags dev \
+    -ldflags="-w -s" \
+    -o casci ./cmd/casci
+
+# Runtime stage
+FROM alpine:3.19
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    ca-certificates \
+    docker-cli \
+    git \
+    openssh-client \
+    bash \
+    curl \
+    sqlite
+
+# Create CASCI user
+RUN addgroup -g 1000 casci && \
+    adduser -D -u 1000 -G casci casci
+
+# Create directories with proper permissions
+RUN mkdir -p \
+    /var/lib/casci/workspaces \
+    /var/lib/casci/cache \
+    /var/lib/casci/artifacts \
+    /var/log/casci/builds \
+    /etc/casci/security \
+    && chown -R casci:casci /var/lib/casci /var/log/casci /etc/casci
+
+# Copy binary from builder
+COPY --from=builder /app/casci /usr/local/bin/casci
+RUN chmod +x /usr/local/bin/casci
+
+# Switch to casci user
+USER casci
+WORKDIR /var/lib/casci
+
+# Expose default port
+EXPOSE 8080
+
+# Volume for persistent data
+VOLUME ["/var/lib/casci", "/var/log/casci", "/etc/casci"]
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Environment variables
+ENV CASCI_HOST=0.0.0.0 \
+    CASCI_PORT=8080
+
+ENTRYPOINT ["/usr/local/bin/casci"]

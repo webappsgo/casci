@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  casci:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: casci-dev
+    ports:
+      - "8080:8080"
+    environment:
+      - CASCI_PORT=8080
+      - CASCI_HOST=0.0.0.0
+      - CASCI_DB_TYPE=sqlite
+      - CASCI_DATA_DIR=/var/lib/casci
+      - CASCI_LOG_DIR=/var/log/casci
+    volumes:
+      - casci-data:/var/lib/casci
+      - casci-logs:/var/log/casci
+      - casci-security:/etc/casci
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - casci-network
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # PostgreSQL (default for development)
+  postgres:
+    image: postgres:15-alpine
+    container_name: casci-postgres
+    environment:
+      - POSTGRES_USER=casci
+      - POSTGRES_PASSWORD=casci
+      - POSTGRES_DB=casci
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - casci-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U casci"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MySQL for testing (optional)
+  mysql:
+    image: mysql:8-debian
+    container_name: casci-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=casci
+      - MYSQL_USER=casci
+      - MYSQL_PASSWORD=casci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - casci-network
+    restart: unless-stopped
+    profiles:
+      - mysql
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: casci-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - casci-network
+    restart: unless-stopped
+    profiles:
+      - redis
+
+volumes:
+  casci-data:
+  casci-logs:
+  casci-security:
+  postgres-data:
+  mysql-data:
+  redis-data:
+
+networks:
+  casci-network:
+    driver: bridge
