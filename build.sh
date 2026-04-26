@@ -13,8 +13,8 @@ echo "   Time: $BUILD_TIME"
 echo "   Commit: $GIT_COMMIT"
 echo ""
 
-# Build with CGO for SQLite support
-CGO_ENABLED=1 go build -tags dev -ldflags="$LDFLAGS" -o casci ./cmd/casci
+# Build with CGO_ENABLED=0 using modernc.org/sqlite (pure Go)
+CGO_ENABLED=0 go build -tags dev -ldflags="$LDFLAGS" -o casci ./src/cmd/casci
 
 echo "✓ Build complete: ./casci"
 echo ""

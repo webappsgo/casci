@@ -1,0 +1,12 @@
+{{/* MANDATORY PARTIAL - scripts.tmpl - JavaScript includes */}}
+<script src="/static/js/app.js"></script>
+<script src="/static/js/modal.js"></script>
+<script src="/static/js/toast.js"></script>
+<script src="/static/js/forms.js"></script>
+
+{{/* Page-specific scripts */}}
+{{if .ExtraScripts}}
+{{range .ExtraScripts}}
+<script src="{{.}}"></script>
+{{end}}
+{{end}}

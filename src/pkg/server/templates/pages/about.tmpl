@@ -1,0 +1,69 @@
+{{template "layout" .}}
+
+{{define "title"}}About - CASCI{{end}}
+
+{{define "content"}}
+<div class="container">
+    <h1>About CASCI</h1>
+    
+    <div class="section">
+        <h2>CI/CD Application Server for Continuous Integration</h2>
+        <p>CASCI is a complete CI/CD platform in a single static binary that replaces Jenkins, GitHub Actions, GitLab CI, and other CI/CD tools.</p>
+    </div>
+
+    <div class="section">
+        <h3>Version Information</h3>
+        <table class="info-table">
+            <tr>
+                <td><strong>Version:</strong></td>
+                <td>0.1.0</td>
+            </tr>
+            <tr>
+                <td><strong>Build Date:</strong></td>
+                <td>{{.BuildDate}}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h3>Key Features</h3>
+        <ul>
+            <li>Single static binary deployment (zero dependencies)</li>
+            <li>Docker container execution with resource limits</li>
+            <li>Multi-node orchestration and scaling</li>
+            <li>Built-in security scanning (Trivy, Semgrep, Gitleaks, Syft, Grype)</li>
+            <li>Webhook integrations (GitHub, GitLab, Bitbucket, Gitea)</li>
+            <li>Real-time notifications (Slack, Email, Discord)</li>
+            <li>Prometheus metrics export</li>
+            <li>Professional web UI with REST API</li>
+            <li>Interactive API documentation (Swagger UI + GraphQL Playground)</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h3>API Documentation</h3>
+        <p>This application provides a full REST API with interactive documentation.</p>
+        <ul>
+            <li><a href="/swagger/">Swagger UI</a> - Interactive REST API explorer</li>
+            <li><a href="/graphql/playground">GraphQL Playground</a> - Interactive GraphQL explorer</li>
+            <li><a href="/openapi.json">OpenAPI Specification (JSON)</a></li>
+            <li><a href="/openapi.yaml">OpenAPI Specification (YAML)</a></li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h3>Links</h3>
+        <ul>
+            <li><a href="https://github.com/casapps/casci" target="_blank">GitHub Repository</a></li>
+            <li><a href="/server/help">Help & Documentation</a></li>
+            <li><a href="/server/privacy">Privacy Policy</a></li>
+            <li><a href="/server/contact">Contact Us</a></li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h3>License</h3>
+        <p>CASCI is open source software licensed under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>.</p>
+    </div>
+</div>
+{{end}}

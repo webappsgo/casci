@@ -1,0 +1,231 @@
+# CASCI GraphQL Schema
+
+type Query {
+  # User queries
+  me: User!
+  user(id: ID!): User
+  users(limit: Int, offset: Int): UserConnection!
+  
+  # Project queries
+  project(id: ID!): Project
+  projects(limit: Int, offset: Int): ProjectConnection!
+  
+  # Build queries
+  build(id: ID!): Build
+  builds(projectID: ID, limit: Int, offset: Int): BuildConnection!
+  
+  # Node queries
+  node(id: ID!): Node
+  nodes(limit: Int, offset: Int): NodeConnection!
+  
+  # Health and system
+  health: HealthStatus!
+  metrics: SystemMetrics!
+}
+
+type Mutation {
+  # User mutations
+  register(input: RegisterInput!): AuthPayload!
+  login(input: LoginInput!): AuthPayload!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
+  deleteUser(id: ID!): Boolean!
+  
+  # Project mutations
+  createProject(input: CreateProjectInput!): Project!
+  updateProject(id: ID!, input: UpdateProjectInput!): Project!
+  deleteProject(id: ID!): Boolean!
+  
+  # Build mutations
+  triggerBuild(projectID: ID!, input: TriggerBuildInput): Build!
+  cancelBuild(id: ID!): Build!
+  restartBuild(id: ID!): Build!
+  
+  # Node mutations
+  registerNode(input: RegisterNodeInput!): Node!
+  updateNode(id: ID!, input: UpdateNodeInput!): Node!
+  deleteNode(id: ID!): Boolean!
+  drainNode(id: ID!): Boolean!
+}
+
+type Subscription {
+  # Build updates
+  buildUpdated(projectID: ID): Build!
+  buildLogLine(buildID: ID!): LogLine!
+  
+  # Node updates
+  nodeStatusChanged: Node!
+}
+
+# User types
+type User {
+  id: ID!
+  username: String!
+  email: String!
+  isAdmin: Boolean!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type UserConnection {
+  edges: [User!]!
+  totalCount: Int!
+}
+
+input RegisterInput {
+  username: String!
+  email: String!
+  password: String!
+}
+
+input LoginInput {
+  username: String!
+  password: String!
+}
+
+input UpdateUserInput {
+  email: String
+  password: String
+}
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+# Project types
+type Project {
+  id: ID!
+  name: String!
+  description: String
+  repositoryURL: String!
+  branch: String!
+  userID: ID!
+  createdAt: String!
+  updatedAt: String!
+  builds(limit: Int, offset: Int): BuildConnection!
+}
+
+type ProjectConnection {
+  edges: [Project!]!
+  totalCount: Int!
+}
+
+input CreateProjectInput {
+  name: String!
+  description: String
+  repositoryURL: String!
+  branch: String!
+}
+
+input UpdateProjectInput {
+  name: String
+  description: String
+  repositoryURL: String
+  branch: String
+}
+
+# Build types
+type Build {
+  id: ID!
+  projectID: ID!
+  project: Project!
+  number: Int!
+  status: BuildStatus!
+  commitHash: String
+  commitMessage: String
+  startedAt: String
+  finishedAt: String
+  duration: Int
+  createdAt: String!
+  updatedAt: String!
+}
+
+type BuildConnection {
+  edges: [Build!]!
+  totalCount: Int!
+}
+
+enum BuildStatus {
+  PENDING
+  QUEUED
+  RUNNING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+input TriggerBuildInput {
+  commitHash: String
+  branch: String
+}
+
+type LogLine {
+  buildID: ID!
+  line: String!
+  timestamp: String!
+}
+
+# Node types
+type Node {
+  id: ID!
+  name: String!
+  hostname: String!
+  architecture: String!
+  operatingSystem: String!
+  role: NodeRole!
+  status: NodeStatus!
+  capacity: Int!
+  currentLoad: Int!
+  lastHeartbeat: String
+  createdAt: String!
+  updatedAt: String!
+}
+
+type NodeConnection {
+  edges: [Node!]!
+  totalCount: Int!
+}
+
+enum NodeRole {
+  ORCHESTRATOR
+  BUILDER
+  HYBRID
+}
+
+enum NodeStatus {
+  ONLINE
+  OFFLINE
+  DRAINING
+}
+
+input RegisterNodeInput {
+  name: String!
+  hostname: String!
+  architecture: String!
+  operatingSystem: String!
+  role: NodeRole!
+  capacity: Int!
+  token: String!
+}
+
+input UpdateNodeInput {
+  name: String
+  capacity: Int
+  status: NodeStatus
+}
+
+# System types
+type HealthStatus {
+  status: String!
+  timestamp: String!
+  version: String!
+}
+
+type SystemMetrics {
+  cpu: Float!
+  memory: Float!
+  disk: Float!
+  goroutines: Int!
+  buildQueue: Int!
+  activeBuilds: Int!
+}

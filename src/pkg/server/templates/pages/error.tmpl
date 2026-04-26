@@ -1,0 +1,27 @@
+{{/* Error Page */}}
+{{define "content"}}
+<div class="error-page">
+    <div class="error-content">
+        <div class="error-code">{{.ErrorCode}}</div>
+        <h1 class="error-title">{{.ErrorTitle}}</h1>
+        <p class="error-message">{{.ErrorMessage}}</p>
+        
+        {{if .ErrorDetails}}
+        <div class="error-details">
+            <h3>Details</h3>
+            <pre><code>{{.ErrorDetails}}</code></pre>
+        </div>
+        {{end}}
+        
+        <div class="error-actions">
+            <a href="/" class="btn btn-primary">Go Home</a>
+            <a href="/healthz" class="btn btn-secondary">Check Health</a>
+            {{if .User}}
+            {{if .User.IsAdmin}}
+            <a href="/admin/logs" class="btn btn-secondary">View Logs</a>
+            {{end}}
+            {{end}}
+        </div>
+    </div>
+</div>
+{{end}}

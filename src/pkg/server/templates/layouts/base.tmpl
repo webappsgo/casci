@@ -1,0 +1,18 @@
+{{/* Base Layout - Used by all pages */}}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    {{template "head" .}}
+</head>
+<body>
+    {{template "header" .}}
+    {{template "nav" .}}
+    
+    <main class="container">
+        {{template "content" .}}
+    </main>
+    
+    {{template "footer" .}}
+    {{template "scripts" .}}
+</body>
+</html>

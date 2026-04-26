@@ -1,0 +1,46 @@
+# gqlgen configuration for CASCI
+
+# Schema location
+schema:
+  - schema.graphql
+
+# Where to generate the server code
+exec:
+  filename: generated.go
+  package: graphql
+
+# Where to generate the model code
+model:
+  filename: models_gen.go
+  package: graphql
+
+# Where to generate the resolver stubs
+resolver:
+  filename: resolver.go
+  package: graphql
+  type: Resolver
+
+# Optional: skip generating specific models that already exist
+# autobind:
+#   - "github.com/casapps/casci/src/pkg/users"
+
+# Struct tags for generated models
+struct_tag: json
+
+# Generate models
+models:
+  ID:
+    model:
+      - github.com/99designs/gqlgen/graphql.ID
+  Int:
+    model:
+      - github.com/99designs/gqlgen/graphql.Int
+  String:
+    model:
+      - github.com/99designs/gqlgen/graphql.String
+  Boolean:
+    model:
+      - github.com/99designs/gqlgen/graphql.Boolean
+  Float:
+    model:
+      - github.com/99designs/gqlgen/graphql.Float

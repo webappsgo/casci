@@ -1,0 +1,55 @@
+{{/* Admin Layout - Used by admin panel pages */}}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    {{template "head" .}}
+</head>
+<body class="admin-panel">
+    {{template "header" .}}
+    {{template "nav" .}}
+    
+    <div class="admin-layout">
+        <aside class="admin-sidebar">
+            <nav class="admin-nav">
+                <a href="/admin" class="admin-nav-item {{if eq .Active "dashboard"}}active{{end}}">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+                <a href="/admin/projects" class="admin-nav-item {{if eq .Active "projects"}}active{{end}}">
+                    <span class="icon">📁</span> Projects
+                </a>
+                <a href="/admin/builds" class="admin-nav-item {{if eq .Active "builds"}}active{{end}}">
+                    <span class="icon">🔨</span> Builds
+                </a>
+                <a href="/admin/users" class="admin-nav-item {{if eq .Active "users"}}active{{end}}">
+                    <span class="icon">👥</span> Users
+                </a>
+                <a href="/admin/nodes" class="admin-nav-item {{if eq .Active "nodes"}}active{{end}}">
+                    <span class="icon">🖥️</span> Nodes
+                </a>
+                <a href="/admin/scheduler" class="admin-nav-item {{if eq .Active "scheduler"}}active{{end}}">
+                    <span class="icon">⏰</span> Scheduler
+                </a>
+                <a href="/admin/compliance" class="admin-nav-item {{if eq .Active "compliance"}}active{{end}}">
+                    <span class="icon">🔒</span> Compliance
+                </a>
+                <a href="/admin/audit" class="admin-nav-item {{if eq .Active "audit"}}active{{end}}">
+                    <span class="icon">📋</span> Audit Logs
+                </a>
+                <a href="/admin/logs" class="admin-nav-item {{if eq .Active "logs"}}active{{end}}">
+                    <span class="icon">📄</span> Logs
+                </a>
+                <a href="/admin/settings" class="admin-nav-item {{if eq .Active "settings"}}active{{end}}">
+                    <span class="icon">⚙️</span> Settings
+                </a>
+            </nav>
+        </aside>
+        
+        <main class="admin-content">
+            {{template "content" .}}
+        </main>
+    </div>
+    
+    {{template "footer" .}}
+    {{template "scripts" .}}
+</body>
+</html>

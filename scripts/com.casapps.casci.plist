@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.casapps.casci</string>
+    
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/casci</string>
+    </array>
+    
+    <key>RunAtLoad</key>
+    <true/>
+    
+    <key>KeepAlive</key>
+    <true/>
+    
+    <key>StandardOutPath</key>
+    <string>/usr/local/var/log/casci/stdout.log</string>
+    
+    <key>StandardErrorPath</key>
+    <string>/usr/local/var/log/casci/stderr.log</string>
+    
+    <key>WorkingDirectory</key>
+    <string>/usr/local/var/casci</string>
+    
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>CASCI_DB_TYPE</key>
+        <string>sqlite</string>
+        <key>CASCI_DB_DSN</key>
+        <string>/usr/local/var/casci/casci.db</string>
+    </dict>
+    
+    <key>UserName</key>
+    <string>_casci</string>
+    
+    <key>GroupName</key>
+    <string>_casci</string>
+    
+    <key>ProcessType</key>
+    <string>Adaptive</string>
+    
+    <key>Nice</key>
+    <integer>0</integer>
+    
+    <key>SoftResourceLimits</key>
+    <dict>
+        <key>NumberOfFiles</key>
+        <integer>4096</integer>
+    </dict>
+    
+    <key>HardResourceLimits</key>
+    <dict>
+        <key>NumberOfFiles</key>
+        <integer>8192</integer>
+    </dict>
+</dict>
+</plist>

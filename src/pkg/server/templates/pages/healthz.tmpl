@@ -1,0 +1,78 @@
+{{/* Health Check Page */}}
+{{define "content"}}
+<div class="health-page">
+    <div class="health-header">
+        <h1>System Health</h1>
+        <div class="health-status status-{{.Health.Status}}">
+            {{if eq .Health.Status "healthy"}}
+            <span class="status-icon">✓</span>
+            <span class="status-text">Healthy</span>
+            {{else}}
+            <span class="status-icon">✗</span>
+            <span class="status-text">Unhealthy</span>
+            {{end}}
+        </div>
+    </div>
+    
+    <div class="health-info-grid">
+        <div class="info-card">
+            <div class="info-label">Version</div>
+            <div class="info-value">{{.Health.Version}}</div>
+        </div>
+        <div class="info-card">
+            <div class="info-label">Mode</div>
+            <div class="info-value mode-{{.Health.Mode}}">{{.Health.Mode}}</div>
+        </div>
+        <div class="info-card">
+            <div class="info-label">Uptime</div>
+            <div class="info-value">{{.Health.Uptime}}</div>
+        </div>
+        <div class="info-card">
+            <div class="info-label">Last Check</div>
+            <div class="info-value">{{.Health.Timestamp}}</div>
+        </div>
+    </div>
+    
+    <div class="health-checks">
+        <h2>Component Status</h2>
+        <div class="checks-grid">
+            {{range $name, $status := .Health.Checks}}
+            <div class="check-card status-{{$status}}">
+                <div class="check-name">{{$name}}</div>
+                <div class="check-status">
+                    {{if eq $status "ok"}}
+                    <span class="check-icon">✓</span> OK
+                    {{else}}
+                    <span class="check-icon">✗</span> {{$status}}
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </div>
+    
+    {{if .Health.SystemInfo}}
+    <div class="system-info">
+        <h2>System Information</h2>
+        <div class="system-grid">
+            <div class="system-item">
+                <span class="system-label">CPU Usage:</span>
+                <span class="system-value">{{.Health.SystemInfo.CPUUsage}}%</span>
+            </div>
+            <div class="system-item">
+                <span class="system-label">Memory Usage:</span>
+                <span class="system-value">{{.Health.SystemInfo.MemoryUsage}}%</span>
+            </div>
+            <div class="system-item">
+                <span class="system-label">Disk Usage:</span>
+                <span class="system-value">{{.Health.SystemInfo.DiskUsage}}%</span>
+            </div>
+            <div class="system-item">
+                <span class="system-label">Goroutines:</span>
+                <span class="system-value">{{.Health.SystemInfo.Goroutines}}</span>
+            </div>
+        </div>
+    </div>
+    {{end}}
+</div>
+{{end}}

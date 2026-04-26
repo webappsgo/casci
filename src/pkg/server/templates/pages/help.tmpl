@@ -1,0 +1,138 @@
+{{template "layout" .}}
+
+{{define "title"}}Help & Documentation - CASCI{{end}}
+
+{{define "content"}}
+<div class="container">
+    <h1>Help & Documentation</h1>
+
+    <div class="section">
+        <h2>Getting Started</h2>
+        <p>CASCI is a CI/CD platform that automates your build, test, and deployment workflows.</p>
+        
+        <h3>Quick Start</h3>
+        <ol>
+            <li><strong>Register an account</strong> - The first user becomes the administrator</li>
+            <li><strong>Create a project</strong> - Add your Git repository</li>
+            <li><strong>Configure webhooks</strong> - Connect to GitHub, GitLab, Bitbucket, or Gitea</li>
+            <li><strong>Trigger a build</strong> - Push code or manually trigger</li>
+            <li><strong>View results</strong> - Monitor builds in real-time</li>
+        </ol>
+    </div>
+
+    <div class="section">
+        <h2>API Documentation</h2>
+        <p>CASCI provides comprehensive APIs for automation and integration.</p>
+        
+        <h3>Interactive Documentation</h3>
+        <ul>
+            <li><a href="/swagger/">Swagger UI</a> - Browse and test REST API endpoints</li>
+            <li><a href="/graphql/playground">GraphQL Playground</a> - Explore GraphQL schema and run queries</li>
+        </ul>
+
+        <h3>API Specifications</h3>
+        <ul>
+            <li><a href="/openapi.json">OpenAPI 2.0 (JSON)</a> - Machine-readable API spec</li>
+            <li><a href="/openapi.yaml">OpenAPI 2.0 (YAML)</a> - Human-readable API spec</li>
+        </ul>
+
+        <h3>Authentication</h3>
+        <p>API requests require JWT authentication:</p>
+        <pre><code>Authorization: Bearer YOUR_JWT_TOKEN</code></pre>
+        <p>Get your API token from <a href="/admin/settings">Settings → API Token</a></p>
+    </div>
+
+    <div class="section">
+        <h2>Common Tasks</h2>
+        
+        <h3>Creating a Project</h3>
+        <ol>
+            <li>Navigate to Projects</li>
+            <li>Click "Create Project"</li>
+            <li>Enter repository URL and branch</li>
+            <li>CASCI will auto-detect your pipeline format</li>
+        </ol>
+
+        <h3>Viewing Build Logs</h3>
+        <ol>
+            <li>Go to Projects → Select Project</li>
+            <li>Click on a build number</li>
+            <li>View real-time logs and status</li>
+        </ol>
+
+        <h3>Configuring Notifications</h3>
+        <ol>
+            <li>Project Settings → Notifications</li>
+            <li>Add Slack, Discord, Email, or Webhook</li>
+            <li>Configure notification triggers</li>
+        </ol>
+    </div>
+
+    <div class="section">
+        <h2>Supported CI/CD Formats</h2>
+        <p>CASCI automatically detects and runs these pipeline formats:</p>
+        <ul>
+            <li><strong>Jenkinsfile</strong> - Jenkins pipeline syntax</li>
+            <li><strong>.gitlab-ci.yml</strong> - GitLab CI</li>
+            <li><strong>.github/workflows/*.yml</strong> - GitHub Actions</li>
+            <li><strong>.circleci/config.yml</strong> - CircleCI</li>
+            <li><strong>.travis.yml</strong> - Travis CI</li>
+            <li><strong>.drone.yml</strong> - Drone CI</li>
+            <li><strong>azure-pipelines.yml</strong> - Azure Pipelines</li>
+            <li><strong>bitbucket-pipelines.yml</strong> - Bitbucket Pipelines</li>
+            <li><strong>casci.yml</strong> - Native CASCI format</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Troubleshooting</h2>
+        
+        <h3>Build Failures</h3>
+        <ul>
+            <li>Check build logs for error messages</li>
+            <li>Verify Docker is running (if using container execution)</li>
+            <li>Ensure repository is accessible</li>
+            <li>Check node capacity and status</li>
+        </ul>
+
+        <h3>Webhook Issues</h3>
+        <ul>
+            <li>Verify webhook URL is correct</li>
+            <li>Check webhook secret matches</li>
+            <li>Review webhook delivery logs in your Git provider</li>
+        </ul>
+
+        <h3>Authentication Problems</h3>
+        <ul>
+            <li>Check JWT token hasn't expired (24h lifetime)</li>
+            <li>Regenerate API token if needed</li>
+            <li>Verify credentials are correct</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>FAQ</h2>
+        
+        <h3>Q: How do I run builds on multiple nodes?</h3>
+        <p>A: Register additional nodes using the node registration API. CASCI automatically distributes builds across available nodes.</p>
+
+        <h3>Q: Can I use CASCI with private repositories?</h3>
+        <p>A: Yes, add SSH keys or access tokens in Project Settings → Credentials.</p>
+
+        <h3>Q: How are secrets managed?</h3>
+        <p>A: Secrets are encrypted with AES-256-GCM and injected into builds as environment variables.</p>
+
+        <h3>Q: What security scanning is included?</h3>
+        <p>A: CASCI integrates Trivy (container scanning), Semgrep (SAST), Gitleaks (secret detection), Syft (SBOM), and Grype (vulnerabilities).</p>
+    </div>
+
+    <div class="section">
+        <h2>Need More Help?</h2>
+        <ul>
+            <li><a href="/server/contact">Contact Support</a></li>
+            <li><a href="https://github.com/casapps/casci" target="_blank">GitHub Repository</a></li>
+            <li><a href="https://github.com/casapps/casci/issues" target="_blank">Report an Issue</a></li>
+        </ul>
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,74 @@
+{{/* Home Page */}}
+{{define "content"}}
+<div class="home-hero">
+    <div class="hero-content">
+        <h1 class="hero-title">CASCI</h1>
+        <p class="hero-subtitle">CI/CD Application Server for Continuous Integration</p>
+        <p class="hero-description">
+            A complete CI/CD platform in a single static binary that replaces Jenkins, 
+            GitHub Actions, GitLab CI, and other CI/CD tools.
+        </p>
+        <div class="hero-actions">
+            <a href="/docs" class="btn btn-primary btn-large">Get Started</a>
+            <a href="/admin" class="btn btn-secondary btn-large">Admin Panel</a>
+        </div>
+    </div>
+</div>
+
+<div class="features-grid">
+    <div class="feature-card">
+        <div class="feature-icon">🚀</div>
+        <h3>Zero Configuration</h3>
+        <p>Start building in seconds with intelligent defaults and automatic setup</p>
+    </div>
+    
+    <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>Security First</h3>
+        <p>Built-in security scanning, compliance modes, and audit logging</p>
+    </div>
+    
+    <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Lightning Fast</h3>
+        <p>Single 400MB static binary with embedded assets and no dependencies</p>
+    </div>
+    
+    <div class="feature-card">
+        <div class="feature-icon">🌐</div>
+        <h3>100% Compatible</h3>
+        <p>Run Jenkinsfiles, GitHub Actions, GitLab CI, and 9+ CI/CD formats unchanged</p>
+    </div>
+    
+    <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Complete Monitoring</h3>
+        <p>Prometheus metrics, audit logs, and real-time build tracking</p>
+    </div>
+    
+    <div class="feature-card">
+        <div class="feature-icon">🔧</div>
+        <h3>Easy Management</h3>
+        <p>Beautiful admin panel with full REST, GraphQL, and Swagger APIs</p>
+    </div>
+</div>
+
+<div class="stats-section">
+    <div class="stat-card">
+        <div class="stat-value">{{.Stats.TotalProjects}}</div>
+        <div class="stat-label">Projects</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{.Stats.TotalBuilds}}</div>
+        <div class="stat-label">Builds</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{.Stats.ActiveNodes}}</div>
+        <div class="stat-label">Active Nodes</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{.Stats.SuccessRate}}%</div>
+        <div class="stat-label">Success Rate</div>
+    </div>
+</div>
+{{end}}

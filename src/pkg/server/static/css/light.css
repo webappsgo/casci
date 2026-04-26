@@ -1,0 +1,99 @@
+/* Light Theme (TEMPLATE.md compliant) */
+:root[data-theme="light"] {
+    /* Light color palette */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --bg-tertiary: #e0e0e0;
+    --bg-hover: #f0f0f0;
+    --bg-active: #e0e0e0;
+    
+    --text-primary: #212121;
+    --text-secondary: #424242;
+    --text-muted: #757575;
+    --text-link: #1976d2;
+    --text-link-hover: #1565c0;
+    
+    --color-primary: #1976d2;
+    --color-secondary: #424242;
+    --color-success: #388e3c;
+    --color-warning: #f57c00;
+    --color-danger: #d32f2f;
+    --color-info: #0288d1;
+    
+    --border-color: #e0e0e0;
+    --shadow: rgba(0, 0, 0, 0.1);
+    
+    /* Component colors */
+    --btn-primary-bg: #1976d2;
+    --btn-primary-hover: #1565c0;
+    --btn-primary-text: #ffffff;
+    
+    --btn-secondary-bg: #e0e0e0;
+    --btn-secondary-hover: #d5d5d5;
+    --btn-secondary-text: #212121;
+    
+    --input-bg: #ffffff;
+    --input-border: #e0e0e0;
+    --input-focus: #1976d2;
+    --input-text: #212121;
+    
+    --card-bg: #ffffff;
+    --card-border: #e0e0e0;
+    
+    --header-bg: #ffffff;
+    --footer-bg: #f5f5f5;
+    --nav-bg: #ffffff;
+    
+    --modal-overlay: rgba(0, 0, 0, 0.5);
+    --modal-bg: #ffffff;
+    
+    --sidebar-bg: #f5f5f5;
+    --sidebar-hover: #e0e0e0;
+    --sidebar-active: #1976d2;
+}
+
+/* Light theme specific styles */
+[data-theme="light"] {
+    color-scheme: light;
+}
+
+[data-theme="light"] .hero-title {
+    background: linear-gradient(135deg, #1976d2 0%, #0288d1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+[data-theme="light"] code {
+    background: #f5f5f5;
+    color: #d32f2f;
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="light"] pre {
+    background: #f5f5f5;
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="light"] ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+[data-theme="light"] ::selection {
+    background: var(--color-primary);
+    color: #ffffff;
+}

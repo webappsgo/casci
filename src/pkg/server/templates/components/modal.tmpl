@@ -1,0 +1,23 @@
+{{/* Modal Component - Custom modal (NO JS alerts) */}}
+{{define "modal"}}
+<div class="modal" id="{{.ID}}" style="display: none;">
+    <div class="modal-overlay" onclick="closeModal('{{.ID}}')"></div>
+    <div class="modal-container">
+        <div class="modal-header">
+            <h3 class="modal-title">{{.Title}}</h3>
+            <button class="modal-close" onclick="closeModal('{{.ID}}')" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+            {{.Content}}
+        </div>
+        <div class="modal-footer">
+            {{if .ShowCancel}}
+            <button class="btn btn-secondary" onclick="closeModal('{{.ID}}')">{{if .CancelText}}{{.CancelText}}{{else}}Cancel{{end}}</button>
+            {{end}}
+            {{if .ShowConfirm}}
+            <button class="btn btn-primary" onclick="{{.ConfirmAction}}">{{if .ConfirmText}}{{.ConfirmText}}{{else}}Confirm{{end}}</button>
+            {{end}}
+        </div>
+    </div>
+</div>
+{{end}}

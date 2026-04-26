@@ -100,4 +100,11 @@ $RECYCLE.BIN/
 **/*.rewrite.sh
 **/*.refactor.sh
 
-
+# CASCI specific
+binaries/
+releases/
+/tmp/casci
+casci
+*.db
+*.db-shm
+*.db-wal

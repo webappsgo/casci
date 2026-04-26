@@ -1,0 +1,33 @@
+{{/* MANDATORY PARTIAL - header.tmpl - Site header */}}
+<header class="site-header">
+    <div class="container header-content">
+        <div class="logo">
+            <a href="/">
+                <span class="logo-text">CASCI</span>
+            </a>
+        </div>
+        
+        <div class="header-right">
+            {{if .User}}
+            <div class="user-menu">
+                <button class="btn-user" id="user-menu-btn">
+                    <span class="user-name">{{.User.Username}}</span>
+                    <span class="icon">▼</span>
+                </button>
+                <div class="user-dropdown" id="user-dropdown">
+                    <a href="/admin" class="dropdown-item">Admin Panel</a>
+                    <a href="/profile" class="dropdown-item">Profile</a>
+                    <hr class="dropdown-divider">
+                    <button class="dropdown-item btn-logout" onclick="logout()">Logout</button>
+                </div>
+            </div>
+            {{else}}
+            <a href="/admin" class="btn btn-primary">Login</a>
+            {{end}}
+            
+            <button class="btn-theme" id="theme-toggle" title="Toggle theme">
+                <span class="icon-theme">🌙</span>
+            </button>
+        </div>
+    </div>
+</header>

@@ -1,0 +1,33 @@
+{
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "CI/CD Application Server - Complete API Documentation",
+        "title": "CASCI API",
+        "termsOfService": "https://casci.casapps.us/terms",
+        "contact": {
+            "name": "CASCI Support",
+            "url": "https://casci.casapps.us/support",
+            "email": "support@casapps.us"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "0.1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {},
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type \"Bearer\" followed by a space and JWT token",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

@@ -1,0 +1,128 @@
+{{/* Admin Dashboard */}}
+{{define "content"}}
+<div class="admin-dashboard">
+    <div class="dashboard-header">
+        <h1>Dashboard</h1>
+        <div class="dashboard-actions">
+            <button class="btn btn-secondary" onclick="refreshDashboard()">
+                <span class="icon">🔄</span> Refresh
+            </button>
+        </div>
+    </div>
+    
+    <div class="dashboard-stats">
+        <div class="stat-card primary">
+            <div class="stat-icon">📁</div>
+            <div class="stat-content">
+                <div class="stat-value">{{.Stats.TotalProjects}}</div>
+                <div class="stat-label">Total Projects</div>
+            </div>
+        </div>
+        
+        <div class="stat-card success">
+            <div class="stat-icon">🔨</div>
+            <div class="stat-content">
+                <div class="stat-value">{{.Stats.TotalBuilds}}</div>
+                <div class="stat-label">Total Builds</div>
+            </div>
+        </div>
+        
+        <div class="stat-card info">
+            <div class="stat-icon">👥</div>
+            <div class="stat-content">
+                <div class="stat-value">{{.Stats.TotalUsers}}</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+        </div>
+        
+        <div class="stat-card warning">
+            <div class="stat-icon">🖥️</div>
+            <div class="stat-content">
+                <div class="stat-value">{{.Stats.ActiveNodes}}</div>
+                <div class="stat-label">Active Nodes</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-grid">
+        <div class="dashboard-card">
+            <h2>Recent Builds</h2>
+            <div class="builds-list">
+                {{range .RecentBuilds}}
+                <div class="build-item status-{{.Status}}">
+                    <div class="build-info">
+                        <div class="build-project">{{.ProjectName}}</div>
+                        <div class="build-number">#{{.BuildNumber}}</div>
+                    </div>
+                    <div class="build-status">{{.Status}}</div>
+                    <div class="build-time">{{.Duration}}</div>
+                </div>
+                {{else}}
+                <div class="empty-state">No recent builds</div>
+                {{end}}
+            </div>
+            <a href="/admin/builds" class="card-link">View all builds →</a>
+        </div>
+        
+        <div class="dashboard-card">
+            <h2>System Health</h2>
+            <div class="health-metrics">
+                <div class="metric">
+                    <span class="metric-label">CPU Usage</span>
+                    <div class="metric-bar">
+                        <div class="metric-fill" style="width: {{.SystemMetrics.CPUUsage}}%"></div>
+                    </div>
+                    <span class="metric-value">{{.SystemMetrics.CPUUsage}}%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Memory Usage</span>
+                    <div class="metric-bar">
+                        <div class="metric-fill" style="width: {{.SystemMetrics.MemoryUsage}}%"></div>
+                    </div>
+                    <span class="metric-value">{{.SystemMetrics.MemoryUsage}}%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Disk Usage</span>
+                    <div class="metric-bar">
+                        <div class="metric-fill" style="width: {{.SystemMetrics.DiskUsage}}%"></div>
+                    </div>
+                    <span class="metric-value">{{.SystemMetrics.DiskUsage}}%</span>
+                </div>
+            </div>
+            <a href="/healthz" class="card-link">View full health →</a>
+        </div>
+    </div>
+    
+    <div class="dashboard-grid">
+        <div class="dashboard-card">
+            <h2>Build Activity (Last 7 Days)</h2>
+            <div class="activity-chart">
+                {{/* Placeholder for chart - will be rendered with JS */}}
+                <canvas id="build-activity-chart"></canvas>
+            </div>
+        </div>
+        
+        <div class="dashboard-card">
+            <h2>Quick Actions</h2>
+            <div class="quick-actions">
+                <a href="/admin/projects" class="quick-action">
+                    <span class="action-icon">➕</span>
+                    <span class="action-text">New Project</span>
+                </a>
+                <a href="/admin/users" class="quick-action">
+                    <span class="action-icon">👤</span>
+                    <span class="action-text">Add User</span>
+                </a>
+                <a href="/admin/nodes" class="quick-action">
+                    <span class="action-icon">🖥️</span>
+                    <span class="action-text">Add Node</span>
+                </a>
+                <a href="/admin/settings" class="quick-action">
+                    <span class="action-icon">⚙️</span>
+                    <span class="action-text">Settings</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

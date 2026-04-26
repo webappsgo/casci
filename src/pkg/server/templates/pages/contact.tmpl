@@ -1,0 +1,63 @@
+{{template "layout" .}}
+
+{{define "title"}}Contact Us - CASCI{{end}}
+
+{{define "content"}}
+<div class="container">
+    <h1>Contact Us</h1>
+    
+    <p>Have a question or feedback? Send us a message using the form below.</p>
+
+    {{if .Success}}
+    <div class="alert alert-success">
+        <p>✓ Thank you for your message. We'll respond soon.</p>
+    </div>
+    {{end}}
+
+    {{if .Error}}
+    <div class="alert alert-error">
+        <p>✗ {{.Error}}</p>
+    </div>
+    {{end}}
+
+    <form method="POST" action="/server/contact" class="form">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+        
+        <div class="form-group">
+            <label for="name">Name *</label>
+            <input type="text" id="name" name="name" required maxlength="100" placeholder="Your name">
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email" required maxlength="200" placeholder="your.email@example.com">
+        </div>
+
+        <div class="form-group">
+            <label for="subject">Subject *</label>
+            <input type="text" id="subject" name="subject" required maxlength="200" placeholder="Brief subject">
+        </div>
+
+        <div class="form-group">
+            <label for="message">Message *</label>
+            <textarea id="message" name="message" required rows="8" maxlength="5000" placeholder="Your message..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="captcha">Security Check: What is 2 + 3? *</label>
+            <input type="text" id="captcha" name="captcha" required placeholder="Enter answer">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Send Message</button>
+    </form>
+
+    <div class="section">
+        <h3>Other Ways to Reach Us</h3>
+        <ul>
+            <li><strong>GitHub</strong>: <a href="https://github.com/casapps/casci/issues" target="_blank">Open an issue</a></li>
+            <li><strong>Email</strong>: support@casapps.us</li>
+            <li><strong>Documentation</strong>: <a href="/server/help">Help Center</a></li>
+        </ul>
+    </div>
+</div>
+{{end}}

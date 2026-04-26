@@ -1,0 +1,19 @@
+{{/* MANDATORY PARTIAL - head.tmpl - <head> contents */}}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>{{if .Title}}{{.Title}} - {{end}}CASCI</title>
+<meta name="description" content="CASCI - CI/CD Application Server for Continuous Integration">
+
+{{/* Favicon */}}
+<link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+
+{{/* Stylesheets */}}
+<link rel="stylesheet" href="/static/css/dracula.css" id="theme-dark">
+<link rel="stylesheet" href="/static/css/light.css" id="theme-light" disabled>
+<link rel="stylesheet" href="/static/css/styles.css">
+
+{{/* Security Headers via meta tags */}}
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+<meta http-equiv="X-XSS-Protection" content="1; mode=block">

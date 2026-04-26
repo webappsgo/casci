@@ -1,0 +1,181 @@
+{{/* Admin Settings */}}
+{{define "content"}}
+<div class="admin-settings">
+    <div class="settings-header">
+        <h1>Settings</h1>
+    </div>
+    
+    <div class="settings-tabs">
+        <button class="tab-btn active" data-tab="server">Server</button>
+        <button class="tab-btn" data-tab="web">Web</button>
+        <button class="tab-btn" data-tab="security">Security</button>
+        <button class="tab-btn" data-tab="database">Database</button>
+        <button class="tab-btn" data-tab="notifications">Notifications</button>
+        <button class="tab-btn" data-tab="ssl">SSL/TLS</button>
+    </div>
+    
+    <form id="settings-form" class="settings-form">
+        {{/* Server Settings Tab */}}
+        <div class="tab-content active" data-tab="server">
+            <h2>Server Settings</h2>
+            
+            <div class="form-group">
+                <label for="server-port">Port</label>
+                <input type="text" id="server-port" name="server.port" value="{{.Config.Server.Port}}" class="form-control">
+                <small class="form-help">Single port (HTTP) or dual (HTTP,HTTPS): "8080" or "8080,64453"</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="server-fqdn">FQDN</label>
+                <input type="text" id="server-fqdn" name="server.fqdn" value="{{.Config.Server.FQDN}}" class="form-control">
+                <small class="form-help">Fully qualified domain name for this server</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="server-address">Listen Address</label>
+                <select id="server-address" name="server.address" class="form-control">
+                    <option value="[::]" {{if eq .Config.Server.Address "[::]"}}selected{{end}}>All interfaces (IPv4/IPv6)</option>
+                    <option value="0.0.0.0" {{if eq .Config.Server.Address "0.0.0.0"}}selected{{end}}>All interfaces (IPv4 only)</option>
+                    <option value="127.0.0.1" {{if eq .Config.Server.Address "127.0.0.1"}}selected{{end}}>Localhost only</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="server-mode">Application Mode</label>
+                <select id="server-mode" name="server.mode" class="form-control">
+                    <option value="production" {{if eq .Config.Server.Mode "production"}}selected{{end}}>Production</option>
+                    <option value="development" {{if eq .Config.Server.Mode "development"}}selected{{end}}>Development</option>
+                </select>
+                <small class="form-help">Development mode enables debug endpoints and verbose logging</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="server-title">Application Title</label>
+                <input type="text" id="server-title" name="server.title" value="{{.Config.Server.Title}}" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="server-description">Application Description</label>
+                <input type="text" id="server-description" name="server.description" value="{{.Config.Server.Description}}" class="form-control">
+            </div>
+        </div>
+        
+        {{/* Web Settings Tab */}}
+        <div class="tab-content" data-tab="web">
+            <h2>Web Settings</h2>
+            
+            <div class="form-group">
+                <label for="web-theme">Default Theme</label>
+                <select id="web-theme" name="web.ui.theme" class="form-control">
+                    <option value="dark" {{if eq .Config.Web.UI.Theme "dark"}}selected{{end}}>Dark (Dracula)</option>
+                    <option value="light" {{if eq .Config.Web.UI.Theme "light"}}selected{{end}}>Light</option>
+                    <option value="auto" {{if eq .Config.Web.UI.Theme "auto"}}selected{{end}}>Auto (System)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="web-cors">CORS</label>
+                <input type="text" id="web-cors" name="web.cors" value="{{.Config.Web.CORS}}" class="form-control">
+                <small class="form-help">Allowed origins (comma-separated) or "*" for all</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="web.footer.cookie_consent.enabled" {{if .Config.Web.Footer.CookieConsent.Enabled}}checked{{end}}>
+                    Enable Cookie Consent
+                </label>
+            </div>
+        </div>
+        
+        {{/* Security Settings Tab */}}
+        <div class="tab-content" data-tab="security">
+            <h2>Security Settings</h2>
+            
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="server.rate_limit.enabled" {{if .Config.Server.RateLimit.Enabled}}checked{{end}}>
+                    Enable Rate Limiting
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label for="rate-requests">Requests per Window</label>
+                <input type="number" id="rate-requests" name="server.rate_limit.requests" value="{{.Config.Server.RateLimit.Requests}}" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="rate-window">Window (seconds)</label>
+                <input type="number" id="rate-window" name="server.rate_limit.window" value="{{.Config.Server.RateLimit.Window}}" class="form-control">
+            </div>
+        </div>
+        
+        {{/* Database Settings Tab */}}
+        <div class="tab-content" data-tab="database">
+            <h2>Database Settings</h2>
+            
+            <div class="form-group">
+                <label for="db-driver">Database Driver</label>
+                <select id="db-driver" name="server.database.driver" class="form-control">
+                    <option value="file" {{if eq .Config.Server.Database.Driver "file"}}selected{{end}}>File (SQLite)</option>
+                    <option value="sqlite" {{if eq .Config.Server.Database.Driver "sqlite"}}selected{{end}}>SQLite</option>
+                    <option value="postgres" {{if eq .Config.Server.Database.Driver "postgres"}}selected{{end}}>PostgreSQL</option>
+                    <option value="mysql" {{if eq .Config.Server.Database.Driver "mysql"}}selected{{end}}>MySQL/MariaDB</option>
+                </select>
+            </div>
+            
+            <div class="database-config">
+                <div class="alert alert-info">
+                    <strong>Note:</strong> Database changes require server restart
+                </div>
+            </div>
+        </div>
+        
+        {{/* Notifications Tab */}}
+        <div class="tab-content" data-tab="notifications">
+            <h2>Notification Settings</h2>
+            <p class="text-muted">Configure notification channels and settings</p>
+            <div class="alert alert-info">
+                Notification settings coming soon
+            </div>
+        </div>
+        
+        {{/* SSL/TLS Tab */}}
+        <div class="tab-content" data-tab="ssl">
+            <h2>SSL/TLS Settings</h2>
+            
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="server.ssl.enabled" {{if .Config.Server.SSL.Enabled}}checked{{end}}>
+                    Enable SSL/TLS
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="server.ssl.letsencrypt.enabled" {{if .Config.Server.SSL.LetsEncrypt.Enabled}}checked{{end}}>
+                    Enable Let's Encrypt
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label for="ssl-email">Let's Encrypt Email</label>
+                <input type="email" id="ssl-email" name="server.ssl.letsencrypt.email" value="{{.Config.Server.SSL.LetsEncrypt.Email}}" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="ssl-challenge">Challenge Type</label>
+                <select id="ssl-challenge" name="server.ssl.letsencrypt.challenge" class="form-control">
+                    <option value="http-01" {{if eq .Config.Server.SSL.LetsEncrypt.Challenge "http-01"}}selected{{end}}>HTTP-01</option>
+                    <option value="dns-01" {{if eq .Config.Server.SSL.LetsEncrypt.Challenge "dns-01"}}selected{{end}}>DNS-01</option>
+                    <option value="tls-alpn-01" {{if eq .Config.Server.SSL.LetsEncrypt.Challenge "tls-alpn-01"}}selected{{end}}>TLS-ALPN-01</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+            <button type="button" class="btn btn-secondary" onclick="resetForm()">Reset</button>
+        </div>
+    </form>
+</div>
+{{end}}

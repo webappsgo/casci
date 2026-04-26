@@ -1,0 +1,15 @@
+{{/* MANDATORY PARTIAL - nav.tmpl - Main navigation */}}
+<nav class="main-nav">
+    <div class="container nav-content">
+        <a href="/" class="nav-item {{if eq .Active "home"}}active{{end}}">Home</a>
+        <a href="/projects" class="nav-item {{if eq .Active "projects"}}active{{end}}">Projects</a>
+        <a href="/builds" class="nav-item {{if eq .Active "builds"}}active{{end}}">Builds</a>
+        <a href="/docs" class="nav-item {{if eq .Active "docs"}}active{{end}}">Documentation</a>
+        <a href="/healthz" class="nav-item {{if eq .Active "health"}}active{{end}}">Health</a>
+        {{if .User}}
+        {{if .User.IsAdmin}}
+        <a href="/admin" class="nav-item {{if eq .Active "admin"}}active{{end}}">Admin</a>
+        {{end}}
+        {{end}}
+    </div>
+</nav>

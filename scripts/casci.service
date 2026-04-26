@@ -1,0 +1,38 @@
+[Unit]
+Description=CASCI - CI/CD Application Server
+Documentation=https://github.com/casapps/casci
+After=network.target
+
+[Service]
+Type=simple
+User=casci
+Group=casci
+WorkingDirectory=/var/lib/casci
+ExecStart=/usr/local/bin/casci
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=casci
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/casci /var/log/casci
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+# Environment
+Environment="CASCI_DB_TYPE=sqlite"
+Environment="CASCI_DB_DSN=/var/lib/casci/casci.db"
+
+[Install]
+WantedBy=multi-user.target

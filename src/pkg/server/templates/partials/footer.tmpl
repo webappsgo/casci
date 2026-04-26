@@ -1,0 +1,80 @@
+{{/* MANDATORY PARTIAL - footer.tmpl - Site footer */}}
+
+{{/* Custom branding HTML (if configured) */}}
+{{if .FooterCustomHTML}}
+<div class="custom-branding">
+    {{.FooterCustomHTML}}
+</div>
+{{end}}
+
+{{/* Standard page links (always first) */}}
+<footer class="site-footer">
+    <div class="container footer-content">
+        <p class="footer-links">
+            <a href="/server/about">About</a>
+            <span>•</span>
+            <a href="/server/privacy">Privacy</a>
+            <span>•</span>
+            <a href="/server/contact">Contact</a>
+            <span>•</span>
+            <a href="/server/help">Help</a>
+        </p>
+        
+        {{/* Application branding */}}
+        <p class="footer-branding">
+            <a href="https://github.com/casapps/casci" target="_blank" rel="noopener">CASCI</a>
+            <span>•</span>
+            <span>Made with ❤️</span>
+            <span>•</span>
+            <span>{{.Version}}</span>
+        </p>
+        
+        <p class="footer-meta">
+            <a href="/health">Status</a>
+            <span>•</span>
+            <span>&copy; {{.CurrentYear}} casapps</span>
+        </p>
+    </div>
+</footer>
+
+{{/* Cookie consent popup */}}
+{{if .CookieConsentEnabled}}
+<div id="cookie-consent" class="cookie-consent" style="display: none;">
+    <div class="cookie-consent-content">
+        <p>{{.CookieConsentMessage}}</p>
+        <div class="cookie-consent-buttons">
+            <button onclick="acceptCookies()" class="btn btn-primary btn-small">Accept</button>
+            {{if .CookieConsentPolicyURL}}
+            <a href="{{.CookieConsentPolicyURL}}" class="btn btn-secondary btn-small">Learn More</a>
+            {{end}}
+        </div>
+    </div>
+</div>
+
+<script>
+function checkCookieConsent() {
+    if (!localStorage.getItem('cookie-consent')) {
+        document.getElementById('cookie-consent').style.display = 'block';
+    }
+}
+
+function acceptCookies() {
+    localStorage.setItem('cookie-consent', 'accepted');
+    document.getElementById('cookie-consent').style.display = 'none';
+}
+
+// Check on page load
+checkCookieConsent();
+</script>
+{{end}}
+
+{{/* Google Analytics (if configured) */}}
+{{if .TrackingID}}
+<script async src="https://www.googletagmanager.com/gtag/js?id={{.TrackingID}}"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '{{.TrackingID}}');
+</script>
+{{end}}

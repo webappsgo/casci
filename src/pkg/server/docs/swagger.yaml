@@ -1,0 +1,25 @@
+basePath: /api/v1
+host: localhost:8080
+info:
+  contact:
+    email: support@casapps.us
+    name: CASCI Support
+    url: https://casci.casapps.us/support
+  description: CI/CD Application Server - Complete API Documentation
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://casci.casapps.us/terms
+  title: CASCI API
+  version: 0.1.0
+paths: {}
+schemes:
+- http
+- https
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
