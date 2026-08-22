@@ -108,3 +108,6 @@ casci
 *.db
 *.db-shm
 *.db-wal
+
+# runtime data must never live in the project directory (AI.md)
+.casci/
