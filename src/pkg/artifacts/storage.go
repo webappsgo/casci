@@ -278,29 +278,29 @@ func NewAzureStorage(container, accountName, accountKey string) *AzureStorage {
 // Store stores data to Azure Blob Storage (stub)
 func (az *AzureStorage) Store(ctx context.Context, path string, data []byte) error {
 	// TODO: Implement Azure upload
-	return fmt.Errorf("Azure storage not yet implemented")
+	return fmt.Errorf("azure storage not yet implemented")
 }
 
 // Retrieve retrieves data from Azure Blob Storage (stub)
 func (az *AzureStorage) Retrieve(ctx context.Context, path string) ([]byte, error) {
 	// TODO: Implement Azure download
-	return nil, fmt.Errorf("Azure storage not yet implemented")
+	return nil, fmt.Errorf("azure storage not yet implemented")
 }
 
 // Delete deletes data from Azure Blob Storage (stub)
 func (az *AzureStorage) Delete(ctx context.Context, path string) error {
 	// TODO: Implement Azure delete
-	return fmt.Errorf("Azure storage not yet implemented")
+	return fmt.Errorf("azure storage not yet implemented")
 }
 
 // Exists checks if blob exists in Azure (stub)
 func (az *AzureStorage) Exists(ctx context.Context, path string) (bool, error) {
 	// TODO: Implement Azure exists check
-	return false, fmt.Errorf("Azure storage not yet implemented")
+	return false, fmt.Errorf("azure storage not yet implemented")
 }
 
 // GetURL generates a SAS URL for Azure blob (stub)
 func (az *AzureStorage) GetURL(ctx context.Context, path string, expiryMinutes int) (string, error) {
 	// TODO: Implement Azure SAS URL
-	return "", fmt.Errorf("Azure storage not yet implemented")
+	return "", fmt.Errorf("azure storage not yet implemented")
 }

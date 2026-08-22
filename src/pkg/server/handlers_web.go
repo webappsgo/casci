@@ -1,13 +1,36 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/webappsgo/casci/src/internal/config"
 	"github.com/webappsgo/casci/src/pkg/users"
 )
+
+// negotiateHealthzFormat picks the healthz response format from the
+// request's Accept header / extension, per PART 14 content negotiation:
+// .txt and text/plain are always priority 1
+func negotiateHealthzFormat(r *http.Request) string {
+	if strings.HasSuffix(r.URL.Path, ".txt") {
+		return "text"
+	}
+	if strings.HasSuffix(r.URL.Path, ".json") {
+		return "json"
+	}
+	accept := r.Header.Get("Accept")
+	switch {
+	case strings.Contains(accept, "text/plain"):
+		return "text"
+	case strings.Contains(accept, "application/json"):
+		return "json"
+	default:
+		return "html"
+	}
+}
 
 // PageData is the base data structure for all pages
 type PageData struct {
@@ -188,7 +211,9 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleHealthz serves the health check HTML page
+// handleHealthz serves the health check via content negotiation, per PART
+// 13: JSON and plain text respond directly, everything else gets the HTML
+// dashboard page
 func (s *Server) handleHealthzHTML(w http.ResponseWriter, r *http.Request) {
 	system := s.metricsCollector.GetSystemMetrics()
 
@@ -199,6 +224,23 @@ func (s *Server) handleHealthzHTML(w http.ResponseWriter, r *http.Request) {
 	if err := s.db.DB().PingContext(r.Context()); err != nil {
 		status = "degraded"
 		dbCheck = "error"
+	}
+
+	switch negotiateHealthzFormat(r) {
+	case "json":
+		w.Header().Set("Content-Type", "application/json")
+		if status != "healthy" {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+		fmt.Fprintf(w, "{\"status\": \"%s\", \"checks\": {\"database\": \"%s\"}}\n", status, dbCheck)
+		return
+	case "text":
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		if status != "healthy" {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+		fmt.Fprintf(w, "status: %s\ndatabase: %s\n", status, dbCheck)
+		return
 	}
 
 	data := struct {

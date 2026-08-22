@@ -698,18 +698,6 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	return s.server.Shutdown(shutdownCtx)
 }
 
-// Handler implementations
-func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
-	// Check database connection
-	if err := s.db.Ping(r.Context()); err != nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
-		fmt.Fprintf(w, `{"status": "unhealthy", "error": "%s"}`, err.Error())
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, `{"status": "healthy"}`)
-}
 
 func (s *Server) handleAPIv1(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")

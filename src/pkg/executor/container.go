@@ -305,8 +305,8 @@ func (ce *ContainerExecutor) extractPipelineCommands(p interface{}) []string {
 // buildEnvironment generates environment variables for the container
 func (ce *ContainerExecutor) buildEnvironment(build *builds.Build, projectConfig *detection.ProjectConfig) []string {
 	env := []string{
-		fmt.Sprintf("CI=true"),
-		fmt.Sprintf("CASCI=true"),
+		"CI=true",
+		"CASCI=true",
 		fmt.Sprintf("BUILD_ID=%d", build.ID),
 		fmt.Sprintf("BUILD_NUMBER=%d", build.BuildNumber),
 		fmt.Sprintf("PROJECT_ID=%d", build.ProjectID),
