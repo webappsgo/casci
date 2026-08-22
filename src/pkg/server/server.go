@@ -698,7 +698,6 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	return s.server.Shutdown(shutdownCtx)
 }
 
-
 func (s *Server) handleAPIv1(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprint(w, `{"message": "CASCI API v1", "version": "1.0.0"}`)

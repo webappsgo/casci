@@ -224,3 +224,31 @@ flatten would immediately relocate.
 `v1` the prefix never matches, the untrimmed path fails `strconv.Atoi`, and
 every by-ID request returns 400. Needs the configured version threaded into
 the handlers (or a router that captures the ID as a parameter).
+
+## 17. `github.com/docker/docker` — 2 unfixed upstream CVEs (blocked, not actionable)
+
+`govulncheck` flags `GO-2026-4887` (AuthZ plugin bypass via oversized
+request bodies) and `GO-2026-4883` (off-by-one in plugin privilege
+validation) in `github.com/docker/docker`, reached via
+`src/pkg/executor/container.go`'s use of the Docker client. Both report
+`Fixed in: N/A` — no patched version exists yet upstream; the module is
+already pinned to the latest available tag (`v28.5.2+incompatible`). The
+`vuln-scan` CI job will stay red on these two findings until upstream ships
+a fix; re-run `govulncheck ./...` periodically and bump
+`github.com/docker/docker` the moment a fixed version is tagged. Not
+exploitable via this project's own attack surface — the executor only acts
+as a Docker API client for build containers, never runs an AuthZ plugin or
+receives plugin privilege requests itself.
+
+## 18. Go unit test coverage is far below the PART 29 60% floor
+
+Only `src/pkg/server/templates_test.go` exists in the entire ~20-package
+tree, so `go test -cover ./...` reports roughly 0% overall against the
+PART 29 required 60% floor (100% for endpoints/admin routes). The `test`
+CI job's coverage-threshold step will stay red until a real test-writing
+pass covers the untested packages (`users`, `projects`, `builds`,
+`executor`, `nodes`, `security`, `audit`, `credentials`, `notifications`,
+`webhooks`, `artifacts`, `database`, `config`, etc.). This is a
+substantial, multi-session effort — tracked here rather than attempted
+piecemeal so it gets a dedicated pass with the user's input on priority
+order (auth/DB/token-validation critical paths first, per PART 29).
