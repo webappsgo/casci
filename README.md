@@ -1,29 +1,106 @@
 # casci
 
+CASCI (CI/CD Application Server for Continuous Integration) is a complete
+CI/CD platform delivered as a single static Go binary. It replaces Jenkins,
+GitHub Actions, GitLab CI, CircleCI, Travis CI, and similar tools for teams
+and individuals who want one deployable that runs existing CI/CD pipelines
+unchanged, requires no configuration files, and scales from a laptop to a
+cluster of 1000+ build nodes.
+
 [![Build](https://github.com/webappsgo/casci/actions/workflows/ci.yml/badge.svg)](https://github.com/webappsgo/casci/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/webappsgo/casci)](https://github.com/webappsgo/casci/releases/latest)
 [![License](https://img.shields.io/github/license/webappsgo/casci)](LICENSE.md)
 [![Documentation](https://readthedocs.org/projects/webappsgo-casci/badge/?version=latest)](https://webappsgo-casci.readthedocs.io)
 
-## About
+---
 
-CASCI is a complete CI/CD platform delivered as a single static Go binary. It runs existing Jenkins, GitHub Actions, GitLab CI, CircleCI, Travis CI, and Drone pipelines unchanged, needs no configuration files, and scales from a laptop to a cluster of 1000+ build nodes.
+## 📦 Install
 
-## Official Site
+Download the latest release from [GitHub Releases](https://github.com/webappsgo/casci/releases/latest).
 
-https://casci.casapps.us
+### Linux
+| Arch | Binary |
+|------|--------|
+| amd64 | `casci-linux-amd64` |
+| arm64 | `casci-linux-arm64` |
+
+```bash
+curl -LSsf https://github.com/webappsgo/casci/releases/latest/download/casci-linux-amd64 \
+  -o /usr/local/bin/casci && chmod +x /usr/local/bin/casci
+```
+
+### macOS
+| Arch | Binary |
+|------|--------|
+| Intel (x86_64) | `casci-darwin-amd64` |
+| Apple Silicon (arm64) | `casci-darwin-arm64` |
+
+```bash
+# Detect arch automatically
+ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+curl -LSsf "https://github.com/webappsgo/casci/releases/latest/download/casci-darwin-${ARCH}" \
+  -o /usr/local/bin/casci && chmod +x /usr/local/bin/casci
+# Remove macOS quarantine flag
+xattr -d com.apple.quarantine /usr/local/bin/casci 2>/dev/null || true
+```
+
+### Windows
+| Arch | Binary |
+|------|--------|
+| amd64 | `casci-windows-amd64.exe` |
+| arm64 | `casci-windows-arm64.exe` |
+
+Download and add to `%PATH%`.
+
+### FreeBSD
+| Arch | Binary |
+|------|--------|
+| amd64 | `casci-freebsd-amd64` |
+| arm64 | `casci-freebsd-arm64` |
+
+```bash
+curl -LSsf https://github.com/webappsgo/casci/releases/latest/download/casci-freebsd-amd64 \
+  -o /usr/local/bin/casci && chmod +x /usr/local/bin/casci
+```
+
+On first run CASCI selects a random port in the `64000-64999` range and
+persists it to `server.yml`, so the port stays stable across restarts.
+
+---
+
+## 🐳 Docker
+
+```bash
+docker run -d \
+  --name casci \
+  -p 172.17.0.1:64580:80 \
+  -v ./volumes/config:/config:z \
+  -v ./volumes/data:/data:z \
+  ghcr.io/webappsgo/casci:latest
+```
+
+Inside a container the port defaults to `80`.
+
+### Docker Compose
+
+```bash
+curl -q -LSsf -O https://raw.githubusercontent.com/webappsgo/casci/main/docker/docker-compose.yml
+docker compose up -d
+```
+
+---
 
 ## Features
 
 - Single static binary with no required external services; embedded SQLite by default, external PostgreSQL or MySQL opt-in
 - Zero configuration on first run — no CLI flags and no hand-edited config files for normal operation
-- Multi-format pipeline engine: Jenkinsfile, GitHub Actions, GitLab CI, CircleCI, Travis CI, Azure Pipelines, Bitbucket Pipelines, Drone CI, and Buildkite parsed into one internal pipeline model
+- Multi-format pipeline engine: Jenkinsfile (declarative and scripted, Blue Ocean and multibranch), GitHub Actions, GitLab CI, Travis CI, CircleCI, Azure Pipelines, Bitbucket Pipelines, Drone CI, Buildkite, Tekton, Woodpecker, and CodeFresh parsed into one internal pipeline model, with auto-generated pipelines for repositories that ship none of the above
+- Jenkins-compatible REST surface at `/api/json` and `/crumbIssuer/api/json`, including Blue Ocean API and `jenkins-cli.jar`-style CLI operations
 - Project auto-detection for Go, JavaScript, Python, Java, Rust, Ruby, and PHP when a repository ships no pipeline file
-- Jenkins-compatible REST surface at `/api/json` and `/crumbIssuer/api/json`
-- Container-isolated build execution with per-build workspace cleanup
-- Build queue dispatching to local execution or registered remote build nodes
-- Distributed build nodes with token-based join, scaling to 1000+ agents
-- Artifact storage and retrieval per build
+- Container-isolated build execution with per-build workspace cleanup and no storage shared between users' builds
+- Build queue dispatching to local execution or registered remote build nodes, scaling to 1000+ agents via token-based join
+- On-demand build capacity on AWS, Google Cloud, Azure, Oracle Cloud, Vultr, Hetzner Cloud, DigitalOcean, and Linode, with instances destroyed as soon as a build completes or times out
+- Artifact storage and retrieval per build, with every build signed, SBOM-tracked, and scanned for vulnerabilities, secrets, and license issues
 - Git clone, branch and tag checkout, and commit metadata capture
 - GitHub, GitLab, Bitbucket, and Gitea webhook triggers with signature verification
 - Security scanning built into the binary: vulnerability, SAST, secret, license, SBOM, and malware scans with severity classification
@@ -36,43 +113,49 @@ https://casci.casapps.us
 - WebSocket build log streaming
 - Self-healing operation: automatic error recovery and graceful degradation
 
-## Production
+---
 
-### Docker (Recommended)
+## ⌨️ CLI Usage
 
-```bash
-docker run -d \
-  --name casci \
-  -p 172.17.0.1:64580:80 \
-  -v ./volumes/config:/config:z \
-  -v ./volumes/data:/data:z \
-  ghcr.io/webappsgo/casci:latest
-```
-
-### Docker Compose
+`casci` is a single binary — the same executable serves the application and
+its own command-line interface.
 
 ```bash
-curl -q -LSsf -O https://raw.githubusercontent.com/webappsgo/casci/main/docker/docker-compose.yml
-docker compose up -d
+casci --help
+casci --version
+casci --status
 ```
 
-### Binary
+| Flag | Description |
+|------|-------------|
+| `--help`, `-h` | Show help |
+| `--version`, `-v` | Show version |
+| `--status` | Show server status and health (exit `0` healthy, `1` unhealthy) |
+| `--shell {completions,init,--help} [SHELL]` | Shell integration |
+| `--mode {production,development,debug}` | Application mode |
+| `--config DIR` | Config directory |
+| `--data DIR` | Data directory |
+| `--cache DIR` | Cache directory |
+| `--log DIR` | Log directory |
+| `--backup DIR` | Backup directory |
+| `--pid FILE` | PID file path |
+| `--address ADDR` | Listen address |
+| `--port PORT` | Listen port |
+| `--baseurl PATH` | URL path prefix |
+| `--daemon` | Run as daemon (detach from terminal) |
+| `--debug` | Enable debug mode |
+| `--color {auto,yes,no}` | Color output |
+| `--lang CODE` | Language for output |
+| `--service {start,restart,stop,reload,--install,--uninstall,--disable,--help}` | Service management |
+| `--maintenance {backup,restore,update,mode,setup,--help}` | Maintenance operations |
+| `--update [check\|yes\|branch {stable,beta,daily}\|--help]` | Check or perform updates |
 
-```bash
-# Download latest release
-curl -q -LSsf -O https://github.com/webappsgo/casci/releases/latest/download/casci-linux-amd64
+---
 
-# Make executable and run
-chmod +x casci-linux-amd64
-./casci-linux-amd64
-```
+## ⚙️ Configuration
 
-On first run CASCI selects a random port in the `64000-64999` range and persists it to `server.yml`, so the port stays stable across restarts. Inside a container the port defaults to `80`.
-
-## Configuration
-
-Configuration is auto-generated on first run. Edit it via the admin panel at
-`https://casci.casapps.us/server/administration`.
+Configuration is auto-generated on first run and managed from the admin
+panel (`/server/administration` on your instance).
 
 Key settings:
 
@@ -88,11 +171,15 @@ Key settings:
 | Cache | `/var/cache/casapps/casci/` | `~/.cache/casapps/casci/` |
 | Logs | `/var/log/casapps/casci/` | `~/.local/log/casapps/casci/` |
 
-The config file is `server.yml` inside the config directory. It is generated on first run, written with mode `0600` because it holds the encryption key and the webhook secret, and is the persisted source of truth for everything not listed as an environment variable below.
+The config file is `server.yml` inside the config directory. It is generated
+on first run, written with mode `0600` because it holds the encryption key
+and the webhook secret, and is the persisted source of truth for everything
+not listed as an environment variable below.
 
 ### Environment Variables
 
-Environment variables are unprefixed. The list is closed — anything not on it is a `server.yml` key, and setting it in the environment has no effect.
+Environment variables are unprefixed. The list is closed — anything not on
+it is a `server.yml` key, and setting it in the environment has no effect.
 
 **Runtime — re-read on every start:**
 
@@ -126,79 +213,67 @@ Environment variables are unprefixed. The list is closed — anything not on it 
 | `APPLICATION_NAME` | Display name | `casci` |
 | `APPLICATION_TAGLINE` | Display tagline | unset |
 
-Everything else is configured in `server.yml` or from the admin panel: `server.cors_origins`, `server.tls.*`, `server.security.encryption_key`, `server.security.webhook_secret`, `server.footer.*`, and `server.database.max_conns` / `max_idle` / `replica_urls`. See [Configuration](https://webappsgo-casci.readthedocs.io/en/latest/configuration/).
+Everything else is configured in `server.yml` or from the admin panel:
+`server.cors_origins`, `server.tls.*`, `server.security.encryption_key`,
+`server.security.webhook_secret`, `server.footer.*`, and
+`server.database.max_conns` / `max_idle` / `replica_urls`. See
+[Configuration](https://webappsgo-casci.readthedocs.io/en/latest/configuration/).
 
-## CLI
+---
 
-```bash
-casci --help
-casci --version
-casci --status
-```
-
-| Flag | Description |
-|------|-------------|
-| `--help`, `-h` | Show help |
-| `--version`, `-v` | Show version |
-| `--status` | Show server status and health (exit `0` healthy, `1` unhealthy) |
-| `--shell {completions,init,--help} [SHELL]` | Shell integration |
-| `--mode {production,development,debug}` | Application mode |
-| `--config DIR` | Config directory |
-| `--data DIR` | Data directory |
-| `--cache DIR` | Cache directory |
-| `--log DIR` | Log directory |
-| `--backup DIR` | Backup directory |
-| `--pid FILE` | PID file path |
-| `--address ADDR` | Listen address |
-| `--port PORT` | Listen port |
-| `--baseurl PATH` | URL path prefix |
-| `--daemon` | Run as daemon (detach from terminal) |
-| `--debug` | Enable debug mode |
-| `--color {auto,yes,no}` | Color output |
-| `--lang CODE` | Language for output |
-| `--service {start,restart,stop,reload,--install,--uninstall,--disable,--help}` | Service management |
-| `--maintenance {backup,restore,update,mode,setup,--help}` | Maintenance operations |
-| `--update [check\|yes\|branch {stable,beta,daily}\|--help]` | Check or perform updates |
-
-## API
-
-API documentation is available at `https://casci.casapps.us/api/v1/` when running.
+## 🔌 API
 
 | Endpoint | Description |
 |----------|-------------|
-| `GET https://casci.casapps.us/server/healthz` | Health check |
-| `GET https://casci.casapps.us/api/v1/server/healthz` | Health check (JSON) |
-| `POST https://casci.casapps.us/api/v1/auth/login` | Obtain a JWT |
-| `GET https://casci.casapps.us/api/v1/projects` | List projects |
-| `GET https://casci.casapps.us/api/v1/builds/` | Build operations |
-| `POST https://casci.casapps.us/webhook` | SCM webhook receiver (GitHub, GitLab, Bitbucket, Gitea) |
-| `POST https://casci.casapps.us/graphql` | GraphQL endpoint |
+| `GET /server/healthz` | Health check |
+| `GET /api/v1/server/healthz` | Health check (JSON) |
+| `POST /api/v1/auth/login` | Obtain a JWT |
+| `GET /api/v1/projects` | List projects |
+| `GET /api/v1/builds/` | Build operations |
+| `POST /webhook` | SCM webhook receiver (GitHub, GitLab, Bitbucket, Gitea) |
+| `POST /graphql` | GraphQL endpoint |
 
 ### Examples
 
 ```bash
 # Health check
-curl -q -LSsf https://casci.casapps.us/server/healthz
+curl -q -LSsf https://your-instance.example.com/server/healthz
 
 # API request (requires auth)
-curl -q -LSsf -H "Authorization: Bearer TOKEN" https://casci.casapps.us/api/v1/projects
+curl -q -LSsf -H "Authorization: Bearer TOKEN" https://your-instance.example.com/api/v1/projects
 ```
 
-Authentication uses the `Authorization: Bearer` header. Tokens are never accepted as a query parameter.
+Authentication uses the `Authorization: Bearer` header. Tokens are never
+accepted as a query parameter.
 
-## Other
+---
 
-### Troubleshooting
+## 🩺 Troubleshooting & Documentation
 
 - Check logs: `docker logs casci`
-- Health check: `curl -q -LSsf https://casci.casapps.us/server/healthz`
+- Health check: `curl -q -LSsf https://your-instance.example.com/server/healthz`
 - Local status: `casci --status`
+- Full documentation: https://webappsgo-casci.readthedocs.io
 
-### Documentation
+---
 
-Full documentation: https://webappsgo-casci.readthedocs.io
+## ⚠️ Disclaimer
 
-## Development
+This software is provided "as is" without warranty of any kind. Use at your
+own risk.
+
+- **No Warranty**: The authors are not responsible for any damages, data loss, or issues arising from use of this software
+- **Not Professional Advice**: This software does not constitute legal, financial, medical, or other professional advice
+- **Third-Party Services**: If this software connects to external APIs or services, their terms of service apply separately
+- **Security**: While we strive to follow security best practices, no software is guaranteed to be free of vulnerabilities
+- **Production Use**: Evaluate thoroughly before deploying in production environments
+
+By using this software, you acknowledge that you have read and understood
+this disclaimer.
+
+---
+
+## 🛠️ Development
 
 **Development instructions are for contributors only.**
 
@@ -224,6 +299,15 @@ make build
 make test
 ```
 
+| Target | Description |
+|--------|-------------|
+| `make dev` | Quick local build to a temp dir |
+| `make local` | Local-arch build to `binaries/` |
+| `make build` | Full 8-platform build to `binaries/` |
+| `make release` | Local build plus a GitHub release |
+| `make docker` | Multi-arch Docker image build (no push) |
+| `make test` | Run tests with coverage enforcement |
+
 ### Project Structure
 
 ```
@@ -234,18 +318,20 @@ docs/          # Documentation
 binaries/      # Built binaries (gitignored)
 ```
 
-## Disclaimer
+### 🐳 Docker build
 
-This software is provided "as is" without warranty of any kind. Use at your own risk.
+```bash
+docker buildx build \
+  -f docker/Dockerfile \
+  --platform linux/amd64,linux/arm64 \
+  -t ghcr.io/webappsgo/casci:latest \
+  .
+```
 
-- **No Warranty**: The authors are not responsible for any damages, data loss, or issues arising from use of this software
-- **Not Professional Advice**: This software does not constitute legal, financial, medical, or other professional advice
-- **Third-Party Services**: If this software connects to external APIs or services, their terms of service apply separately
-- **Security**: While we strive to follow security best practices, no software is guaranteed to be free of vulnerabilities
-- **Production Use**: Evaluate thoroughly before deploying in production environments
+`make docker` runs the equivalent multi-arch build locally without pushing.
 
-By using this software, you acknowledge that you have read and understood this disclaimer.
+---
 
-## License
+## 📄 License
 
-MIT - See [LICENSE.md](LICENSE.md)
+MIT — see [LICENSE.md](LICENSE.md)

@@ -73,8 +73,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    container:
-      image: casjaysdev/go:latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
@@ -102,14 +100,15 @@ jobs:
 
       - name: Enforce SHA pinning on third-party actions
         run: |
-          grep -rn -- 'uses:' .github/workflows > uses.txt || true
+          grep -rnE '^[[:space:]]*(-[[:space:]]*)?uses:' .github/workflows > uses.txt || true
           status=0
           while IFS= read -r line; do
             file="${line%%:*}"
             ref="${line#*uses:}"
+            ref="${ref%%#*}"
             ref="$(printf '%s' "$ref" | tr -d ' \r')"
             case "$ref" in
-              ./*|docker://*) continue ;;
+              ./*|docker://*|"") continue ;;
             esac
             pin="${ref##*@}"
             if ! printf '%s' "$pin" | grep -qE '^[0-9a-f]{40}$'; then
