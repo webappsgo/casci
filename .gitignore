@@ -1,5 +1,4 @@
 # gitignore created on 09/20/25 at 00:27
-# Disable reminder in prompt
 ignoredirmessage
 
 # OS generated files
@@ -100,9 +99,18 @@ $RECYCLE.BIN/
 **/*.rewrite.sh
 **/*.refactor.sh
 
-# CASCI specific
+# ============================================
+# PROJECT-SPECIFIC (add below default section)
+# ============================================
+
+# Build output
 binaries/
 releases/
+
+# Runtime volume data (NEVER commit)
+volumes/
+
+# Stray local build artifacts
 /tmp/casci
 casci
 *.db
@@ -111,3 +119,13 @@ casci
 
 # runtime data must never live in the project directory (AI.md)
 .casci/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Personal AI-assistant files (AI.md PART 3 - shared config IS committed)
+.claude/settings.local.json
+CLAUDE.local.md

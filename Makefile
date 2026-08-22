@@ -1,99 +1,217 @@
-.PHONY: build release docker test help
+# Infer PROJECT_NAME and PROJECT_ORG from git remote or directory path (NEVER hardcode)
+PROJECT_NAME := $(shell git remote get-url origin 2>/dev/null | sed -E 's|.*/([^/]+)(\.git)?$$|\1|' || basename "$$(pwd)")
+PROJECT_ORG := $(shell git remote get-url origin 2>/dev/null | sed -E 's|.*/([^/]+)/[^/]+(\.git)?$$|\1|' || basename "$$(dirname "$$(pwd)")")
 
-# Version from release.txt
-VERSION := $(shell cat release.txt 2>/dev/null || echo "dev")
-BUILD_TIME := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
-GIT_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+# Version precedence: VERSION env (?= respects it) > release.txt > "devel" fallback
+VERSION ?= $(shell cat release.txt 2>/dev/null || echo "devel")
 
-# Build flags - ALWAYS CGO_ENABLED=0 for static binary
-LDFLAGS := -ldflags "-s -w -X main.Version=$(VERSION) -X main.BuildTime=$(BUILD_TIME) -X main.GitCommit=$(GIT_COMMIT)"
+# BuildEpoch — Unix build timestamp (seconds, UTC); the single captured time
+# source. Lets the updater detect a newer daily build; BUILD_DATE below is
+# derived from it, not captured independently.
+BUILD_EPOCH := $(shell date -u +%s)
+# Build info — ISO 8601 / RFC 3339 UTC, derived from BUILD_EPOCH
+BUILD_DATE := $(shell date -u -d @$(BUILD_EPOCH) +"%Y-%m-%dT%H:%M:%SZ")
+COMMIT_ID := $(shell git rev-parse --short HEAD 2>/dev/null || echo "N/A")
 
-# Binary name
-BINARY := casci
+# Official site URL (OPTIONAL - never guess or assume)
+OFFICIAL_SITE := $(shell [ -f site.txt ] && cat site.txt || echo "$${OFFICIAL_SITE:-}")
 
-# Temp directory (BASE.md compliant: /tmp/{tmpdir}/{projectname}/)
-TMPDIR := /tmp/casapps-build/casci
+# Linker flags to embed build info
+# BuildDate is NOT embedded here - it is derived from BuildEpoch in the app's init()
+LDFLAGS := -s -w \
+	-X 'main.Version=$(VERSION)' \
+	-X 'main.CommitID=$(COMMIT_ID)' \
+	-X 'main.BuildEpoch=$(BUILD_EPOCH)' \
+	-X 'main.OfficialSite=$(OFFICIAL_SITE)'
 
-help: ## Show this help
-@echo 'CASCI Makefile - BASE.md Compliant'
-@echo ''
-@echo 'Usage: make [target]'
-@echo ''
-@echo 'Required targets (NON-NEGOTIABLE):'
-@awk 'BEGIN {FS = ":.*?## "} /^[a-z]+:.*?## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+# Directories
+BINDIR := binaries
+RELDIR := releases
 
-build: ## Build all platforms to ./binaries
-@echo "Building CASCI $(VERSION) for all platforms..."
-@mkdir -p binaries $(TMPDIR)
-@echo "  Building linux-amd64..."
-@GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -o $(TMPDIR)/$(BINARY)-linux-amd64 ./src/cmd/casci
-@mv $(TMPDIR)/$(BINARY)-linux-amd64 binaries/$(BINARY)-linux-amd64
-@echo "  Building linux-arm64..."
-@GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build $(LDFLAGS) -o $(TMPDIR)/$(BINARY)-linux-arm64 ./src/cmd/casci
-@mv $(TMPDIR)/$(BINARY)-linux-arm64 binaries/$(BINARY)-linux-arm64
-@echo "  Building darwin-amd64..."
-@GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -o $(TMPDIR)/$(BINARY)-darwin-amd64 ./src/cmd/casci
-@mv $(TMPDIR)/$(BINARY)-darwin-amd64 binaries/$(BINARY)-darwin-amd64
-@echo "  Building darwin-arm64..."
-@GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build $(LDFLAGS) -o $(TMPDIR)/$(BINARY)-darwin-arm64 ./src/cmd/casci
-@mv $(TMPDIR)/$(BINARY)-darwin-arm64 binaries/$(BINARY)-darwin-arm64
-@echo "  Building windows-amd64..."
-@GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -o $(TMPDIR)/$(BINARY)-windows-amd64.exe ./src/cmd/casci
-@mv $(TMPDIR)/$(BINARY)-windows-amd64.exe binaries/$(BINARY)-windows-amd64.exe
-@echo "  Stripping -musl suffix from any binaries..."
-@cd binaries && for f in *-musl*; do [ -f "$$f" ] && mv "$$f" "$${f//-musl/}" || true; done
-@rm -rf $(TMPDIR)
-@echo "✓ All builds complete in ./binaries/"
-@ls -lh binaries/
+# Go directories (persistent across builds)
+GO_CACHE  ?= $(HOME)/go/pkg/mod
+GO_BUILD  ?= $(HOME)/.cache/go-build/$(PROJECT_NAME)
 
-release: ## GitHub release - production to ./releases
-@echo "Creating production release $(VERSION)..."
-@mkdir -p releases $(TMPDIR)
-@echo "  Building linux-amd64..."
-@GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -o $(TMPDIR)/$(BINARY)-linux-amd64 ./src/cmd/casci
-@mv $(TMPDIR)/$(BINARY)-linux-amd64 releases/$(BINARY)-linux-amd64
-@echo "  Building linux-arm64..."
-@GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build $(LDFLAGS) -o $(TMPDIR)/$(BINARY)-linux-arm64 ./src/cmd/casci
-@mv $(TMPDIR)/$(BINARY)-linux-arm64 releases/$(BINARY)-linux-arm64
-@echo "  Building darwin-amd64..."
-@GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -o $(TMPDIR)/$(BINARY)-darwin-amd64 ./src/cmd/casci
-@mv $(TMPDIR)/$(BINARY)-darwin-amd64 releases/$(BINARY)-darwin-amd64
-@echo "  Building darwin-arm64..."
-@GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build $(LDFLAGS) -o $(TMPDIR)/$(BINARY)-darwin-arm64 ./src/cmd/casci
-@mv $(TMPDIR)/$(BINARY)-darwin-arm64 releases/$(BINARY)-darwin-arm64
-@echo "  Building windows-amd64..."
-@GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -o $(TMPDIR)/$(BINARY)-windows-amd64.exe ./src/cmd/casci
-@mv $(TMPDIR)/$(BINARY)-windows-amd64.exe releases/$(BINARY)-windows-amd64.exe
-@echo "  Stripping -musl suffix from any binaries..."
-@cd releases && for f in *-musl*; do [ -f "$$f" ] && mv "$$f" "$${f//-musl/}" || true; done
-@echo "  Compressing releases..."
-@cd releases && for f in casci-*; do \
-if [ -f "$$f" ]; then \
-tar czf "$$f.tar.gz" "$$f" && rm "$$f"; \
-fi; \
-done
-@rm -rf $(TMPDIR)
-@echo "✓ Release $(VERSION) created in ./releases/"
-@ls -lh releases/
+# Build targets (space-separated — consumed by shell for-loops; all 8 platforms)
+PLATFORMS ?= linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64 freebsd/amd64 freebsd/arm64
 
-docker: ## Docker release for ARM64/AMD64
-@echo "Building Docker images for ARM64 and AMD64..."
-@docker buildx version >/dev/null 2>&1 || (echo "ERROR: docker buildx not available" && exit 1)
-@echo "  Building and pushing multi-arch image..."
-@docker buildx build \
---platform linux/amd64,linux/arm64 \
---build-arg VERSION=$(VERSION) \
---build-arg BUILD_TIME=$(BUILD_TIME) \
---build-arg GIT_COMMIT=$(GIT_COMMIT) \
--t ghcr.io/casapps/$(BINARY):$(VERSION) \
--t ghcr.io/casapps/$(BINARY):latest \
---push \
--f Dockerfile .
-@echo "✓ Docker images pushed to ghcr.io/casapps/$(BINARY)"
+# Resource limits — overrideable; prevents any single container from starving concurrent agent builds
+DOCKER_MEM  ?= 4g
+DOCKER_CPUS ?= 2
 
-test: ## Run all tests
-@echo "Running all tests..."
-@go test -v -race -cover ./...
-@echo "✓ All tests passed"
+# Docker - Set REGISTRY based on your platform (ghcr.io, registry.gitlab.com, git.example.com)
+REGISTRY ?= ghcr.io/$(PROJECT_ORG)/$(PROJECT_NAME)
+GO_DOCKER := docker run --rm \
+	--name $(PROJECT_NAME)-$$(tr -dc 'a-z0-9' </dev/urandom | head -c8) \
+	--memory=$(DOCKER_MEM) --cpus=$(DOCKER_CPUS) \
+	-v $(PWD):/app \
+	-v $(GO_CACHE):/usr/local/share/go/pkg/mod \
+	-v $(GO_BUILD):/usr/local/share/go/cache \
+	-w /app \
+	-e CGO_ENABLED=0 \
+	-e GOFLAGS=-buildvcs=false \
+	casjaysdev/go:latest
 
-.DEFAULT_GOAL := help
+.PHONY: build local release docker test dev clean
+
+# =============================================================================
+# BUILD - Build all platforms + local binary (via Docker with cached modules)
+# =============================================================================
+build: clean
+	@mkdir -p $(BINDIR) $(GO_CACHE) $(GO_BUILD)
+	@echo "Building version $(VERSION)..."
+	@echo "Tidying and downloading Go modules..."
+	@$(GO_DOCKER) go mod tidy
+	@$(GO_DOCKER) go mod download
+	@echo "Building local binary..."
+	@$(GO_DOCKER) sh -c "GOOS=$$(go env GOOS) GOARCH=$$(go env GOARCH) \
+		go build -buildvcs=false -trimpath -ldflags \"$(LDFLAGS)\" -o $(BINDIR)/$(PROJECT_NAME) ./src"
+	@for platform in $(PLATFORMS); do \
+		OS=$${platform%/*}; \
+		ARCH=$${platform#*/}; \
+		OUTPUT=$(BINDIR)/$(PROJECT_NAME)-$$OS-$$ARCH; \
+		[ "$$OS" = "windows" ] && OUTPUT=$$OUTPUT.exe; \
+		echo "Building server $$OS/$$ARCH..."; \
+		$(GO_DOCKER) sh -c "GOOS=$$OS GOARCH=$$ARCH \
+			go build -buildvcs=false -trimpath -ldflags \"$(LDFLAGS)\" \
+			-o $$OUTPUT ./src" || exit 1; \
+	done
+	@if [ -d "src/client" ]; then \
+		for platform in $(PLATFORMS); do \
+			OS=$${platform%/*}; \
+			ARCH=$${platform#*/}; \
+			OUTPUT=$(BINDIR)/$(PROJECT_NAME)-cli-$$OS-$$ARCH; \
+			[ "$$OS" = "windows" ] && OUTPUT=$$OUTPUT.exe; \
+			echo "Building CLI $$OS/$$ARCH..."; \
+			$(GO_DOCKER) sh -c "GOOS=$$OS GOARCH=$$ARCH \
+				go build -buildvcs=false -trimpath -ldflags \"$(LDFLAGS)\" \
+				-o $$OUTPUT ./src/client" || exit 1; \
+		done; \
+	fi
+	@if [ -d "src/agent" ]; then \
+		for platform in $(PLATFORMS); do \
+			OS=$${platform%/*}; \
+			ARCH=$${platform#*/}; \
+			OUTPUT=$(BINDIR)/$(PROJECT_NAME)-agent-$$OS-$$ARCH; \
+			[ "$$OS" = "windows" ] && OUTPUT=$$OUTPUT.exe; \
+			echo "Building agent $$OS/$$ARCH..."; \
+			$(GO_DOCKER) sh -c "GOOS=$$OS GOARCH=$$ARCH \
+				go build -buildvcs=false -trimpath -ldflags \"$(LDFLAGS)\" \
+				-o $$OUTPUT ./src/agent" || exit 1; \
+		done; \
+	fi
+	@echo "Build complete: $(BINDIR)/"
+
+# =============================================================================
+# LOCAL - Build local binaries only (fast development builds)
+# =============================================================================
+local: clean
+	@mkdir -p $(BINDIR) $(GO_CACHE) $(GO_BUILD)
+	@echo "Building local binaries version $(VERSION)..."
+	@echo "Tidying and downloading Go modules..."
+	@$(GO_DOCKER) go mod tidy
+	@$(GO_DOCKER) go mod download
+	@echo "Building $(PROJECT_NAME)..."
+	@$(GO_DOCKER) sh -c "GOOS=$$(go env GOOS) GOARCH=$$(go env GOARCH) \
+		go build -buildvcs=false -trimpath -ldflags \"$(LDFLAGS)\" -o $(BINDIR)/$(PROJECT_NAME) ./src"
+	@if [ -d "src/client" ]; then \
+		echo "Building $(PROJECT_NAME)-cli..."; \
+		$(GO_DOCKER) sh -c "GOOS=$$(go env GOOS) GOARCH=$$(go env GOARCH) \
+			go build -buildvcs=false -trimpath -ldflags \"$(LDFLAGS)\" -o $(BINDIR)/$(PROJECT_NAME)-cli ./src/client"; \
+	fi
+	@if [ -d "src/agent" ]; then \
+		echo "Building $(PROJECT_NAME)-agent..."; \
+		$(GO_DOCKER) sh -c "GOOS=$$(go env GOOS) GOARCH=$$(go env GOARCH) \
+			go build -buildvcs=false -trimpath -ldflags \"$(LDFLAGS)\" -o $(BINDIR)/$(PROJECT_NAME)-agent ./src/agent"; \
+	fi
+	@echo "Local build complete: $(BINDIR)/"
+
+# =============================================================================
+# RELEASE - Manual local release (stable only)
+# =============================================================================
+release: build
+	@mkdir -p $(RELDIR)
+	@echo "Preparing release $(VERSION)..."
+	@echo "$(VERSION)" > $(RELDIR)/version.txt
+	@for f in $(BINDIR)/$(PROJECT_NAME)-*; do \
+		[ -f "$$f" ] || continue; \
+		strip "$$f" 2>/dev/null || true; \
+		cp "$$f" $(RELDIR)/; \
+	done
+	@cd $(RELDIR) && sha256sum $(PROJECT_NAME)-* > sha256.txt
+	@cd $(RELDIR) && sha512sum $(PROJECT_NAME)-* > sha512.txt
+	@tar --exclude='.git' --exclude='.github' --exclude='.gitea' \
+		--exclude='binaries' --exclude='releases' --exclude='*.tar.gz' \
+		-czf $(RELDIR)/$(PROJECT_NAME)-$(VERSION)-source.tar.gz .
+	@gh release delete $(VERSION) --yes 2>/dev/null || true
+	@git tag -d $(VERSION) 2>/dev/null || true
+	@git push origin :refs/tags/$(VERSION) 2>/dev/null || true
+	@gh release create $(VERSION) $(RELDIR)/* \
+		--title "$(PROJECT_NAME) $(VERSION)" \
+		--notes "Release $(VERSION)" \
+		--latest
+	@echo "Release complete: $(VERSION)"
+
+# =============================================================================
+# DOCKER - Build container multi-arch locally (no push)
+# =============================================================================
+docker:
+	@echo "Building Docker image $(VERSION)..."
+	@docker buildx version > /dev/null 2>&1 || (echo "docker buildx required" && exit 1)
+	@docker buildx create --name $(PROJECT_NAME)-builder --use 2>/dev/null || \
+		docker buildx use $(PROJECT_NAME)-builder
+	@docker buildx build \
+		-f docker/Dockerfile \
+		--platform linux/amd64,linux/arm64 \
+		--build-arg VERSION="$(VERSION)" \
+		--build-arg BUILD_DATE="$(BUILD_DATE)" \
+		--build-arg BUILD_EPOCH="$(BUILD_EPOCH)" \
+		--build-arg COMMIT_ID="$(COMMIT_ID)" \
+		--build-arg OFFICIAL_SITE="$(OFFICIAL_SITE)" \
+		-t $(REGISTRY):$(VERSION) \
+		-t $(REGISTRY):latest \
+		.
+	@echo "Docker build complete: $(REGISTRY):$(VERSION)"
+
+# =============================================================================
+# TEST - Run all tests with coverage enforcement (via Docker)
+# =============================================================================
+test:
+	@echo "Running tests with coverage..."
+	@$(GO_DOCKER) sh -c " \
+		mkdir -p \"\$${TMPDIR:-/tmp}/$(PROJECT_ORG)\" && \
+		COVDIR=\$$(mktemp -d \"\$${TMPDIR:-/tmp}/$(PROJECT_ORG)/$(PROJECT_NAME)-XXXXXX\") && \
+		go mod download && \
+		go test -v -cover -coverprofile=\$$COVDIR/coverage.out ./... && \
+		COVERAGE=\$$(go tool cover -func=\$$COVDIR/coverage.out | grep total | awk '{print \$$3}' | sed 's/%//') && \
+		echo \"Coverage: \$$COVERAGE%\" && \
+		if [ \$$(echo \"\$$COVERAGE < 60\" | bc -l) -eq 1 ]; then \
+			echo \"ERROR: Coverage is \$$COVERAGE%, must be >= 60%\"; exit 1; \
+		fi && \
+		echo \"Tests complete - Coverage: \$$COVERAGE% (>= 60% required)\""
+
+# =============================================================================
+# DEV - Quick build for local development/testing (to random temp dir)
+# =============================================================================
+dev:
+	@$(GO_DOCKER) go mod tidy
+	@mkdir -p "$${TMPDIR:-/tmp}/$(PROJECT_ORG)" && \
+		BUILD_DIR=$$(mktemp -d "$${TMPDIR:-/tmp}/$(PROJECT_ORG)/$(PROJECT_NAME)-XXXXXX") && \
+		echo "Quick dev build to $$BUILD_DIR..." && \
+		$(GO_DOCKER) go build -buildvcs=false -o $$BUILD_DIR/$(PROJECT_NAME) ./src && \
+		echo "Built: $$BUILD_DIR/$(PROJECT_NAME)" && \
+		if [ -d "src/client" ]; then \
+			$(GO_DOCKER) go build -buildvcs=false -o $$BUILD_DIR/$(PROJECT_NAME)-cli ./src/client && \
+			echo "Built: $$BUILD_DIR/$(PROJECT_NAME)-cli"; \
+		fi && \
+		if [ -d "src/agent" ]; then \
+			$(GO_DOCKER) go build -buildvcs=false -o $$BUILD_DIR/$(PROJECT_NAME)-agent ./src/agent && \
+			echo "Built: $$BUILD_DIR/$(PROJECT_NAME)-agent"; \
+		fi && \
+		echo "Test:  docker run --rm --name $(PROJECT_NAME)-test -v $$BUILD_DIR:/app alpine:latest /app/$(PROJECT_NAME) --help"
+
+# =============================================================================
+# CLEAN - Remove build artifacts
+# =============================================================================
+clean:
+	@rm -rf $(BINDIR) $(RELDIR)

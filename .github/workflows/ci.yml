@@ -1,0 +1,264 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PROJECT_NAME: casci
+
+jobs:
+  lint:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: casjaysdev/go:latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - run: go vet ./...
+      - run: staticcheck ./...
+
+  test:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: casjaysdev/go:latest
+    env:
+      CGO_ENABLED: "0"
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+
+      - name: Run tests with coverage
+        run: |
+          mkdir -p "/tmp/${{ github.repository_owner }}"
+          COVDIR=$(mktemp -d "/tmp/${{ github.repository_owner }}/$(basename "${{ github.repository }}")-XXXXXX")
+          echo "COVDIR=$COVDIR" >> "$GITHUB_ENV"
+          go test -cover -coverprofile="$COVDIR/coverage.out" ./...
+
+      - name: Enforce coverage threshold
+        run: |
+          THRESHOLD=60
+          PCT=$(go tool cover -func="$COVDIR/coverage.out" | awk '/^total:/ {gsub("%","",$3); print int($3)}')
+          if [ "$PCT" -lt "$THRESHOLD" ]; then
+            echo "::error::coverage $PCT% < threshold $THRESHOLD%"
+            exit 1
+          fi
+          echo "coverage $PCT% (>= $THRESHOLD% required)"
+
+      - name: Stage coverage profile for upload
+        run: cp "$COVDIR/coverage.out" coverage.out
+
+      - name: Upload coverage profile
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: coverage-profile
+          path: coverage.out
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: casjaysdev/go:latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Scan for committed secrets
+        uses: trufflesecurity/trufflehog@bcfcf73aaf4759d4dadc2783177c245a02792318  # v3.97.0
+        with:
+          path: ./
+          base: ${{ github.event.before }}
+          head: ${{ github.event.after }}
+          extra_args: --results=verified,unknown
+
+  workflow-policy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: casjaysdev/go:latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+
+      - name: Enforce SHA pinning on third-party actions
+        run: |
+          grep -rn -- 'uses:' .github/workflows > uses.txt || true
+          status=0
+          while IFS= read -r line; do
+            file="${line%%:*}"
+            ref="${line#*uses:}"
+            ref="$(printf '%s' "$ref" | tr -d ' \r')"
+            case "$ref" in
+              ./*|docker://*) continue ;;
+            esac
+            pin="${ref##*@}"
+            if ! printf '%s' "$pin" | grep -qE '^[0-9a-f]{40}$'; then
+              echo "::error file=$file::action '$ref' is not pinned to a full 40-character commit SHA"
+              status=1
+            fi
+          done < uses.txt
+          rm -f uses.txt
+          if [ "$status" -ne 0 ]; then
+            exit 1
+          fi
+          echo "all actions are SHA-pinned"
+
+  vuln-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: casjaysdev/go:latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - if: hashFiles('go.sum') != ''
+        run: govulncheck ./...
+
+  build:
+    if: github.event_name != 'schedule'
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: casjaysdev/go:latest
+    env:
+      CGO_ENABLED: "0"
+      GOFLAGS: -buildvcs=false
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+
+      - name: Set build info
+        run: |
+          if [ -f release.txt ]; then
+            echo "VERSION=$(cat release.txt)" >> $GITHUB_ENV
+          else
+            echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+          fi
+          echo "COMMIT_ID=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          BUILD_EPOCH=$(date -u +%s)
+          echo "BUILD_EPOCH=$BUILD_EPOCH" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(date -u -d @$BUILD_EPOCH +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+          if [ -f site.txt ]; then
+            echo "OFFICIAL_SITE=$(cat site.txt)" >> $GITHUB_ENV
+          else
+            echo "OFFICIAL_SITE=${{ secrets.OFFICIAL_SITE }}" >> $GITHUB_ENV
+          fi
+
+      - name: Build all packages
+        run: go build -buildvcs=false ./...
+
+      - name: Build server binary
+        run: |
+          LDFLAGS="-s -w -X 'main.Version=${{ env.VERSION }}' -X 'main.CommitID=${{ env.COMMIT_ID }}' -X 'main.BuildEpoch=${{ env.BUILD_EPOCH }}' -X 'main.OfficialSite=${{ env.OFFICIAL_SITE }}'"
+          go build -buildvcs=false -trimpath -ldflags "${LDFLAGS}" -o ${{ env.PROJECT_NAME }} ./src
+
+      - name: Upload server binary
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: ${{ env.PROJECT_NAME }}-ci-linux-amd64
+          path: ${{ env.PROJECT_NAME }}
+
+  coverage:
+    if: github.event_name != 'schedule'
+    needs: [test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: casjaysdev/go:latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+
+      - name: Download coverage profile
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: coverage-profile
+
+      - name: Publish coverage summary
+        run: |
+          {
+            echo '## Coverage'
+            echo
+            echo '```'
+            go tool cover -func=coverage.out | tail -40
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  image-scan:
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5  # v4.1.0
+
+      - name: Build image for scanning
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf  # v7.2.0
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          provenance: false
+          tags: ${{ env.PROJECT_NAME }}:ci-scan
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
+        with:
+          image-ref: ${{ env.PROJECT_NAME }}:ci-scan
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
+  upload-artifacts:
+    if: github.event_name != 'schedule'
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: casjaysdev/go:latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+
+      - name: Download server binary
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: ${{ env.PROJECT_NAME }}-ci-linux-amd64
+          path: binaries
+
+      - name: Generate checksums
+        run: |
+          cd binaries
+          FILES="$(ls)"
+          sha256sum $FILES > sha256.txt
+          sha512sum $FILES > sha512.txt
+
+      - name: Upload checksummed artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: ${{ env.PROJECT_NAME }}-ci-artifacts
+          path: binaries

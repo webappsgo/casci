@@ -1,0 +1,36 @@
+# Catch-all owner for the repository
+* @casjay
+
+# Specification and project policy
+/AI.md @casjay
+/IDEA.md @casjay
+/CLAUDE.md @casjay
+
+# CI/CD, release, and workflow hardening
+/.github/ @casjay
+/.github/workflows/ @casjay
+/Jenkinsfile @casjay
+/renovate.json @casjay
+
+# Container build and release packaging
+/docker/ @casjay
+/Makefile @casjay
+/release.txt @casjay
+
+# Authentication, sessions, tokens, credentials, and crypto
+/src/pkg/users/ @casjay
+/src/pkg/security/ @casjay
+/src/pkg/credentials/ @casjay
+/src/pkg/audit/ @casjay
+/src/pkg/compliance/ @casjay
+
+# Build executor and workspace - executes untrusted pipeline code
+/src/pkg/executor/ @casjay
+/src/pkg/workspace/ @casjay
+
+# Inbound webhook receivers and server routing
+/src/pkg/webhooks/ @casjay
+/src/pkg/server/ @casjay
+
+# Integration and binary validation test harness
+/tests/ @casjay

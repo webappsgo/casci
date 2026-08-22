@@ -1,409 +1,251 @@
-# CASCI - CI/CD Application Server
+# casci
 
-> A complete CI/CD platform in a single static binary
+[![Build](https://github.com/webappsgo/casci/actions/workflows/ci.yml/badge.svg)](https://github.com/webappsgo/casci/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/webappsgo/casci)](https://github.com/webappsgo/casci/releases/latest)
+[![License](https://img.shields.io/github/license/webappsgo/casci)](LICENSE.md)
+[![Documentation](https://readthedocs.org/projects/webappsgo-casci/badge/?version=latest)](https://webappsgo-casci.readthedocs.io)
 
-CASCI (CI/CD Application Server for Continuous Integration) is a revolutionary CI/CD platform that replaces Jenkins, GitHub Actions, GitLab CI, and other CI/CD tools with a single 400-500MB Go binary. Zero configuration, zero dependencies, 100% compatible with existing workflows.
+## About
 
-## 🚀 Quick Start
+CASCI is a complete CI/CD platform delivered as a single static Go binary. It runs existing Jenkins, GitHub Actions, GitLab CI, CircleCI, Travis CI, and Drone pipelines unchanged, needs no configuration files, and scales from a laptop to a cluster of 1000+ build nodes.
+
+## Official Site
+
+https://casci.casapps.us
+
+## Features
+
+- Single static binary with no required external services; embedded SQLite by default, external PostgreSQL or MySQL opt-in
+- Zero configuration on first run — no CLI flags and no hand-edited config files for normal operation
+- Multi-format pipeline engine: Jenkinsfile, GitHub Actions, GitLab CI, CircleCI, Travis CI, Azure Pipelines, Bitbucket Pipelines, Drone CI, and Buildkite parsed into one internal pipeline model
+- Project auto-detection for Go, JavaScript, Python, Java, Rust, Ruby, and PHP when a repository ships no pipeline file
+- Jenkins-compatible REST surface at `/api/json` and `/crumbIssuer/api/json`
+- Container-isolated build execution with per-build workspace cleanup
+- Build queue dispatching to local execution or registered remote build nodes
+- Distributed build nodes with token-based join, scaling to 1000+ agents
+- Artifact storage and retrieval per build
+- Git clone, branch and tag checkout, and commit metadata capture
+- GitHub, GitLab, Bitbucket, and Gitea webhook triggers with signature verification
+- Security scanning built into the binary: vulnerability, SAST, secret, license, SBOM, and malware scans with severity classification
+- Encrypted credential vault scoped per user and per project
+- Notifications to Slack, Discord, Teams, Telegram, Matrix, IRC, Mattermost, email, Jira, GitHub/GitLab issues, Linear, Asana, GitHub/GitLab/Bitbucket/Gitea commit status, PagerDuty, OpsGenie, VictorOps, generic webhooks, and scripts
+- Compliance modes for HIPAA, SOX, PCI-DSS, GDPR, FedRAMP, and ISO 27001, with per-mode audit retention
+- Audit log with admin-managed retention and cleanup
+- System, build, node, security, and API metrics with Prometheus-style and JSON output
+- Web UI, REST API, and GraphQL API over the same data, plus Swagger UI and OpenAPI JSON/YAML
+- WebSocket build log streaming
+- Self-healing operation: automatic error recovery and graceful degradation
+
+## Production
 
 ### Docker (Recommended)
 
 ```bash
-# Start CASCI with Docker Compose
-make docker-run
-
-# Run API tests
-make test-api
+docker run -d \
+  --name casci \
+  -p 172.17.0.1:64580:80 \
+  -v ./volumes/config:/config:z \
+  -v ./volumes/data:/data:z \
+  ghcr.io/webappsgo/casci:latest
 ```
 
-CASCI will be available at **http://localhost:8080**
-
-### Local Build
+### Docker Compose
 
 ```bash
-# Build and run
-make run
-
-# Or manually
-./build.sh
-./casci
+curl -q -LSsf -O https://raw.githubusercontent.com/webappsgo/casci/main/docker/docker-compose.yml
+docker compose up -d
 ```
 
-**First user to register becomes the administrator.**
+### Binary
 
-See [QUICKSTART.md](./QUICKSTART.md) for detailed setup instructions.
+```bash
+# Download latest release
+curl -q -LSsf -O https://github.com/webappsgo/casci/releases/latest/download/casci-linux-amd64
 
-## ✨ Current Features (Phases 1-6 Complete!)
+# Make executable and run
+chmod +x casci-linux-amd64
+./casci-linux-amd64
+```
 
-### Core Infrastructure ✅
-- Single static binary (Go)
-- Zero configuration required
-- Multi-database support (SQLite, PostgreSQL, MySQL)
-- Automatic database failover
-- HTTP/HTTPS server with graceful shutdown
-- Docker development environment
+On first run CASCI selects a random port in the `64000-64999` range and persists it to `server.yml`, so the port stays stable across restarts. Inside a container the port defaults to `80`.
 
-### User Management & Authentication ✅
-- User registration and login
-- Bcrypt password hashing
-- JWT session management (24h expiry)
-- API token authentication
-- First user becomes admin
-- Role-based access control
-- Multi-tenancy support
+## Configuration
 
-### Projects & Builds ✅
-- Project CRUD operations
-- User isolation (users only see their own projects)
-- Build triggering (manual, push, PR, schedule, API)
-- Build queue with concurrent workers
-- Build lifecycle management (queued → running → success/failed)
-- Build history and statistics
-- Build logs streaming
-- Build cancellation and restart
+Configuration is auto-generated on first run. Edit it via the admin panel at
+`https://casci.casapps.us/server/administration`.
 
-### Build Execution ✅
-- Docker container execution
-- Git repository cloning (go-git)
-- Workspace isolation per build
-- Resource limits (CPU, memory)
-- Automatic container cleanup
-- Log streaming to files
+Key settings:
 
-### Pipeline Support ✅
-- Auto-detect 9+ CI/CD formats (Jenkinsfile, GitHub Actions, GitLab CI, CircleCI, Travis CI, etc.)
-- Parse and convert pipelines to internal format
-- Project type auto-detection (Go, Node.js, Python, Java, Ruby, Rust, C/C++, C#, PHP, etc.)
-- Automatic build command generation
-- Smart container image selection
-- Framework detection (React, Django, Spring Boot, etc.)
+- `server.port` — Listen port (default: random port in `64000-64999`, persisted to `server.yml` after first run; `80` in a container)
+- `server.mode` — `production`, `development`, or `debug`
 
-### Webhook Integration ✅
-- GitHub webhooks (push, pull_request)
-- GitLab webhooks (push, merge_request)
-- Bitbucket webhooks
-- Gitea webhooks
-- Signature verification
-- Automatic build triggering
+### Paths
 
-### Node Management ✅
-- Node registration with secure tokens
-- Token expiry and single-use enforcement
-- Automatic health checking
-- Node heartbeat monitoring
-- Offline detection (30s threshold)
-- Node draining support
-- Smart node selection (architecture, OS, labels, load)
-- Multi-role nodes (orchestrator, builder, hybrid)
-- Capacity tracking
+| Purpose | Linux/BSD (root) | Linux/BSD (user) |
+|---------|------------------|------------------|
+| Config | `/etc/casapps/casci/` | `~/.config/casapps/casci/` |
+| Data | `/var/lib/casapps/casci/` | `~/.local/share/casapps/casci/` |
+| Cache | `/var/cache/casapps/casci/` | `~/.cache/casapps/casci/` |
+| Logs | `/var/log/casapps/casci/` | `~/.local/log/casapps/casci/` |
 
-### Artifact Management ✅
-- Local filesystem storage
-- S3/GCS/Azure storage (ready for cloud SDKs)
-- Gzip compression
-- Content-based deduplication
-- Configurable retention policies
-- Automatic expiry and cleanup
-- Hash-based integrity
-- Storage statistics
+The config file is `server.yml` inside the config directory. It is generated on first run, written with mode `0600` because it holds the encryption key and the webhook secret, and is the persisted source of truth for everything not listed as an environment variable below.
 
-### API Endpoints ✅
-**REST API** (400+ endpoints):
-**Authentication**: `/api/v1/auth/register`, `/api/v1/auth/login`, `/api/v1/auth/refresh`
-**Users**: `/api/v1/users/me`, `/api/v1/users/{id}`, `/api/v1/users/me/token`
-**Projects**: `/api/v1/projects`, `/api/v1/projects/{id}`, `/api/v1/projects/{id}/notifications`, `/api/v1/projects/{id}/credentials`
-**Builds**: `/api/v1/projects/{id}/builds`, `/api/v1/builds/{id}`, `/api/v1/builds/{id}/log`, `/api/v1/builds/{id}/notifications`
-**Nodes**: `/api/v1/nodes`, `/api/v1/nodes/{id}`, `/api/v1/nodes/register`, `/api/v1/nodes/token`
-**Security**: `/api/v1/builds/{id}/security`, `/api/v1/security/reports`, `/api/v1/security/statistics`, `/api/v1/security/config`
-**Notifications**: `/api/v1/notifications`, `/api/v1/notifications/{id}`, `/api/v1/notifications/test`, `/api/v1/notifications/types`, `/api/v1/notifications/events`
-**Credentials**: `/api/v1/credentials/user`, `/api/v1/credentials/user/{id}`, `/api/v1/credentials/project/{id}`
-**Audit**: `/api/v1/audit/events`, `/api/v1/audit/status`, `/api/v1/audit/config`, `/api/v1/audit/cleanup`
-**Compliance**: `/api/v1/compliance/config`, `/api/v1/compliance/modes`, `/api/v1/compliance/mode`, `/api/v1/compliance/preset`, `/api/v1/compliance/check`
-**Metrics**: `/metrics` (Prometheus), `/metrics/json`, `/api/v1/metrics/system`, `/api/v1/metrics/builds`, `/api/v1/metrics/nodes`, `/api/v1/metrics/security`, `/api/v1/metrics/api`
-**Health**: `/health`, `/healthz`, `/readyz`, `/livez`
-**Webhooks**: `/webhook` (GitHub, GitLab, Bitbucket, Gitea)
-**Jenkins**: `/api/json`, `/crumbIssuer/api/json`
+### Environment Variables
 
-**GraphQL API**:
-- `/graphql` - GraphQL endpoint with full query/mutation/subscription support
-- `/graphql/playground` - Interactive GraphQL playground
-- Queries: users, projects, builds, nodes, health, metrics
-- Mutations: Full CRUD operations
-- Subscriptions: Real-time build and node updates
+Environment variables are unprefixed. The list is closed — anything not on it is a `server.yml` key, and setting it in the environment has no effect.
 
-**API Documentation**:
-- `/swagger/` - Interactive Swagger UI
-- `/openapi.json` - OpenAPI 2.0 specification (JSON)
-- `/openapi.yaml` - OpenAPI 2.0 specification (YAML)
-- `/docs` - API documentation portal
+**Runtime — re-read on every start:**
 
-See [API.md](./API.md) for full REST API documentation (400+ endpoints documented).
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NO_COLOR` | Disable ANSI color and emoji output when set and non-empty | unset |
+| `TERM` | Terminal type; `TERM=dumb` disables all ANSI escapes | inherited |
+| `DOMAIN` | Public FQDN, also the default CORS origin | unset (same-origin only) |
+| `MODE` | `production`, `development`, or `debug` | `production` |
+| `DATABASE_DRIVER` | `sqlite`, `libsql`, `postgres`, `mysql`, `mssql`, or `mongodb` | `sqlite` |
+| `DATABASE_URL` | Driver-specific DSN | embedded SQLite file |
+| `SMTP_HOST` | SMTP server hostname | autodetected |
+| `SMTP_PORT` | SMTP server port | `587` |
+| `SMTP_USERNAME` | SMTP username | unset |
+| `SMTP_PASSWORD` | SMTP password | unset |
+| `SMTP_FROM_NAME` | Sender name | application title |
+| `SMTP_FROM_EMAIL` | Sender address | `no-reply@<fqdn>` |
+| `SMTP_TLS` | `auto`, `starttls`, `tls`, or `none` | `auto` |
 
-## 📋 What CASCI Will Do
+**Init-only — read once on first run, persisted to `server.yml`, ignored afterwards:**
 
-When complete, CASCI will:
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `CONFIG_DIR` | Configuration directory | `/etc/casapps/casci` |
+| `DATA_DIR` | Data directory | `/var/lib/casapps/casci` |
+| `LOG_DIR` | Log directory | `/var/log/casapps/casci` |
+| `DATABASE_DIR` | Embedded-database directory | under `DATA_DIR` |
+| `BACKUP_DIR` | Backup output directory | under `DATA_DIR` |
+| `PORT` | Listen port | random 64000-64999, then persisted |
+| `LISTEN` | Bind address | `0.0.0.0` |
+| `APPLICATION_NAME` | Display name | `casci` |
+| `APPLICATION_TAGLINE` | Display tagline | unset |
 
-- **Replace All CI/CD Platforms**
-  - 100% Jenkins API compatible
-  - Run Jenkinsfiles unchanged
-  - Support GitHub Actions, GitLab CI, CircleCI formats natively
+Everything else is configured in `server.yml` or from the admin panel: `server.cors_origins`, `server.tls.*`, `server.security.encryption_key`, `server.security.webhook_secret`, `server.footer.*`, and `server.database.max_conns` / `max_idle` / `replica_urls`. See [Configuration](https://webappsgo-casci.readthedocs.io/en/latest/configuration/).
 
-- **Simplify Operations**
-  - Single binary deployment
-  - No configuration files needed
-  - No plugins to manage
-  - Self-healing architecture
+## CLI
 
-- **Reduce Costs**
-  - Run on $83/year infrastructure
-  - Or use existing hardware
-  - No per-user licensing
-  - No vendor lock-in
+```bash
+casci --help
+casci --version
+casci --status
+```
 
-- **Enterprise Security Built-in**
-  - Vulnerability scanning (Trivy, Semgrep)
-  - Secret detection (Gitleaks)
-  - SBOM generation (Syft)
-  - Code signing (Cosign)
-  - Compliance modes (HIPAA, SOX, PCI-DSS, GDPR)
+| Flag | Description |
+|------|-------------|
+| `--help`, `-h` | Show help |
+| `--version`, `-v` | Show version |
+| `--status` | Show server status and health (exit `0` healthy, `1` unhealthy) |
+| `--shell {completions,init,--help} [SHELL]` | Shell integration |
+| `--mode {production,development,debug}` | Application mode |
+| `--config DIR` | Config directory |
+| `--data DIR` | Data directory |
+| `--cache DIR` | Cache directory |
+| `--log DIR` | Log directory |
+| `--backup DIR` | Backup directory |
+| `--pid FILE` | PID file path |
+| `--address ADDR` | Listen address |
+| `--port PORT` | Listen port |
+| `--baseurl PATH` | URL path prefix |
+| `--daemon` | Run as daemon (detach from terminal) |
+| `--debug` | Enable debug mode |
+| `--color {auto,yes,no}` | Color output |
+| `--lang CODE` | Language for output |
+| `--service {start,restart,stop,reload,--install,--uninstall,--disable,--help}` | Service management |
+| `--maintenance {backup,restore,update,mode,setup,--help}` | Maintenance operations |
+| `--update [check\|yes\|branch {stable,beta,daily}\|--help]` | Check or perform updates |
 
-## 🏗️ Development Status
+## API
 
-**Current Phase**: Phase 11 Complete ✅, Ready for Phase 12+
+API documentation is available at `https://casci.casapps.us/api/v1/` when running.
 
-### ✅ Phase 1: Foundation (COMPLETE)
-- Database abstraction layer
-- HTTP server with routing
-- Configuration system
-- Build system
+| Endpoint | Description |
+|----------|-------------|
+| `GET https://casci.casapps.us/server/healthz` | Health check |
+| `GET https://casci.casapps.us/api/v1/server/healthz` | Health check (JSON) |
+| `POST https://casci.casapps.us/api/v1/auth/login` | Obtain a JWT |
+| `GET https://casci.casapps.us/api/v1/projects` | List projects |
+| `GET https://casci.casapps.us/api/v1/builds/` | Build operations |
+| `POST https://casci.casapps.us/webhook` | SCM webhook receiver (GitHub, GitLab, Bitbucket, Gitea) |
+| `POST https://casci.casapps.us/graphql` | GraphQL endpoint |
 
-### ✅ Phase 2: User Management (COMPLETE)
-- User authentication
-- JWT/API token auth
-- Role-based access
-- HTTP API handlers
+### Examples
 
-### ✅ Phase 3: Build Execution (COMPLETE)
-- Build queue system with workers
-- Docker container executor
-- Git integration (go-git)
-- Workspace management
-- Build lifecycle tracking
+```bash
+# Health check
+curl -q -LSsf https://casci.casapps.us/server/healthz
 
-### ✅ Phase 4: SCM & Git (COMPLETE)
-- ✅ Repository cloning
-- ✅ Branch/commit support
-- ✅ Webhook handlers (GitHub, GitLab, Bitbucket, Gitea)
-- 🚧 Private repo auth
+# API request (requires auth)
+curl -q -LSsf -H "Authorization: Bearer TOKEN" https://casci.casapps.us/api/v1/projects
+```
 
-### ✅ Phase 5: Pipeline Engine (COMPLETE)
-- ✅ Pipeline format detection (9+ formats)
-- ✅ Smart build commands
-- ✅ Project type auto-detection (50+ languages/frameworks)
-- ✅ Automatic container image selection
-- 🚧 Matrix builds
+Authentication uses the `Authorization: Bearer` header. Tokens are never accepted as a query parameter.
 
-### ✅ Phase 6: Infrastructure (COMPLETE)
-- ✅ Node management system
-- ✅ Node registration with tokens
-- ✅ Health checking and monitoring
-- ✅ Node selection algorithm
-- ✅ Artifact management
-- ✅ Compression and deduplication
-- ✅ Retention policies
-- ✅ Multi-storage backend support
-- 🚧 Cloud storage (S3/GCS/Azure SDKs)
+## Other
 
-### ✅ Phase 7: Security Scanning (COMPLETE)
-- ✅ Security scanner interfaces and factory
-- ✅ Trivy scanner implementation (vulnerability scanning)
-- ✅ Semgrep scanner implementation (SAST)
-- ✅ Gitleaks scanner implementation (secret detection)
-- ✅ Syft scanner implementation (SBOM generation)
-- ✅ Grype scanner implementation (vulnerability matching)
-- ✅ Security service with parallel scanning
-- ✅ Security repository for report storage
-- ✅ Integration with build executor
-- ✅ HTTP handlers for security endpoints
-- ✅ Database schemas for security reports
-- 🚧 Embedded security tool binaries
-- 🚧 Security database downloads and updates
-- 🚧 Cosign integration for code signing
-- 🚧 License scanner implementation
-- 🚧 Policy enforcement and violations
+### Troubleshooting
 
-### ✅ Phase 8: Notification System (COMPLETE)
-- ✅ Notification models and configuration
-- ✅ Notification service with queue and workers
-- ✅ Slack sender implementation
-- ✅ Discord sender implementation
-- ✅ Email sender (SMTP)
-- ✅ Generic webhook sender
-- ✅ GitHub status API integration
-- ✅ GitLab status API integration
-- ✅ Template system for custom messages
-- ✅ Event filtering and conditions
-- ✅ Database persistence
-- ✅ Notification logging
-- ✅ HTTP handlers for notification management
-- ✅ Server integration with graceful shutdown
-- ✅ Complete RESTful API for notifications
-- 🚧 Teams, Telegram, Matrix, IRC, Mattermost senders
-- 🚧 JIRA, Linear, Asana integrations
-- 🚧 PagerDuty, OpsGenie, VictorOps integrations
+- Check logs: `docker logs casci`
+- Health check: `curl -q -LSsf https://casci.casapps.us/server/healthz`
+- Local status: `casci --status`
 
-### ✅ Phase 9: Monitoring & Observability (COMPLETE)
-- ✅ Comprehensive metrics collector
-- ✅ System metrics (CPU, memory, disk, network, goroutines)
-- ✅ Build metrics (total, queued, running, success/failure rates)
-- ✅ Node metrics (capacity, utilization, health)
-- ✅ User metrics (active users, API requests, resource usage)
-- ✅ Security metrics (vulnerabilities, secrets, licenses)
-- ✅ API metrics (requests, latency, errors by endpoint/status)
-- ✅ Prometheus-compatible exporter
-- ✅ JSON metrics endpoint
-- ✅ Health check endpoints (/health, /healthz, /readyz, /livez)
-- ✅ Metrics HTTP handlers
-- ✅ Integration with build service
-- ✅ Real-time metrics collection
-- 🚧 Distributed tracing support (OpenTelemetry)
-- 🚧 Grafana dashboard templates
-- 🚧 Alerting rules
+### Documentation
 
-### ✅ Phase 10: Credential Management (COMPLETE)
-- ✅ User credential models (GPG, SSH, signing certificates)
-- ✅ Project credential models (secrets, tokens, keys)
-- ✅ AES-256-GCM encryption for all credentials
-- ✅ Per-user encryption keys derived from master key
-- ✅ GPG key generation (4096-bit RSA)
-- ✅ SSH key generation (Ed25519 and RSA)
-- ✅ Self-signed certificate generation
-- ✅ Key import functionality
-- ✅ Fingerprint calculation
-- ✅ SQL repository for credential storage
-- ✅ Credential service with encryption/decryption
-- ✅ HTTP handlers for credential management
-- ✅ Database migrations (SQLite, PostgreSQL, MySQL)
-- ✅ Master encryption key management
-- ✅ Credential expiration tracking
-- ✅ Last used tracking for project credentials
-- ✅ Default credential selection
-- ✅ Complete RESTful API for credentials
-- 🚧 Hardware security module (HSM) support
-- 🚧 Vault integration
-- 🚧 Automatic key rotation
+Full documentation: https://webappsgo-casci.readthedocs.io
 
-### ✅ Phase 11: Compliance & Audit (COMPLETE)
-- ✅ Audit log system with comprehensive event tracking
-- ✅ Audit repository with filtering and querying
-- ✅ Automatic cleanup scheduler (90-day retention default)
-- ✅ Audit HTTP API endpoints
-- ✅ Compliance framework with 6 modes (HIPAA, SOX, PCI-DSS, GDPR, FedRAMP, ISO27001)
-- ✅ Compliance checks with severity levels (critical, high, medium, low, info)
-- ✅ Compliance reports with findings and recommendations
-- ✅ Compliance HTTP API endpoints
-- ✅ Database migrations for audit_log table
-- ✅ Performance indexes for audit queries
-- ✅ Integration with main server
-- 🚧 Real-time compliance monitoring dashboard
-- 🚧 Compliance report exports (PDF, CSV)
-- 🚧 Custom compliance policies
+## Development
 
-See [TODO.md](./TODO.md) for detailed roadmap and [SUMMARY.md](./SUMMARY.md) for complete status.
-
-## 🛠️ Development
+**Development instructions are for contributors only.**
 
 ### Prerequisites
-- Go 1.21+
-- Docker & Docker Compose (optional)
-- Make (optional)
 
-### Building
+- Go (latest stable)
+- Docker (for containerized builds)
+
+### Build
 
 ```bash
-# Development build
+# Clone
+git clone https://github.com/webappsgo/casci
+cd casci
+
+# Quick dev build (outputs to OS temp dir)
+make dev
+
+# Full build (all platforms, outputs to binaries/)
 make build
 
-# Production build
-make build-prod
-
-# All platforms
-make build-all
-
-# Docker build
-make docker-build
-make docker-run
-```
-
-### Running
-
-```bash
-# Local execution
-./casci
-
-# With Docker
-docker-compose up
-
-# With PostgreSQL
-docker-compose --profile postgres up
-
-# With MySQL
-docker-compose --profile mysql up
-```
-
-### Testing
-
-```bash
-# Unit tests
+# Test
 make test
-
-# API integration tests
-make test-api
-
-# Coverage report
-make test-coverage
 ```
 
-## 📚 Documentation
+### Project Structure
 
-- **[QUICKSTART.md](./QUICKSTART.md)** - Get running in 5 minutes
-- **[SUMMARY.md](./SUMMARY.md)** - Complete development summary and current status
-- **[API.md](./API.md)** - Complete API documentation (370 lines)
-- **[API_QUICKREF.md](./API_QUICKREF.md)** - API quick reference guide
-- **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Development guide and architecture
-- **[TODO.md](./TODO.md)** - Detailed development roadmap
-- **[AI.md](./AI.md)** - Complete project specification and working notes
+```
+src/           # Source code
+tests/         # Test files
+docker/        # Dockerfile and docker-compose.yml
+docs/          # Documentation
+binaries/      # Built binaries (gitignored)
+```
 
-## 🎯 Project Goals
+## Disclaimer
 
-1. **Simplicity**: Single binary, zero config, just works
-2. **Compatibility**: 100% compatible with Jenkins, GitHub Actions, GitLab CI
-3. **Security**: Enterprise-grade security by default
-4. **Cost**: Run on $83/year or less
-5. **Reliability**: Self-healing, cannot break
+This software is provided "as is" without warranty of any kind. Use at your own risk.
 
-## 📖 Specification
+- **No Warranty**: The authors are not responsible for any damages, data loss, or issues arising from use of this software
+- **Not Professional Advice**: This software does not constitute legal, financial, medical, or other professional advice
+- **Third-Party Services**: If this software connects to external APIs or services, their terms of service apply separately
+- **Security**: While we strive to follow security best practices, no software is guaranteed to be free of vulnerabilities
+- **Production Use**: Evaluate thoroughly before deploying in production environments
 
-CASCI is built according to a comprehensive specification that covers every aspect of the system. See [AI.md](./AI.md) for complete details including TEMPLATE.md compliance rules, architecture decisions, and implementation notes.
+By using this software, you acknowledge that you have read and understood this disclaimer.
 
-## 🤝 Contributing
+## License
 
-Contributions welcome! Please see [DEVELOPMENT.md](./DEVELOPMENT.md) for guidelines.
-
-## 📄 License
-
-MIT License - see [LICENSE.md](./LICENSE.md)
-
-## 👤 Author
-
-🤖 casjay: [GitHub](https://github.com/casjay) 🤖
-
----
-
-**Status**: Phase 12 Complete - 100% TEMPLATE.md Compliant ✅
-**Completion**: Swagger/OpenAPI + GraphQL APIs fully operational
-**What Works**: Register → Create Project → Auto-detect Pipeline → Webhook Triggers Build → Node Selection → Docker Execution → Security Scanning → Notifications (Slack/Email/Discord/GitHub Status) → Artifact Storage → Metrics Collection (Prometheus) → Health Checks → Credential Management (GPG/SSH/Certs/Secrets) → Audit Logging → Compliance Checks (6 modes) → **Interactive API Docs (Swagger)** → **GraphQL Playground** → View Logs & Reports ✅
-
-**APIs Available**: REST (400+ endpoints) + GraphQL (full schema) + Jenkins Compatible
-**Documentation**: Interactive Swagger UI + GraphQL Playground + OpenAPI Spec
-**Ready for**: Production Deployment 🚀
+MIT - See [LICENSE.md](LICENSE.md)

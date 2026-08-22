@@ -1,6 +1,6 @@
 [Unit]
 Description=CASCI - CI/CD Application Server
-Documentation=https://github.com/casapps/casci
+Documentation=https://github.com/webappsgo/casci
 After=network.target
 
 [Service]

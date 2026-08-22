@@ -1,0 +1,45 @@
+# casci - development compose (HUMAN USE ONLY)
+# http://localhost:64580
+
+name: casci-dev
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    # Max 5MB per log file
+    max-size: "5m"
+    # Keep only 1 log file
+    max-file: "1"
+
+services:
+  casci:
+    image: ghcr.io/webappsgo/casci:devel
+    container_name: casci-dev
+    hostname: casci
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      DEBUG: true
+      MODE: development
+      PORT: 80
+      TZ: ${TZ:-America/New_York}
+    volumes:
+      - ./volumes/config:/config:z
+      - ./volumes/data:/data:z
+    ports:
+      # Development: accessible from all interfaces, no 172.17.0.1 bind
+      - "64580:80"
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/casci", "--status"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    networks:
+      - casci-dev
+
+networks:
+  casci-dev:
+    name: casci-dev
+    external: false

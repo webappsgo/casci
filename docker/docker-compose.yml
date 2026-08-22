@@ -1,0 +1,65 @@
+# nginx proxy address - http://172.17.0.1:64580
+# casci - self-hosted CI/CD server
+
+name: casci
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    # Max 5MB per log file
+    max-size: "5m"
+    # Keep only 1 log file
+    max-file: "1"
+
+services:
+  casci:
+    image: ghcr.io/webappsgo/casci:latest
+    container_name: casci-app
+    hostname: casci
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      PORT: 80
+      TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: casci-app
+      CACHE_URL: valkey://casci-cache:6379
+    volumes:
+      - ./volumes/config:/config:z
+      - ./volumes/data:/data:z
+    ports:
+      # Production: bound to Docker bridge only (reverse proxy handles external)
+      - "172.17.0.1:64580:80"
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/casci", "--status"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    depends_on:
+      casci-cache:
+        condition: service_healthy
+    networks:
+      - casci
+
+  casci-cache:
+    image: valkey/valkey:alpine
+    container_name: casci-cache
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    volumes:
+      - ./volumes/data/db/valkey:/data:z
+    healthcheck:
+      test: ["CMD-SHELL", "valkey-cli ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - casci
+
+networks:
+  casci:
+    name: casci
+    external: false

@@ -1,9 +1,48 @@
-.git
+# Git
+.git/
 .gitignore
-.casci
+.gitattributes
+
+# CI/CD workflows (not needed in container)
+.github/
+.gitea/
+.forgejo/
+.gitlab-ci.yml
+Jenkinsfile
+
+# Runtime volume data (NEVER include in image)
+volumes/
+
+# Runtime data directory (NEVER include in image)
+.casci/
+
+# Build output (container builds from source)
+binaries/
+releases/
+
+# Stray local build artifacts
 casci
-dist/
 *.log
-README.md
-LICENSE.md
-TODO.md
+
+# Tests (not needed in production image)
+tests/
+
+# Documentation (not needed in container)
+docs/
+*.md
+
+# Build files (not needed - build happens inside Docker)
+Makefile
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# AI config directories
+.claude/
+.cursor/
+.aider/
+.ai/
+.windsurf/

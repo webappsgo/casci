@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability (private)
+    url: https://github.com/webappsgo/casci/security/advisories/new
+    about: Never file a vulnerability as a public issue. Use GitHub private vulnerability reporting - see .github/SECURITY.md.
+  - name: Questions and support
+    url: https://github.com/webappsgo/casci/discussions
+    about: Ask setup, configuration, and usage questions here instead of opening an issue.
+  - name: Documentation
+    url: https://github.com/webappsgo/casci/tree/main/docs
+    about: Installation, configuration, deployment, and API reference.
+  - name: Official site
+    url: https://casci.casapps.us
+    about: Project homepage, release notes, and the hosted documentation.

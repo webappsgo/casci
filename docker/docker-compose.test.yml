@@ -1,0 +1,68 @@
+# casci - test compose (AI/AUTOMATED TESTING)
+# http://172.17.0.1:64581
+
+name: casci-test
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    # Max 5MB per log file
+    max-size: "5m"
+    # Keep only 1 log file
+    max-file: "1"
+
+services:
+  casci:
+    image: ghcr.io/webappsgo/casci:devel
+    container_name: casci-test
+    hostname: casci
+    restart: "no"
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      DEBUG: true
+      MODE: development
+      PORT: 80
+      TZ: ${TZ:-America/New_York}
+      CACHE_URL: valkey://casci-cache-test:6379
+    volumes:
+      # CRITICAL: ./volumes/ must resolve to $TEMP_DIR/volumes/, NOT project directory
+      # This file MUST be copied to a temp directory before running (unless invoked via tests/ scripts)
+      - ./volumes/config:/config:z
+      - ./volumes/data:/data:z
+    ports:
+      - "172.17.0.1:64581:80"
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/casci", "--status"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    depends_on:
+      casci-cache-test:
+        condition: service_healthy
+    networks:
+      - casci-test
+
+  casci-cache-test:
+    image: valkey/valkey:alpine
+    container_name: casci-cache-test
+    restart: "no"
+    logging: *default-logging
+    tmpfs:
+      # ephemeral - always clean state
+      - /data
+    healthcheck:
+      test: ["CMD-SHELL", "valkey-cli ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - casci-test
+
+networks:
+  casci-test:
+    driver: bridge
+    # explicit name for reliable cleanup
+    name: casci-test
