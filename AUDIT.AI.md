@@ -10,7 +10,7 @@ this file when all entries are gone.
 ## Pass 1: Security
 
 - [ ] server/templates.go:220: CSP still allows 'unsafe-inline' in style-src (script-src is now nonce-based, so this is the last CSP gap)
-- [ ] web.cors defaults to "*" in config.go — a fresh install ships a wildcard Access-Control-Allow-Origin. Needs a user decision on the default, so it is TODO.AI.md item 7 rather than a silent change
+- [ ] web.cors defaults to "*" in config.go — a fresh install ships a wildcard Access-Control-Allow-Origin. Needs a user decision on the default, so it is TODO.AI.md item 4 rather than a silent change
 - [ ] No rate limiting exists anywhere — AI.md 4595-4615 specifies per-IP sliding windows (read 120/min, write 10/min, health 120/min, global burst 240/min) plus stricter auth limits (login 5/15min with lockout, registration 5/hour, upload 10/hour). Nothing is implemented and there is no config for it
 
 ## Pass 2: Code Quality
@@ -39,8 +39,8 @@ this file when all entries are gone.
 
 ## Pass 6: Code Flow Trace
 
-- [ ] ~45 handlers in webhooks/, audit/, compliance/, credentials/ and security/ still discard the json.NewEncoder(w).Encode error; writeJSON is duplicated in three packages. Sequenced behind the PART 3 package flatten (TODO.AI.md item 15)
-- [ ] users/projects/builds handlers parse path IDs with a hardcoded "/api/v1/" literal, so any other server.api_version makes every by-ID route return 400 (TODO.AI.md item 16)
+- [ ] ~45 handlers in webhooks/, audit/, compliance/, credentials/ and security/ still discard the json.NewEncoder(w).Encode error; writeJSON is duplicated in three packages. Sequenced behind the PART 3 package flatten (TODO.AI.md item 12)
+- [ ] users/projects/builds handlers parse path IDs with a hardcoded "/api/v1/" literal, so any other server.api_version makes every by-ID route return 400 (TODO.AI.md item 13)
 
 ## Completed
 
