@@ -60,11 +60,11 @@ type Vulnerability struct {
 
 // Secret represents a detected secret
 type Secret struct {
-	Type        string `json:"type"` // AWS Key, GitHub Token, etc.
-	Description string `json:"description"`
-	File        string `json:"file"`
-	Line        int    `json:"line"`
-	Match       string `json:"match,omitempty"`
+	Type        string  `json:"type"` // AWS Key, GitHub Token, etc.
+	Description string  `json:"description"`
+	File        string  `json:"file"`
+	Line        int     `json:"line"`
+	Match       string  `json:"match,omitempty"`
 	Entropy     float64 `json:"entropy,omitempty"`
 }
 
@@ -93,11 +93,11 @@ type CodeIssue struct {
 
 // SBOM represents a Software Bill of Materials
 type SBOM struct {
-	Format       string      `json:"format"` // SPDX, CycloneDX
-	Version      string      `json:"version"`
-	Components   []Component `json:"components"`
+	Format       string       `json:"format"` // SPDX, CycloneDX
+	Version      string       `json:"version"`
+	Components   []Component  `json:"components"`
 	Dependencies []Dependency `json:"dependencies"`
-	GeneratedAt  time.Time   `json:"generated_at"`
+	GeneratedAt  time.Time    `json:"generated_at"`
 }
 
 // Component represents a software component
@@ -120,32 +120,32 @@ type Dependency struct {
 
 // ScanConfig represents security scan configuration
 type ScanConfig struct {
-	EnableVulnScan   bool     `json:"enable_vuln_scan"`
-	EnableSAST       bool     `json:"enable_sast"`
-	EnableSecretScan bool     `json:"enable_secret_scan"`
-	EnableLicenseScan bool    `json:"enable_license_scan"`
-	EnableSBOM       bool     `json:"enable_sbom"`
-	FailOnCritical   bool     `json:"fail_on_critical"`
-	FailOnHigh       bool     `json:"fail_on_high"`
-	IgnoreCVEs       []string `json:"ignore_cves,omitempty"`
-	AllowedLicenses  []string `json:"allowed_licenses,omitempty"`
-	SBOMFormat       string   `json:"sbom_format"` // spdx, cyclonedx
+	EnableVulnScan    bool     `json:"enable_vuln_scan"`
+	EnableSAST        bool     `json:"enable_sast"`
+	EnableSecretScan  bool     `json:"enable_secret_scan"`
+	EnableLicenseScan bool     `json:"enable_license_scan"`
+	EnableSBOM        bool     `json:"enable_sbom"`
+	FailOnCritical    bool     `json:"fail_on_critical"`
+	FailOnHigh        bool     `json:"fail_on_high"`
+	IgnoreCVEs        []string `json:"ignore_cves,omitempty"`
+	AllowedLicenses   []string `json:"allowed_licenses,omitempty"`
+	SBOMFormat        string   `json:"sbom_format"` // spdx, cyclonedx
 }
 
 // ScanResult represents the result of a scan
 type ScanResult struct {
-	Type           ScanType               `json:"type"`
-	Tool           string                 `json:"tool"`
-	Success        bool                   `json:"success"`
-	Error          string                 `json:"error,omitempty"`
-	Vulnerabilities []Vulnerability       `json:"vulnerabilities,omitempty"`
-	Secrets        []Secret               `json:"secrets,omitempty"`
-	Licenses       []License              `json:"licenses,omitempty"`
-	CodeIssues     []CodeIssue            `json:"code_issues,omitempty"`
-	SBOM           *SBOM                  `json:"sbom,omitempty"`
-	Summary        map[string]int         `json:"summary"`
-	RawOutput      string                 `json:"raw_output,omitempty"`
-	Duration       time.Duration          `json:"duration"`
+	Type            ScanType        `json:"type"`
+	Tool            string          `json:"tool"`
+	Success         bool            `json:"success"`
+	Error           string          `json:"error,omitempty"`
+	Vulnerabilities []Vulnerability `json:"vulnerabilities,omitempty"`
+	Secrets         []Secret        `json:"secrets,omitempty"`
+	Licenses        []License       `json:"licenses,omitempty"`
+	CodeIssues      []CodeIssue     `json:"code_issues,omitempty"`
+	SBOM            *SBOM           `json:"sbom,omitempty"`
+	Summary         map[string]int  `json:"summary"`
+	RawOutput       string          `json:"raw_output,omitempty"`
+	Duration        time.Duration   `json:"duration"`
 }
 
 // PolicyViolation represents a security policy violation

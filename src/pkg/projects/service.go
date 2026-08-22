@@ -3,7 +3,7 @@ package projects
 import (
 	"context"
 
-	"github.com/casapps/casci/src/pkg/database"
+	"github.com/webappsgo/casci/src/pkg/database"
 )
 
 // Service handles project business logic

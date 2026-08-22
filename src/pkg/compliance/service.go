@@ -16,14 +16,14 @@ func NewService(config *ComplianceConfig) *Service {
 	if config == nil {
 		config = GetPresetConfig(ModeNone)
 	}
-	
+
 	s := &Service{
 		config: config,
 		checks: make([]ComplianceCheck, 0),
 	}
-	
+
 	s.registerChecks()
-	
+
 	return s
 }
 
@@ -46,29 +46,29 @@ func (s *Service) SetMode(mode Mode) error {
 
 func (s *Service) RunCompliance(ctx context.Context) (*ComplianceReport, error) {
 	report := &ComplianceReport{
-		GeneratedAt: time.Now(),
-		Mode:        s.config.Mode,
-		Status:      "running",
-		Findings:    make([]Finding, 0),
+		GeneratedAt:     time.Now(),
+		Mode:            s.config.Mode,
+		Status:          "running",
+		Findings:        make([]Finding, 0),
 		Recommendations: make([]string, 0),
 	}
-	
+
 	if !s.config.Enabled {
 		report.Status = "disabled"
 		report.Compliant = true
 		return report, nil
 	}
-	
+
 	for _, check := range s.checks {
 		if !s.shouldRunCheck(check) {
 			report.SkippedChecks++
 			continue
 		}
-		
+
 		report.TotalChecks++
-		
+
 		passed, details, err := check.CheckFunc()
-		
+
 		finding := Finding{
 			Severity:    check.Severity,
 			Category:    check.Category,
@@ -76,7 +76,7 @@ func (s *Service) RunCompliance(ctx context.Context) (*ComplianceReport, error) 
 			Description: check.Description,
 			Details:     details,
 		}
-		
+
 		if err != nil {
 			finding.Status = StatusError
 			finding.Details = fmt.Sprintf("Error: %v. Details: %s", err, details)
@@ -84,7 +84,7 @@ func (s *Service) RunCompliance(ctx context.Context) (*ComplianceReport, error) 
 			report.Findings = append(report.Findings, finding)
 			continue
 		}
-		
+
 		if passed {
 			finding.Status = StatusPassed
 			report.PassedChecks++
@@ -94,16 +94,16 @@ func (s *Service) RunCompliance(ctx context.Context) (*ComplianceReport, error) 
 			report.Findings = append(report.Findings, finding)
 		}
 	}
-	
+
 	report.Compliant = report.FailedChecks == 0
 	report.Status = "completed"
-	
+
 	if !report.Compliant {
 		report.Recommendations = s.generateRecommendations(report)
 	}
-	
+
 	log.Printf("Compliance check completed: %d/%d checks passed", report.PassedChecks, report.TotalChecks)
-	
+
 	return report, nil
 }
 
@@ -111,22 +111,22 @@ func (s *Service) shouldRunCheck(check ComplianceCheck) bool {
 	if len(check.Mode) == 0 {
 		return true
 	}
-	
+
 	for _, mode := range check.Mode {
 		if mode == s.config.Mode {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
 func (s *Service) generateRecommendations(report *ComplianceReport) []string {
 	recommendations := make([]string, 0)
-	
+
 	criticalFailed := 0
 	highFailed := 0
-	
+
 	for _, finding := range report.Findings {
 		if finding.Status == StatusFailed {
 			if finding.Severity == SeverityCritical {
@@ -136,22 +136,22 @@ func (s *Service) generateRecommendations(report *ComplianceReport) []string {
 			}
 		}
 	}
-	
+
 	if criticalFailed > 0 {
 		recommendations = append(recommendations,
 			fmt.Sprintf("Address %d critical findings immediately", criticalFailed))
 	}
-	
+
 	if highFailed > 0 {
 		recommendations = append(recommendations,
 			fmt.Sprintf("Review and remediate %d high-severity findings", highFailed))
 	}
-	
+
 	if s.config.Mode != ModeNone {
 		recommendations = append(recommendations,
 			fmt.Sprintf("Ensure all requirements for %s compliance are met", s.config.Mode))
 	}
-	
+
 	return recommendations
 }
 

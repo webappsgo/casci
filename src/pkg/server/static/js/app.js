@@ -45,29 +45,14 @@ function initUserMenu() {
     }
 }
 
-// Logout function
-async function logout() {
-    try {
-        const response = await fetch('/api/v1/auth/logout', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`
-            }
-        });
-        
-        if (response.ok) {
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('user');
-            showToast('Logged out successfully', 'You have been logged out', 'success');
-            setTimeout(() => {
-                window.location.href = '/';
-            }, 1000);
-        } else {
-            throw new Error('Logout failed');
-        }
-    } catch (error) {
-        showToast('Logout Error', error.message, 'error');
-    }
+// Logout. Sessions are stateless bearer tokens with no server-side revocation
+// list, so signing out is purely a matter of discarding the local credentials.
+function logout() {
+    clearAuthToken();
+    showToast('Logged out successfully', 'You have been logged out', 'success');
+    setTimeout(() => {
+        window.location.href = '/';
+    }, 1000);
 }
 
 // Auth Token Management
@@ -82,6 +67,21 @@ function setAuthToken(token) {
 function clearAuthToken() {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
+}
+
+// Route prefixes are operator-configurable (server.api_version, server.admin_path),
+// so they are published as meta tags by head.tmpl rather than hardcoded here.
+function metaContent(name, fallback) {
+    const tag = document.querySelector(`meta[name="${name}"]`);
+    return tag && tag.content ? tag.content : fallback;
+}
+
+function apiBase() {
+    return '/api/' + metaContent('api-version', 'v1') + '/server';
+}
+
+function adminPath() {
+    return metaContent('admin-path', 'administration');
 }
 
 // API Request Helper
@@ -144,7 +144,7 @@ function initSettingsForm() {
         }
         
         try {
-            await apiRequest('/api/v1/admin/config', {
+            await apiRequest(`${apiBase()}/${adminPath()}/config/settings`, {
                 method: 'PUT',
                 body: JSON.stringify(settings)
             });
@@ -177,8 +177,8 @@ function initSettingsTabs() {
 }
 
 // Dashboard Refresh
-async function refreshDashboard() {
-    const btn = event.target.closest('button');
+async function refreshDashboard(btn) {
+    if (!btn) return;
     const originalHTML = btn.innerHTML;
     btn.innerHTML = '<span class="spinner"></span> Refreshing...';
     btn.disabled = true;
@@ -195,9 +195,10 @@ async function refreshDashboard() {
 }
 
 // Form Reset
-function resetForm() {
-    if (!confirm('Are you sure you want to reset the form?')) return;
-    document.getElementById('settings-form').reset();
+function resetForm(formId) {
+    const form = document.getElementById(formId || 'settings-form');
+    if (!form) return;
+    confirmDialog('Reset Form', 'Are you sure you want to reset the form?', () => form.reset());
 }
 
 // Initialize on DOMContentLoaded
@@ -236,5 +237,30 @@ document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         // Open search modal
+    }
+});
+
+// Delegated dispatcher for controls that previously carried onclick attributes.
+// The Content-Security-Policy allows only nonced script, so inline handlers
+// would never fire.
+document.addEventListener('click', (e) => {
+    const target = e.target.closest('[data-action]');
+    if (!target) return;
+
+    switch (target.dataset.action) {
+        case 'logout':
+            logout();
+            break;
+        case 'reset-form':
+            resetForm(target.dataset.form);
+            break;
+        case 'refresh-dashboard':
+            refreshDashboard(target.closest('button'));
+            break;
+        case 'toast-close':
+            target.closest('.toast').remove();
+            break;
+        default:
+            break;
     }
 });

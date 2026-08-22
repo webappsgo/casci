@@ -7,18 +7,18 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/casapps/casci/src/pkg/pipeline"
+	"github.com/webappsgo/casci/src/pkg/pipeline"
 )
 
 // ProjectType represents the detected project type
 type ProjectType struct {
-	Language        string
-	LanguageVersion string
-	Framework       string
-	BuildTool       string
-	PackageManager  string
-	TestFramework   string
-	HasDockerfile   bool
+	Language         string
+	LanguageVersion  string
+	Framework        string
+	BuildTool        string
+	PackageManager   string
+	TestFramework    string
+	HasDockerfile    bool
 	HasDockerCompose bool
 }
 

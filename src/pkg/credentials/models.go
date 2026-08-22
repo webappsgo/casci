@@ -28,34 +28,34 @@ const (
 
 // UserCredential represents a user's cryptographic credential
 type UserCredential struct {
-	ID                   int               `json:"id"`
-	UserID               int               `json:"user_id"`
-	Type                 CredentialType    `json:"type"`
-	Name                 string            `json:"name"`
-	PublicKey            string            `json:"public_key,omitempty"`
-	PrivateKeyEncrypted  string            `json:"-"` // Never expose in JSON
-	Fingerprint          string            `json:"fingerprint,omitempty"`
-	Metadata             map[string]string `json:"metadata,omitempty"`
-	CreatedAt            time.Time         `json:"created_at"`
-	UpdatedAt            time.Time         `json:"updated_at"`
-	ExpiresAt            *time.Time        `json:"expires_at,omitempty"`
-	IsDefault            bool              `json:"is_default"`
+	ID                  int               `json:"id"`
+	UserID              int               `json:"user_id"`
+	Type                CredentialType    `json:"type"`
+	Name                string            `json:"name"`
+	PublicKey           string            `json:"public_key,omitempty"`
+	PrivateKeyEncrypted string            `json:"-"` // Never expose in JSON
+	Fingerprint         string            `json:"fingerprint,omitempty"`
+	Metadata            map[string]string `json:"metadata,omitempty"`
+	CreatedAt           time.Time         `json:"created_at"`
+	UpdatedAt           time.Time         `json:"updated_at"`
+	ExpiresAt           *time.Time        `json:"expires_at,omitempty"`
+	IsDefault           bool              `json:"is_default"`
 }
 
 // ProjectCredential represents a project-specific credential
 type ProjectCredential struct {
-	ID              int               `json:"id"`
-	ProjectID       int               `json:"project_id"`
-	UserID          int               `json:"user_id"`
-	Type            CredentialType    `json:"type"`
-	Name            string            `json:"name"`
-	Description     string            `json:"description,omitempty"`
-	ValueEncrypted  string            `json:"-"` // Never expose in JSON
-	Metadata        map[string]string `json:"metadata,omitempty"`
-	CreatedAt       time.Time         `json:"created_at"`
-	UpdatedAt       time.Time         `json:"updated_at"`
-	ExpiresAt       *time.Time        `json:"expires_at,omitempty"`
-	LastUsedAt      *time.Time        `json:"last_used_at,omitempty"`
+	ID             int               `json:"id"`
+	ProjectID      int               `json:"project_id"`
+	UserID         int               `json:"user_id"`
+	Type           CredentialType    `json:"type"`
+	Name           string            `json:"name"`
+	Description    string            `json:"description,omitempty"`
+	ValueEncrypted string            `json:"-"` // Never expose in JSON
+	Metadata       map[string]string `json:"metadata,omitempty"`
+	CreatedAt      time.Time         `json:"created_at"`
+	UpdatedAt      time.Time         `json:"updated_at"`
+	ExpiresAt      *time.Time        `json:"expires_at,omitempty"`
+	LastUsedAt     *time.Time        `json:"last_used_at,omitempty"`
 }
 
 // CreateUserCredentialRequest represents a request to create a user credential

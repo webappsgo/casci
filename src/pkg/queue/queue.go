@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/casapps/casci/src/pkg/builds"
+	"github.com/webappsgo/casci/src/pkg/builds"
 )
 
 // BuildQueue manages the queue of builds to be executed

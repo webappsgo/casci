@@ -241,28 +241,3 @@ errorStyle.textContent = `
     }
 `;
 document.head.appendChild(errorStyle);
-
-// Example usage in comments:
-/*
-// Validate form before submit
-if (validateForm('settings-form')) {
-    // Form is valid, proceed with submission
-}
-
-// Auto-save form
-enableAutoSave('settings-form', (data) => {
-    console.log('Auto-saving:', data);
-});
-
-// Show loading during async operation
-showFormLoading('settings-form', 'Saving...');
-setTimeout(() => {
-    hideFormLoading('settings-form');
-    successToast('Saved', 'Settings saved successfully');
-}, 2000);
-
-// Populate form from API response
-fetch('/api/v1/admin/config')
-    .then(r => r.json())
-    .then(data => populateForm('settings-form', data));
-*/

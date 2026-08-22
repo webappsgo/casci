@@ -1,3 +1,4 @@
+{{define "toast"}}
 {{/* Toast Component - Toast notifications (NO JS alerts) */}}
 <div class="toast-container" id="toast-container"></div>
 
@@ -9,6 +10,7 @@
             <div class="toast-title"></div>
             <div class="toast-message"></div>
         </div>
-        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+        <button class="toast-close" data-action="toast-close">×</button>
     </div>
 </template>
+{{end}}

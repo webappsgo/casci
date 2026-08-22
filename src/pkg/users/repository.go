@@ -2,12 +2,22 @@ package users
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
 	"time"
 
-	"github.com/casapps/casci/src/pkg/database"
+	"github.com/webappsgo/casci/src/pkg/database"
 )
+
+// hashAPIToken returns the SHA-256 hex digest of an API token. API tokens are
+// already high-entropy random values, so a single unsalted SHA-256 round is the
+// correct storage form (AI.md PART 11 - never store plaintext tokens).
+func hashAPIToken(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(sum[:])
+}
 
 // Repository handles user data operations
 type Repository struct {
@@ -19,30 +29,32 @@ func NewRepository(db *database.Database) *Repository {
 	return &Repository{db: db}
 }
 
-// Create creates a new user
+// Create creates a new user. The raw API token on the user is hashed before
+// storage and stays on the in-memory struct so the caller can show it once.
 func (r *Repository) Create(ctx context.Context, user *User) error {
 	query := `
-		INSERT INTO users (username, email, password_hash, api_token, is_admin, created_at)
+		INSERT INTO users (username, email, password_hash, api_token_hash, is_admin, created_at)
 		VALUES (?, ?, ?, ?, ?, ?)
 	`
 
 	// Adjust query for PostgreSQL
 	if r.db.GetType() == "postgres" {
 		query = `
-			INSERT INTO users (username, email, password_hash, api_token, is_admin, created_at)
+			INSERT INTO users (username, email, password_hash, api_token_hash, is_admin, created_at)
 			VALUES ($1, $2, $3, $4, $5, $6)
 			RETURNING id
 		`
 	}
 
 	user.CreatedAt = time.Now()
+	tokenHash := hashAPIToken(user.APIToken)
 
 	if r.db.GetType() == "postgres" {
 		err := r.db.QueryRow(ctx, query,
 			user.Username,
 			user.Email,
 			user.PasswordHash,
-			user.APIToken,
+			tokenHash,
 			user.IsAdmin,
 			user.CreatedAt,
 		).Scan(&user.ID)
@@ -53,7 +65,7 @@ func (r *Repository) Create(ctx context.Context, user *User) error {
 		user.Username,
 		user.Email,
 		user.PasswordHash,
-		user.APIToken,
+		tokenHash,
 		user.IsAdmin,
 		user.CreatedAt,
 	)
@@ -73,14 +85,14 @@ func (r *Repository) Create(ctx context.Context, user *User) error {
 // GetByID retrieves a user by ID
 func (r *Repository) GetByID(ctx context.Context, id int) (*User, error) {
 	query := `
-		SELECT id, username, email, password_hash, api_token, is_admin, created_at
+		SELECT id, username, email, password_hash, is_admin, created_at
 		FROM users
 		WHERE id = ?
 	`
 
 	if r.db.GetType() == "postgres" {
 		query = `
-			SELECT id, username, email, password_hash, api_token, is_admin, created_at
+			SELECT id, username, email, password_hash, is_admin, created_at
 			FROM users
 			WHERE id = $1
 		`
@@ -92,7 +104,6 @@ func (r *Repository) GetByID(ctx context.Context, id int) (*User, error) {
 		&user.Username,
 		&user.Email,
 		&user.PasswordHash,
-		&user.APIToken,
 		&user.IsAdmin,
 		&user.CreatedAt,
 	)
@@ -110,14 +121,14 @@ func (r *Repository) GetByID(ctx context.Context, id int) (*User, error) {
 // GetByUsername retrieves a user by username
 func (r *Repository) GetByUsername(ctx context.Context, username string) (*User, error) {
 	query := `
-		SELECT id, username, email, password_hash, api_token, is_admin, created_at
+		SELECT id, username, email, password_hash, is_admin, created_at
 		FROM users
 		WHERE username = ?
 	`
 
 	if r.db.GetType() == "postgres" {
 		query = `
-			SELECT id, username, email, password_hash, api_token, is_admin, created_at
+			SELECT id, username, email, password_hash, is_admin, created_at
 			FROM users
 			WHERE username = $1
 		`
@@ -129,7 +140,6 @@ func (r *Repository) GetByUsername(ctx context.Context, username string) (*User,
 		&user.Username,
 		&user.Email,
 		&user.PasswordHash,
-		&user.APIToken,
 		&user.IsAdmin,
 		&user.CreatedAt,
 	)
@@ -147,14 +157,14 @@ func (r *Repository) GetByUsername(ctx context.Context, username string) (*User,
 // GetByEmail retrieves a user by email
 func (r *Repository) GetByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
-		SELECT id, username, email, password_hash, api_token, is_admin, created_at
+		SELECT id, username, email, password_hash, is_admin, created_at
 		FROM users
 		WHERE email = ?
 	`
 
 	if r.db.GetType() == "postgres" {
 		query = `
-			SELECT id, username, email, password_hash, api_token, is_admin, created_at
+			SELECT id, username, email, password_hash, is_admin, created_at
 			FROM users
 			WHERE email = $1
 		`
@@ -166,7 +176,6 @@ func (r *Repository) GetByEmail(ctx context.Context, email string) (*User, error
 		&user.Username,
 		&user.Email,
 		&user.PasswordHash,
-		&user.APIToken,
 		&user.IsAdmin,
 		&user.CreatedAt,
 	)
@@ -181,29 +190,29 @@ func (r *Repository) GetByEmail(ctx context.Context, email string) (*User, error
 	return user, nil
 }
 
-// GetByAPIToken retrieves a user by API token
+// GetByAPIToken retrieves a user by the SHA-256 hash of the presented API
+// token. The plaintext token is never stored, so it is hashed on lookup.
 func (r *Repository) GetByAPIToken(ctx context.Context, token string) (*User, error) {
 	query := `
-		SELECT id, username, email, password_hash, api_token, is_admin, created_at
+		SELECT id, username, email, password_hash, is_admin, created_at
 		FROM users
-		WHERE api_token = ?
+		WHERE api_token_hash = ?
 	`
 
 	if r.db.GetType() == "postgres" {
 		query = `
-			SELECT id, username, email, password_hash, api_token, is_admin, created_at
+			SELECT id, username, email, password_hash, is_admin, created_at
 			FROM users
-			WHERE api_token = $1
+			WHERE api_token_hash = $1
 		`
 	}
 
 	user := &User{}
-	err := r.db.QueryRow(ctx, query, token).Scan(
+	err := r.db.QueryRow(ctx, query, hashAPIToken(token)).Scan(
 		&user.ID,
 		&user.Username,
 		&user.Email,
 		&user.PasswordHash,
-		&user.APIToken,
 		&user.IsAdmin,
 		&user.CreatedAt,
 	)
@@ -221,7 +230,7 @@ func (r *Repository) GetByAPIToken(ctx context.Context, token string) (*User, er
 // List retrieves all users
 func (r *Repository) List(ctx context.Context) ([]*User, error) {
 	query := `
-		SELECT id, username, email, password_hash, api_token, is_admin, created_at
+		SELECT id, username, email, password_hash, is_admin, created_at
 		FROM users
 		ORDER BY created_at DESC
 	`
@@ -240,7 +249,6 @@ func (r *Repository) List(ctx context.Context) ([]*User, error) {
 			&user.Username,
 			&user.Email,
 			&user.PasswordHash,
-			&user.APIToken,
 			&user.IsAdmin,
 			&user.CreatedAt,
 		)
@@ -253,29 +261,44 @@ func (r *Repository) List(ctx context.Context) ([]*User, error) {
 	return users, nil
 }
 
-// Update updates a user
+// Update updates a user. The API token hash is only rewritten when the caller
+// supplies a freshly generated raw token, since reads never load it back.
 func (r *Repository) Update(ctx context.Context, user *User) error {
 	query := `
 		UPDATE users
-		SET email = ?, password_hash = ?, api_token = ?, is_admin = ?
+		SET email = ?, password_hash = ?, is_admin = ?
 		WHERE id = ?
 	`
 
 	if r.db.GetType() == "postgres" {
 		query = `
 			UPDATE users
-			SET email = $1, password_hash = $2, api_token = $3, is_admin = $4
-			WHERE id = $5
+			SET email = $1, password_hash = $2, is_admin = $3
+			WHERE id = $4
 		`
 	}
 
-	_, err := r.db.Exec(ctx, query,
-		user.Email,
-		user.PasswordHash,
-		user.APIToken,
-		user.IsAdmin,
-		user.ID,
-	)
+	args := []interface{}{user.Email, user.PasswordHash, user.IsAdmin, user.ID}
+
+	if user.APIToken != "" {
+		query = `
+			UPDATE users
+			SET email = ?, password_hash = ?, is_admin = ?, api_token_hash = ?
+			WHERE id = ?
+		`
+
+		if r.db.GetType() == "postgres" {
+			query = `
+				UPDATE users
+				SET email = $1, password_hash = $2, is_admin = $3, api_token_hash = $4
+				WHERE id = $5
+			`
+		}
+
+		args = []interface{}{user.Email, user.PasswordHash, user.IsAdmin, hashAPIToken(user.APIToken), user.ID}
+	}
+
+	_, err := r.db.Exec(ctx, query, args...)
 
 	if err != nil {
 		return fmt.Errorf("failed to update user: %w", err)

@@ -3,13 +3,30 @@ package users
 import (
 	"context"
 	"crypto/rand"
+	"crypto/subtle"
+	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"strings"
 
-	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/argon2"
 
-	"github.com/casapps/casci/src/pkg/database"
+	"github.com/webappsgo/casci/src/pkg/database"
 )
+
+// Argon2id parameters (AI.md PART 11 - all passwords hashed with Argon2id)
+const (
+	argonMemory      uint32 = 64 * 1024
+	argonTime        uint32 = 3
+	argonParallelism uint8  = 4
+	argonSaltLength         = 16
+	argonKeyLength   uint32 = 32
+)
+
+// ErrInvalidPasswordHash is returned when a stored hash is not a valid
+// Argon2id PHC-format string
+var ErrInvalidPasswordHash = errors.New("invalid password hash format")
 
 // Service handles user business logic
 type Service struct {
@@ -61,7 +78,7 @@ func (s *Service) Register(ctx context.Context, req *CreateUserRequest) (*User, 
 	}
 
 	// Check if this is the first user (becomes admin)
-	count, err := s.repo.Count(ctx)
+	count, err := s.Count(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -184,18 +201,66 @@ func (s *Service) RegenerateAPIToken(ctx context.Context, id int) (*User, error)
 	return user, nil
 }
 
-// HashPassword hashes a password using bcrypt
+// HashPassword hashes a password using Argon2id and returns a PHC-format
+// encoded string: $argon2id$v=19$m=65536,t=3,p=4$<b64salt>$<b64hash>
 func (s *Service) HashPassword(password string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return "", err
+	salt := make([]byte, argonSaltLength)
+	if _, err := rand.Read(salt); err != nil {
+		return "", fmt.Errorf("failed to generate password salt: %w", err)
 	}
-	return string(hash), nil
+
+	key := argon2.IDKey([]byte(password), salt, argonTime, argonMemory, argonParallelism, argonKeyLength)
+
+	encoded := fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s",
+		argon2.Version,
+		argonMemory,
+		argonTime,
+		argonParallelism,
+		base64.RawStdEncoding.EncodeToString(salt),
+		base64.RawStdEncoding.EncodeToString(key),
+	)
+
+	return encoded, nil
 }
 
-// VerifyPassword verifies a password against a hash
+// VerifyPassword verifies a password against an Argon2id PHC-format hash
+// using a constant-time comparison
 func (s *Service) VerifyPassword(hash, password string) error {
-	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	parts := strings.Split(hash, "$")
+	if len(parts) != 6 || parts[0] != "" || parts[1] != "argon2id" {
+		return ErrInvalidPasswordHash
+	}
+
+	var version int
+	if _, err := fmt.Sscanf(parts[2], "v=%d", &version); err != nil {
+		return ErrInvalidPasswordHash
+	}
+	if version != argon2.Version {
+		return ErrInvalidPasswordHash
+	}
+
+	var memory, timeCost uint32
+	var parallelism uint8
+	if _, err := fmt.Sscanf(parts[3], "m=%d,t=%d,p=%d", &memory, &timeCost, &parallelism); err != nil {
+		return ErrInvalidPasswordHash
+	}
+
+	salt, err := base64.RawStdEncoding.DecodeString(parts[4])
+	if err != nil {
+		return ErrInvalidPasswordHash
+	}
+
+	expected, err := base64.RawStdEncoding.DecodeString(parts[5])
+	if err != nil {
+		return ErrInvalidPasswordHash
+	}
+
+	computed := argon2.IDKey([]byte(password), salt, timeCost, memory, parallelism, uint32(len(expected)))
+	if subtle.ConstantTimeCompare(computed, expected) != 1 {
+		return ErrInvalidCredentials
+	}
+
+	return nil
 }
 
 // GenerateAPIToken generates a random API token
@@ -224,6 +289,11 @@ func (s *Service) MakeAdmin(ctx context.Context, id int) error {
 }
 
 // RevokeAdmin revokes admin privileges from a user
+// Count returns the total number of registered users
+func (s *Service) Count(ctx context.Context) (int, error) {
+	return s.repo.Count(ctx)
+}
+
 func (s *Service) RevokeAdmin(ctx context.Context, id int) error {
 	user, err := s.repo.GetByID(ctx, id)
 	if err != nil {
@@ -231,7 +301,7 @@ func (s *Service) RevokeAdmin(ctx context.Context, id int) error {
 	}
 
 	// Cannot revoke admin from the first user
-	count, err := s.repo.Count(ctx)
+	count, err := s.Count(ctx)
 	if err != nil {
 		return err
 	}

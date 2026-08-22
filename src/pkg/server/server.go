@@ -2,32 +2,35 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
+	"strings"
 	"time"
 
-	"github.com/casapps/casci/src/internal/config"
-	"github.com/casapps/casci/src/pkg/audit"
-	"github.com/casapps/casci/src/pkg/builds"
-	"github.com/casapps/casci/src/pkg/compliance"
-	"github.com/casapps/casci/src/pkg/credentials"
-	"github.com/casapps/casci/src/pkg/database"
-	"github.com/casapps/casci/src/pkg/executor"
-	"github.com/casapps/casci/src/pkg/metrics"
-	"github.com/casapps/casci/src/pkg/nodes"
-	"github.com/casapps/casci/src/pkg/notifications"
-	"github.com/casapps/casci/src/pkg/projects"
-	"github.com/casapps/casci/src/pkg/queue"
-	"github.com/casapps/casci/src/pkg/security"
-	"github.com/casapps/casci/src/pkg/users"
-	"github.com/casapps/casci/src/pkg/webhooks"
-	"github.com/casapps/casci/src/pkg/graphql"
-	
-	"github.com/casapps/casci/src/pkg/server/docs"
-	httpSwagger "github.com/swaggo/http-swagger"
+	"github.com/webappsgo/casci/src/internal/config"
+	"github.com/webappsgo/casci/src/pkg/audit"
+	"github.com/webappsgo/casci/src/pkg/builds"
+	"github.com/webappsgo/casci/src/pkg/compliance"
+	"github.com/webappsgo/casci/src/pkg/credentials"
+	"github.com/webappsgo/casci/src/pkg/database"
+	"github.com/webappsgo/casci/src/pkg/executor"
+	"github.com/webappsgo/casci/src/pkg/graphql"
+	"github.com/webappsgo/casci/src/pkg/metrics"
+	"github.com/webappsgo/casci/src/pkg/nodes"
+	"github.com/webappsgo/casci/src/pkg/notifications"
+	"github.com/webappsgo/casci/src/pkg/projects"
+	"github.com/webappsgo/casci/src/pkg/queue"
+	"github.com/webappsgo/casci/src/pkg/security"
+	"github.com/webappsgo/casci/src/pkg/users"
+	"github.com/webappsgo/casci/src/pkg/webhooks"
+
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	httpSwagger "github.com/swaggo/http-swagger"
+	"github.com/webappsgo/casci/src/pkg/server/docs"
 )
 
 // Server represents the HTTP/WebSocket server
@@ -65,8 +68,10 @@ type Server struct {
 	csrfManager         *CSRFManager
 	executor            executor.Executor
 	buildQueue          *queue.BuildQueue
-	ctx                 context.Context
-	cancelFunc          context.CancelFunc
+	// startedAt is the process start time, reported as health-check uptime
+	startedAt  time.Time
+	ctx        context.Context
+	cancelFunc context.CancelFunc
 }
 
 // New creates a new server instance
@@ -77,24 +82,29 @@ func New(cfg *config.Config, db *database.Database) (*Server, error) {
 		config:     cfg,
 		db:         db,
 		router:     http.NewServeMux(),
+		startedAt:  time.Now(),
 		ctx:        ctx,
 		cancelFunc: cancel,
 	}
 
 	// Initialize template renderer (TEMPLATE.md compliant)
-	devMode := false // TODO: Add Mode field to config
+	// Development mode reloads templates from disk on every render
+	devMode := cfg.Server.Mode == "development"
 	templateRenderer, err := NewTemplateRenderer(devMode)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize template renderer: %w", err)
 	}
 	srv.templateRenderer = templateRenderer
-	
+
 	// Initialize CSRF manager (TEMPLATE.md PART 13 required)
 	srv.csrfManager = NewCSRFManager()
 
 	// Initialize user management
 	srv.userService = users.NewService(db)
-	srv.authManager = users.NewAuthManager()
+	srv.authManager, err = users.NewAuthManager(cfg.EncryptionKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize auth manager: %w", err)
+	}
 	srv.userHandler = users.NewHandler(srv.userService, srv.authManager)
 	srv.userMiddleware = users.NewMiddleware(srv.authManager, srv.userService)
 
@@ -164,7 +174,7 @@ func New(cfg *config.Config, db *database.Database) (*Server, error) {
 	log.Printf("Compliance system initialized")
 
 	// Initialize webhook handler
-	srv.webhookHandler = webhooks.NewHandler(srv.projectService, srv.buildService)
+	srv.webhookHandler = webhooks.NewHandler(srv.projectService, srv.buildService, cfg.WebhookSecret)
 
 	// Initialize GraphQL handler
 	resolver := graphql.NewResolver(
@@ -179,11 +189,12 @@ func New(cfg *config.Config, db *database.Database) (*Server, error) {
 	log.Printf("GraphQL handler initialized")
 
 	// Initialize executor
+	// Roots come from the PART 4 path resolver, never a hardcoded /var/lib path
 	executorConfig := &executor.Config{
 		Type:           executor.TypeContainer,
-		WorkspaceRoot:  "/var/lib/casci/workspaces",
-		CacheRoot:      "/var/lib/casci/cache",
-		ArtifactsRoot:  "/var/lib/casci/artifacts",
+		WorkspaceRoot:  filepath.Join(config.DataDir(), "workspaces"),
+		CacheRoot:      config.CacheDir(),
+		ArtifactsRoot:  filepath.Join(config.DataDir(), "artifacts"),
 		DefaultTimeout: 3600, // 1 hour default
 	}
 
@@ -206,11 +217,22 @@ func New(cfg *config.Config, db *database.Database) (*Server, error) {
 	// Setup routes
 	srv.setupRoutes()
 
+	// Every response passes through the security headers, then CORS, then CSRF
+	// validation before reaching a route
+	handler := srv.SecurityHeadersMiddleware(srv.CORSMiddleware(srv.CSRFMiddleware(srv.router)))
+
 	// Create HTTP server
 	srv.server = &http.Server{
-		Addr:    fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port),
-		Handler: srv.router,
-		// Note: No timeouts as per spec requirements
+		Addr:              fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port),
+		Handler:           handler,
+		ReadTimeout:       30 * time.Second,
+		ReadHeaderTimeout: 30 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       120 * time.Second,
+		// TLS 1.0/1.1 are not acceptable - AI.md PART 11 requires TLS 1.2+.
+		// server.ssl.min_version can raise the floor further; it can never
+		// lower it, since TLSVersion falls back to 1.2 for anything else.
+		TLSConfig: &tls.Config{MinVersion: config.TLSVersion(cfg.Server.TLSMinVersion)},
 	}
 
 	return srv, nil
@@ -218,69 +240,112 @@ func New(cfg *config.Config, db *database.Database) (*Server, error) {
 
 // setupRoutes configures all HTTP routes
 func (s *Server) setupRoutes() {
+	// API version prefix is operator-configurable (server.api_version), so no
+	// route may hardcode /api/v1
+	api := "/api/" + s.config.Server.APIVersion
+
 	// Web UI Routes (TEMPLATE.md compliant - HTML endpoints)
-	s.router.HandleFunc("/", s.handleIndex)                    // Home page
-	s.router.HandleFunc("/healthz", s.handleHealthzHTML)       // Health check HTML
-	s.router.HandleFunc("/admin", s.handleAdminDashboard)      // Admin dashboard
-	s.router.HandleFunc("/admin/", s.handle404)                // Admin routes (TODO: implement all pages)
-	s.router.HandleFunc("/admin/settings", s.handleAdminSettings) // Admin settings
-	
+	// "/" is the catch-all pattern: the home page on an exact match, 404 otherwise
+	s.router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			s.handle404(w, r)
+			return
+		}
+		s.handleIndex(w, r)
+	})
+	// Canonical health check HTML (AI.md PART 1 endpoint pattern)
+	s.router.HandleFunc("/server/healthz", s.handleHealthzHTML)
+	// Optional root compatibility alias, mounted to the SAME handler, never a
+	// redirect. Off unless server.healthz.root.enabled is set.
+	if s.config.Server.HealthzRootEnabled {
+		s.router.HandleFunc("/healthz", s.handleHealthzHTML)
+	}
+
+	// Admin pages live under /server/{admin_path} and require an authenticated
+	// administrator. The segment is operator-configurable, never a literal.
+	adminRoot := "/server/" + s.config.Server.AdminPath
+	s.router.Handle(adminRoot, s.userMiddleware.RequireAdmin(http.HandlerFunc(s.handleAdminDashboard)))
+	s.router.Handle(adminRoot+"/", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.handle404)))
+	s.router.Handle(adminRoot+"/config/settings", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.handleAdminSettings)))
+
 	// Standard pages (TEMPLATE.md PART 13 required)
-	s.router.HandleFunc("/server/about", s.handleServerAbout)     // About page
-	s.router.HandleFunc("/server/privacy", s.handleServerPrivacy) // Privacy policy
-	s.router.HandleFunc("/server/contact", s.handleServerContact) // Contact form
-	s.router.HandleFunc("/server/help", s.handleServerHelp)       // Help/documentation
-	
-	// Static files (embedded)
-	s.router.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
-	
-	// Swagger/OpenAPI documentation (public)
-	s.router.HandleFunc("/swagger/", httpSwagger.WrapHandler)
-	s.router.HandleFunc("/openapi.json", s.serveOpenAPIJSON)
-	s.router.HandleFunc("/openapi.yaml", s.serveOpenAPIYAML)
-	s.router.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/swagger/index.html", http.StatusMovedPermanently)
+	// About page
+	s.router.HandleFunc("/server/about", s.handleServerAbout)
+	// Privacy policy
+	s.router.HandleFunc("/server/privacy", s.handleServerPrivacy)
+	// Contact form
+	s.router.HandleFunc("/server/contact", s.handleServerContact)
+	// Help/documentation
+	s.router.HandleFunc("/server/help", s.handleServerHelp)
+
+	// Well-known URIs (RFC 8615). security.txt is required on every project;
+	// every other entry 404s rather than redirecting.
+	s.router.HandleFunc("/.well-known/security.txt", s.handleSecurityTxt)
+	s.router.HandleFunc("/.well-known/llms.txt", s.handleLLMsTxt)
+	s.router.HandleFunc("/llms.txt", s.handleLLMsTxt)
+	s.router.HandleFunc("/.well-known/", s.handleWellKnown)
+
+	// Human-readable counterpart of security.txt — the Policy: target
+	s.router.HandleFunc("/server/security", s.handleSecurityPolicy)
+
+	// Static files (embedded). staticRoot is the embedded tree re-rooted at its
+	// "static" directory — without that, stripping the /static/ request prefix
+	// leaves a path that does not exist in the FS and every stylesheet, script
+	// and image 404s.
+	s.router.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticRoot))))
+
+	// Swagger UI (HTML) at the canonical documentation route. The exact path is
+	// rewritten internally to index.html so the UI renders without a redirect.
+	s.router.HandleFunc("/server/docs/swagger", func(w http.ResponseWriter, r *http.Request) {
+		rewritten := r.Clone(r.Context())
+		rewritten.URL.Path = "/server/docs/swagger/index.html"
+		rewritten.RequestURI = rewritten.URL.RequestURI()
+		httpSwagger.WrapHandler(w, rewritten)
 	})
-	s.router.HandleFunc("/api-docs", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/swagger/index.html", http.StatusMovedPermanently)
-	})
-	
-	// GraphQL endpoints (public - authentication via context)
-	s.router.Handle("/graphql", s.graphqlHandler)
-	s.router.Handle("/graphql/playground", playground.Handler("CASCI GraphQL", "/graphql"))
-	s.router.HandleFunc("/graphiql", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/graphql/playground", http.StatusMovedPermanently)
-	})
-	
+	// Swagger UI static assets
+	s.router.HandleFunc("/server/docs/swagger/", httpSwagger.WrapHandler)
+	// OpenAPI spec (JSON/YAML) with the documented unversioned aliases
+	s.router.HandleFunc(api+"/server/swagger", s.serveOpenAPIJSON)
+	s.router.HandleFunc("/api/swagger", s.serveOpenAPIJSON)
+	s.router.HandleFunc(api+"/server/swagger.yaml", s.serveOpenAPIYAML)
+	s.router.HandleFunc("/api/swagger.yaml", s.serveOpenAPIYAML)
+
+	// GraphQL: GraphiQL UI on the web route, POST endpoint on the API route
+	// with the documented unversioned alias
+	s.router.Handle(api+"/server/graphql", s.graphqlHandler)
+	s.router.Handle("/api/graphql", s.graphqlHandler)
+	s.router.Handle("/server/docs/graphql", playground.Handler("CASCI GraphQL", api+"/server/graphql"))
+
 	// Health check and metrics endpoints (public)
-	s.router.HandleFunc("/health", s.metricsHandler.ServeHealth)  // JSON health check
-	s.router.HandleFunc("/api/v1/healthz", s.metricsHandler.ServeHealth) // JSON health check (versioned)
+	// JSON health check paired with the /server/healthz HTML route, plus the
+	// unversioned alias for machine probing (AI.md PART 13)
+	s.router.HandleFunc(api+"/server/healthz", s.metricsHandler.ServeHealth)
+	s.router.HandleFunc("/api/healthz", s.metricsHandler.ServeHealth)
 	s.router.HandleFunc("/readyz", s.metricsHandler.ServeReadiness)
 	s.router.HandleFunc("/livez", s.metricsHandler.ServeLiveness)
-	s.router.HandleFunc("/metrics", s.metricsHandler.ServeMetrics)
-	s.router.HandleFunc("/metrics/json", s.metricsHandler.ServeMetricsJSON)
-
-	// Detailed metrics endpoints (public - for monitoring systems)
-	s.router.HandleFunc("/api/v1/metrics/system", s.metricsHandler.ServeSystemMetrics)
-	s.router.HandleFunc("/api/v1/metrics/builds", s.metricsHandler.ServeBuildMetrics)
-	s.router.HandleFunc("/api/v1/metrics/nodes", s.metricsHandler.ServeNodeMetrics)
-	s.router.HandleFunc("/api/v1/metrics/security", s.metricsHandler.ServeSecurityMetrics)
-	s.router.HandleFunc("/api/v1/metrics/api", s.metricsHandler.ServeAPIMetrics)
+	// Metrics endpoints are INTERNAL (AI.md PART 11/21) - never public
+	s.router.Handle("/metrics", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.metricsHandler.ServeMetrics)))
+	s.router.Handle("/metrics/json", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.metricsHandler.ServeMetricsJSON)))
+	s.router.Handle(api+"/metrics/system", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.metricsHandler.ServeSystemMetrics)))
+	s.router.Handle(api+"/metrics/builds", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.metricsHandler.ServeBuildMetrics)))
+	s.router.Handle(api+"/metrics/nodes", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.metricsHandler.ServeNodeMetrics)))
+	s.router.Handle(api+"/metrics/security", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.metricsHandler.ServeSecurityMetrics)))
+	s.router.Handle(api+"/metrics/api", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.metricsHandler.ServeAPIMetrics)))
 
 	// Authentication endpoints (public)
-	s.router.HandleFunc("/api/v1/auth/register", s.userHandler.Register)
-	s.router.HandleFunc("/api/v1/auth/login", s.userHandler.Login)
-	s.router.Handle("/api/v1/auth/refresh", s.userMiddleware.RequireAuth(http.HandlerFunc(s.userHandler.RefreshToken)))
+	s.router.HandleFunc(api+"/server/auth/register", s.userHandler.Register)
+	s.router.HandleFunc(api+"/server/auth/login", s.userHandler.Login)
+	s.router.Handle(api+"/server/auth/refresh", s.userMiddleware.RequireAuth(http.HandlerFunc(s.userHandler.RefreshToken)))
 
 	// User endpoints (authenticated)
-	s.router.Handle("/api/v1/users/me", s.userMiddleware.RequireAuth(http.HandlerFunc(s.userHandler.GetMe)))
-	s.router.Handle("/api/v1/users/me/token", s.userMiddleware.RequireAuth(http.HandlerFunc(s.userHandler.RegenerateAPIToken)))
+	s.router.Handle(api+"/users/me", s.userMiddleware.RequireAuth(http.HandlerFunc(s.userHandler.GetMe)))
+	s.router.Handle(api+"/users/me/token", s.userMiddleware.RequireAuth(http.HandlerFunc(s.userHandler.RegenerateAPIToken)))
 
 	// User management (admin only)
-	s.router.Handle("/api/v1/users", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.userHandler.ListUsers)))
+	s.router.Handle(api+"/users", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.userHandler.ListUsers)))
 
 	// Individual user operations
-	s.router.HandleFunc("/api/v1/users/", func(w http.ResponseWriter, r *http.Request) {
+	s.router.HandleFunc(api+"/users/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			s.userMiddleware.RequireAuth(http.HandlerFunc(s.userHandler.GetUser)).ServeHTTP(w, r)
@@ -294,59 +359,17 @@ func (s *Server) setupRoutes() {
 	})
 
 	// Project endpoints (authenticated)
-	s.router.Handle("/api/v1/projects", s.userMiddleware.RequireAuth(http.HandlerFunc(s.projectHandler.List)))
-	s.router.HandleFunc("/api/v1/projects/", func(w http.ResponseWriter, r *http.Request) {
-		// Route based on method
-		switch r.Method {
-		case http.MethodPost:
-			s.userMiddleware.RequireAuth(http.HandlerFunc(s.projectHandler.Create)).ServeHTTP(w, r)
-		case http.MethodGet:
-			s.userMiddleware.RequireAuth(http.HandlerFunc(s.projectHandler.Get)).ServeHTTP(w, r)
-		case http.MethodPut, http.MethodPatch:
-			s.userMiddleware.RequireAuth(http.HandlerFunc(s.projectHandler.Update)).ServeHTTP(w, r)
-		case http.MethodDelete:
-			s.userMiddleware.RequireAuth(http.HandlerFunc(s.projectHandler.Delete)).ServeHTTP(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+	s.router.Handle(api+"/projects", s.userMiddleware.RequireAuth(http.HandlerFunc(s.projectHandler.List)))
+	// Single registration for every /api/v1/projects/{id}/... sub-resource -
+	// net/http panics if a pattern is registered twice
+	s.router.Handle(api+"/projects/", s.userMiddleware.RequireAuth(http.HandlerFunc(s.handleProjectSubroutes)))
 
-	// Build endpoints for a project (authenticated)
-	s.router.Handle("/api/v1/projects/", s.userMiddleware.RequireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Handle /api/v1/projects/{id}/builds routes
-		if r.URL.Path == "/api/v1/projects/" || !contains(r.URL.Path, "/builds") {
-			return // Not a builds route
-		}
-
-		if contains(r.URL.Path, "/builds/stats") {
-			s.buildHandler.GetStats(w, r)
-		} else if r.Method == http.MethodPost && !contains(r.URL.Path, "/builds/") {
-			// POST /api/v1/projects/{id}/builds - Trigger build
-			s.buildHandler.Trigger(w, r)
-		} else if r.Method == http.MethodGet {
-			// GET /api/v1/projects/{id}/builds - List builds
-			s.buildHandler.ListByProject(w, r)
-		}
-	})))
-
-	// Individual build endpoints (authenticated)
-	s.router.Handle("/api/v1/builds/", s.userMiddleware.RequireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if contains(r.URL.Path, "/log") {
-			s.buildHandler.GetLog(w, r)
-		} else if contains(r.URL.Path, "/cancel") {
-			s.buildHandler.Cancel(w, r)
-		} else if contains(r.URL.Path, "/restart") {
-			s.buildHandler.Restart(w, r)
-		} else if r.Method == http.MethodGet {
-			s.buildHandler.Get(w, r)
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})))
+	// Single registration for every /api/v1/builds/{id}/... sub-resource
+	s.router.Handle(api+"/builds/", s.userMiddleware.RequireAuth(http.HandlerFunc(s.handleBuildSubroutes)))
 
 	// Node endpoints (authenticated)
-	s.router.Handle("/api/v1/nodes", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.nodeHandler.List)))
-	s.router.HandleFunc("/api/v1/nodes/", func(w http.ResponseWriter, r *http.Request) {
+	s.router.Handle(api+"/nodes", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.nodeHandler.List)))
+	s.router.HandleFunc(api+"/nodes/", func(w http.ResponseWriter, r *http.Request) {
 		// Route based on path suffix
 		if contains(r.URL.Path, "/heartbeat") {
 			// Node heartbeat (nodes authenticate themselves)
@@ -370,33 +393,22 @@ func (s *Server) setupRoutes() {
 	})
 
 	// Node registration (public - secured by token)
-	s.router.HandleFunc("/api/v1/nodes/register", s.nodeHandler.Register)
+	s.router.HandleFunc(api+"/nodes/register", s.nodeHandler.Register)
 
 	// Node token generation (admin only)
-	s.router.Handle("/api/v1/nodes/token", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.nodeHandler.GenerateToken)))
+	s.router.Handle(api+"/nodes/token", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.nodeHandler.GenerateToken)))
 
 	// Security endpoints (authenticated)
-	s.router.HandleFunc("/api/v1/builds/", func(w http.ResponseWriter, r *http.Request) {
-		// Handle security routes for builds
-		if contains(r.URL.Path, "/security") && !contains(r.URL.Path, "/security/scan") {
-			// GET /api/v1/builds/{id}/security - Get security reports
-			s.userMiddleware.RequireAuth(http.HandlerFunc(s.securityHandler.GetBuildSecurityReports)).ServeHTTP(w, r)
-		} else if contains(r.URL.Path, "/security/scan") && r.Method == http.MethodPost {
-			// POST /api/v1/builds/{id}/security/scan - Trigger scan
-			s.userMiddleware.RequireAuth(http.HandlerFunc(s.securityHandler.TriggerScan)).ServeHTTP(w, r)
-		}
-	})
-
-	s.router.Handle("/api/v1/security/reports", s.userMiddleware.RequireAuth(http.HandlerFunc(s.securityHandler.ListSecurityReports)))
-	s.router.HandleFunc("/api/v1/security/reports/", func(w http.ResponseWriter, r *http.Request) {
+	s.router.Handle(api+"/security/reports", s.userMiddleware.RequireAuth(http.HandlerFunc(s.securityHandler.ListSecurityReports)))
+	s.router.HandleFunc(api+"/security/reports/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			s.userMiddleware.RequireAuth(http.HandlerFunc(s.securityHandler.GetSecurityReport)).ServeHTTP(w, r)
 		} else {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
-	s.router.Handle("/api/v1/security/statistics", s.userMiddleware.RequireAuth(http.HandlerFunc(s.securityHandler.GetStatistics)))
-	s.router.Handle("/api/v1/security/config", s.userMiddleware.RequireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	s.router.Handle(api+"/security/statistics", s.userMiddleware.RequireAuth(http.HandlerFunc(s.securityHandler.GetStatistics)))
+	s.router.Handle(api+"/security/config", s.userMiddleware.RequireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			s.securityHandler.GetConfig(w, r)
 		} else if r.Method == http.MethodPut {
@@ -407,7 +419,7 @@ func (s *Server) setupRoutes() {
 	})))
 
 	// Notification endpoints (authenticated)
-	s.router.Handle("/api/v1/notifications", s.userMiddleware.RequireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	s.router.Handle(api+"/notifications", s.userMiddleware.RequireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			s.notificationHandler.ListConfigs(w, r)
 		} else if r.Method == http.MethodPost {
@@ -417,7 +429,7 @@ func (s *Server) setupRoutes() {
 		}
 	})))
 
-	s.router.HandleFunc("/api/v1/notifications/", func(w http.ResponseWriter, r *http.Request) {
+	s.router.HandleFunc(api+"/notifications/", func(w http.ResponseWriter, r *http.Request) {
 		// Route based on path suffix
 		if contains(r.URL.Path, "/test") {
 			// POST /api/v1/notifications/test - Test notification
@@ -438,25 +450,11 @@ func (s *Server) setupRoutes() {
 	})
 
 	// Notification metadata endpoints
-	s.router.Handle("/api/v1/notifications/types", s.userMiddleware.RequireAuth(http.HandlerFunc(s.notificationHandler.GetSupportedTypes)))
-	s.router.Handle("/api/v1/notifications/events", s.userMiddleware.RequireAuth(http.HandlerFunc(s.notificationHandler.GetEventTypes)))
-
-	// Project notification configs
-	s.router.HandleFunc("/api/v1/projects/", func(w http.ResponseWriter, r *http.Request) {
-		if contains(r.URL.Path, "/notifications") && r.Method == http.MethodGet {
-			s.userMiddleware.RequireAuth(http.HandlerFunc(s.notificationHandler.GetProjectConfigs)).ServeHTTP(w, r)
-		}
-	})
-
-	// Build notification logs
-	s.router.HandleFunc("/api/v1/builds/", func(w http.ResponseWriter, r *http.Request) {
-		if contains(r.URL.Path, "/notifications") && r.Method == http.MethodGet {
-			s.userMiddleware.RequireAuth(http.HandlerFunc(s.notificationHandler.GetBuildLogs)).ServeHTTP(w, r)
-		}
-	})
+	s.router.Handle(api+"/notifications/types", s.userMiddleware.RequireAuth(http.HandlerFunc(s.notificationHandler.GetSupportedTypes)))
+	s.router.Handle(api+"/notifications/events", s.userMiddleware.RequireAuth(http.HandlerFunc(s.notificationHandler.GetEventTypes)))
 
 	// User credential endpoints (authenticated)
-	s.router.Handle("/api/v1/credentials/user", s.userMiddleware.RequireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	s.router.Handle(api+"/credentials/user", s.userMiddleware.RequireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			s.credentialHandler.ListUserCredentials(w, r)
 		} else if r.Method == http.MethodPost {
@@ -466,7 +464,7 @@ func (s *Server) setupRoutes() {
 		}
 	})))
 
-	s.router.HandleFunc("/api/v1/credentials/user/", func(w http.ResponseWriter, r *http.Request) {
+	s.router.HandleFunc(api+"/credentials/user/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			s.userMiddleware.RequireAuth(http.HandlerFunc(s.credentialHandler.GetUserCredential)).ServeHTTP(w, r)
@@ -479,18 +477,7 @@ func (s *Server) setupRoutes() {
 		}
 	})
 
-	// Project credential endpoints (authenticated)
-	s.router.HandleFunc("/api/v1/projects/", func(w http.ResponseWriter, r *http.Request) {
-		if contains(r.URL.Path, "/credentials") {
-			if r.Method == http.MethodGet {
-				s.userMiddleware.RequireAuth(http.HandlerFunc(s.credentialHandler.ListProjectCredentials)).ServeHTTP(w, r)
-			} else if r.Method == http.MethodPost {
-				s.userMiddleware.RequireAuth(http.HandlerFunc(s.credentialHandler.CreateProjectCredential)).ServeHTTP(w, r)
-			}
-		}
-	})
-
-	s.router.HandleFunc("/api/v1/credentials/project/", func(w http.ResponseWriter, r *http.Request) {
+	s.router.HandleFunc(api+"/credentials/project/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			s.userMiddleware.RequireAuth(http.HandlerFunc(s.credentialHandler.GetProjectCredential)).ServeHTTP(w, r)
@@ -504,19 +491,19 @@ func (s *Server) setupRoutes() {
 	})
 
 	// API v1 info
-	s.router.HandleFunc("/api/v1/", s.handleAPIv1)
+	s.router.HandleFunc(api+"/", s.handleAPIv1)
 
 	// Audit endpoints (authenticated)
-	s.router.Handle("/api/v1/audit/events", s.userMiddleware.RequireAuth(http.HandlerFunc(s.auditHandler.ListEvents)))
-	s.router.Handle("/api/v1/audit/status", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.auditHandler.GetStatus)))
-	s.router.Handle("/api/v1/audit/config", s.userMiddleware.RequireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	s.router.Handle(api+"/audit/events", s.userMiddleware.RequireAuth(http.HandlerFunc(s.auditHandler.ListEvents)))
+	s.router.Handle(api+"/audit/status", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.auditHandler.GetStatus)))
+	s.router.Handle(api+"/audit/config", s.userMiddleware.RequireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPut || r.Method == http.MethodPatch {
 			s.auditHandler.UpdateConfig(w, r)
 		} else {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})))
-	s.router.Handle("/api/v1/audit/cleanup", s.userMiddleware.RequireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	s.router.Handle(api+"/audit/cleanup", s.userMiddleware.RequireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			s.auditHandler.TriggerCleanup(w, r)
 		} else {
@@ -525,7 +512,7 @@ func (s *Server) setupRoutes() {
 	})))
 
 	// Compliance endpoints (authenticated)
-	s.router.Handle("/api/v1/compliance/config", s.userMiddleware.RequireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	s.router.Handle(api+"/compliance/config", s.userMiddleware.RequireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			s.complianceHandler.GetConfig(w, r)
 		} else if r.Method == http.MethodPut || r.Method == http.MethodPatch {
@@ -534,16 +521,16 @@ func (s *Server) setupRoutes() {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})))
-	s.router.Handle("/api/v1/compliance/modes", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.complianceHandler.ListModes)))
-	s.router.Handle("/api/v1/compliance/mode", s.userMiddleware.RequireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	s.router.Handle(api+"/compliance/modes", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.complianceHandler.ListModes)))
+	s.router.Handle(api+"/compliance/mode", s.userMiddleware.RequireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost || r.Method == http.MethodPut {
 			s.complianceHandler.SetMode(w, r)
 		} else {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})))
-	s.router.Handle("/api/v1/compliance/preset", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.complianceHandler.GetPreset)))
-	s.router.Handle("/api/v1/compliance/check", s.userMiddleware.RequireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	s.router.Handle(api+"/compliance/preset", s.userMiddleware.RequireAdmin(http.HandlerFunc(s.complianceHandler.GetPreset)))
+	s.router.Handle(api+"/compliance/check", s.userMiddleware.RequireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			s.complianceHandler.RunCompliance(w, r)
 		} else {
@@ -560,23 +547,106 @@ func (s *Server) setupRoutes() {
 
 	// WebSocket endpoint
 	s.router.HandleFunc("/ws", s.handleWebSocket)
+}
 
-	// Static files / Web UI (will be implemented later)
-	s.router.HandleFunc("/", s.handleWebUI)
+// handleProjectSubroutes dispatches every /api/v1/projects/... request. All
+// project sub-resources share one mux pattern, so the remaining path segments
+// and the method select the handler.
+func (s *Server) handleProjectSubroutes(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path
+
+	switch {
+	case contains(path, "/builds"):
+		switch {
+		case contains(path, "/builds/stats"):
+			s.buildHandler.GetStats(w, r)
+		case r.Method == http.MethodPost && !contains(path, "/builds/"):
+			// POST /api/v1/projects/{id}/builds - Trigger build
+			s.buildHandler.Trigger(w, r)
+		case r.Method == http.MethodGet:
+			// GET /api/v1/projects/{id}/builds - List builds
+			s.buildHandler.ListByProject(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+
+	case contains(path, "/notifications"):
+		if r.Method == http.MethodGet {
+			s.notificationHandler.GetProjectConfigs(w, r)
+			return
+		}
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
+	case contains(path, "/credentials"):
+		switch r.Method {
+		case http.MethodGet:
+			s.credentialHandler.ListProjectCredentials(w, r)
+		case http.MethodPost:
+			s.credentialHandler.CreateProjectCredential(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+
+	default:
+		// CRUD on the project itself
+		switch r.Method {
+		case http.MethodPost:
+			s.projectHandler.Create(w, r)
+		case http.MethodGet:
+			s.projectHandler.Get(w, r)
+		case http.MethodPut, http.MethodPatch:
+			s.projectHandler.Update(w, r)
+		case http.MethodDelete:
+			s.projectHandler.Delete(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	}
+}
+
+// handleBuildSubroutes dispatches every /api/v1/builds/... request from the
+// single mux pattern that owns that prefix.
+func (s *Server) handleBuildSubroutes(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path
+
+	switch {
+	case contains(path, "/security/scan"):
+		if r.Method == http.MethodPost {
+			s.securityHandler.TriggerScan(w, r)
+			return
+		}
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
+	case contains(path, "/security"):
+		s.securityHandler.GetBuildSecurityReports(w, r)
+
+	case contains(path, "/notifications"):
+		if r.Method == http.MethodGet {
+			s.notificationHandler.GetBuildLogs(w, r)
+			return
+		}
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
+	case contains(path, "/log"):
+		s.buildHandler.GetLog(w, r)
+
+	case contains(path, "/cancel"):
+		s.buildHandler.Cancel(w, r)
+
+	case contains(path, "/restart"):
+		s.buildHandler.Restart(w, r)
+
+	case r.Method == http.MethodGet:
+		s.buildHandler.Get(w, r)
+
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
 }
 
 // Helper function to check if string contains substring
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) && anyIndexOf(s, substr) >= 0
-}
-
-func anyIndexOf(s, substr string) int {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return i
-		}
-	}
-	return -1
+	return strings.Contains(s, substr)
 }
 
 // Start starts the HTTP server
@@ -584,6 +654,7 @@ func (s *Server) Start() error {
 	log.Printf("Starting server on %s:%d", s.config.Server.Host, s.config.Server.Port)
 
 	if s.config.Server.TLSEnabled {
+		// TLSConfig pins MinVersion to TLS 1.2 (set in New)
 		return s.server.ListenAndServeTLS(s.config.Server.TLSCertPath, s.config.Server.TLSKeyPath)
 	}
 
@@ -668,58 +739,6 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// WebSocket implementation will be added later
 	w.WriteHeader(http.StatusNotImplemented)
 	fmt.Fprint(w, "WebSocket support coming soon")
-}
-
-func (s *Server) handleWebUI(w http.ResponseWriter, r *http.Request) {
-	// Serve embedded UI (will be implemented later)
-	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprint(w, `<!DOCTYPE html>
-<html>
-<head>
-	<title>CASCI</title>
-	<style>
-		body {
-			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-			margin: 0;
-			padding: 0;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			min-height: 100vh;
-			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-			color: white;
-		}
-		.container {
-			text-align: center;
-			padding: 2rem;
-		}
-		h1 {
-			font-size: 4rem;
-			margin: 0;
-		}
-		p {
-			font-size: 1.5rem;
-			margin: 1rem 0;
-		}
-		.status {
-			background: rgba(255,255,255,0.2);
-			padding: 1rem;
-			border-radius: 8px;
-			margin-top: 2rem;
-		}
-	</style>
-</head>
-<body>
-	<div class="container">
-		<h1>🚀 CASCI</h1>
-		<p>CI/CD Application Server</p>
-		<div class="status">
-			<p>✅ Server is running</p>
-			<p>Web UI coming soon...</p>
-		</div>
-	</div>
-</body>
-</html>`)
 }
 
 // serveOpenAPIJSON serves the OpenAPI specification in JSON format

@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 // PostgresDriver implements the Driver interface for PostgreSQL
@@ -13,7 +13,7 @@ type PostgresDriver struct{}
 
 // Connect establishes a connection to PostgreSQL
 func (d *PostgresDriver) Connect(dsn string) (*sql.DB, error) {
-	db, err := sql.Open("postgres", dsn)
+	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open PostgreSQL database: %w", err)
 	}
@@ -30,7 +30,7 @@ func (d *PostgresDriver) Migrate(ctx context.Context, db *sql.DB) error {
 			username VARCHAR(255) UNIQUE NOT NULL,
 			email VARCHAR(255) UNIQUE NOT NULL,
 			password_hash VARCHAR(255) NOT NULL,
-			api_token VARCHAR(255) UNIQUE,
+			api_token_hash VARCHAR(255) UNIQUE,
 			is_admin BOOLEAN DEFAULT FALSE,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)`,
@@ -83,7 +83,7 @@ func (d *PostgresDriver) Migrate(ctx context.Context, db *sql.DB) error {
 		// Node tokens table
 		`CREATE TABLE IF NOT EXISTS node_tokens (
 			id SERIAL PRIMARY KEY,
-			token VARCHAR(255) UNIQUE NOT NULL,
+			token_hash VARCHAR(255) UNIQUE NOT NULL,
 			expires_at TIMESTAMP NOT NULL,
 			used_at TIMESTAMP,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -114,27 +114,6 @@ func (d *PostgresDriver) Migrate(ctx context.Context, db *sql.DB) error {
 			type VARCHAR(50),
 			category VARCHAR(50),
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-		)`,
-
-		// User credentials table
-		`CREATE TABLE IF NOT EXISTS user_credentials (
-			id SERIAL PRIMARY KEY,
-			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-			credential_type VARCHAR(50),
-			public_key TEXT,
-			private_key_encrypted TEXT,
-			metadata JSONB,
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-		)`,
-
-		// Project credentials table
-		`CREATE TABLE IF NOT EXISTS project_credentials (
-			id SERIAL PRIMARY KEY,
-			project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-			credential_type VARCHAR(50),
-			name VARCHAR(255),
-			value_encrypted TEXT,
-			UNIQUE(project_id, credential_type, name)
 		)`,
 
 		// Cloud accounts table

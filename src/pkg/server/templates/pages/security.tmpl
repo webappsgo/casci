@@ -1,0 +1,49 @@
+{{define "content"}}
+<div class="container">
+    <h1>Security Policy</h1>
+
+    <div class="section">
+        <p>We take security seriously. If you believe you have found a vulnerability in this
+           instance, please report it privately using one of the channels below rather than
+           opening a public issue.</p>
+    </div>
+
+    <div class="section">
+        <h2>How to report</h2>
+        <ol>
+            {{if .ReportURL}}
+            <li><strong>Preferred:</strong> open a private vulnerability report at
+                <a href="{{.ReportURL}}" rel="noopener">{{.ReportURL}}</a>.</li>
+            {{end}}
+            {{if .ContactEmail}}
+            <li>Email <a href="mailto:{{.ContactEmail}}">{{.ContactEmail}}</a>. Include the
+                affected URL, the steps needed to reproduce the issue, and what impact you
+                believe it has.</li>
+            {{end}}
+        </ol>
+        <p>Please give us a reasonable window to investigate and ship a fix before disclosing
+           the issue publicly. Do not run tests that degrade service for other users, and never
+           access, modify, or retain data that is not yours.</p>
+    </div>
+
+    <div class="section">
+        <h2>Machine-readable policy</h2>
+        <p>The same details are published in RFC 9116 form at
+           <a href="{{.SecurityTxt}}">{{.SecurityTxt}}</a>.</p>
+        <dl class="detail-list">
+            {{if .ReportURL}}
+            <dt>Contact</dt>
+            <dd>{{.ReportURL}}</dd>
+            {{end}}
+            {{if .ContactEmail}}
+            <dt>Contact</dt>
+            <dd>mailto:{{.ContactEmail}}</dd>
+            {{end}}
+            <dt>Policy</dt>
+            <dd>{{.PolicyURL}}</dd>
+            <dt>Expires</dt>
+            <dd>{{.Expires}}</dd>
+        </dl>
+    </div>
+</div>
+{{end}}

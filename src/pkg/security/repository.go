@@ -140,18 +140,29 @@ func (r *SQLRepository) ListReports(ctx context.Context, filters map[string]inte
 		args = append(args, passed)
 	}
 
-	if hasCritical, ok := filters["has_critical"]; ok && hasCritical.(bool) {
-		query += " AND critical_count > 0"
+	// Comma-ok assertions: a caller passing a non-bool must not panic the
+	// request, it must simply not apply the filter
+	if raw, ok := filters["has_critical"]; ok {
+		if hasCritical, ok := raw.(bool); ok && hasCritical {
+			query += " AND critical_count > 0"
+		}
 	}
 
-	if hasHigh, ok := filters["has_high"]; ok && hasHigh.(bool) {
-		query += " AND high_count > 0"
+	if raw, ok := filters["has_high"]; ok {
+		if hasHigh, ok := raw.(bool); ok && hasHigh {
+			query += " AND high_count > 0"
+		}
 	}
 
 	query += " ORDER BY created_at DESC"
 
-	if limit, ok := filters["limit"]; ok {
-		query += fmt.Sprintf(" LIMIT %d", limit.(int))
+	// Bind LIMIT as a parameter and ignore any non-integer value rather than
+	// panicking on a bad type assertion
+	if raw, ok := filters["limit"]; ok {
+		if limit, ok := raw.(int); ok && limit > 0 {
+			query += " LIMIT ?"
+			args = append(args, limit)
+		}
 	}
 
 	rows, err := r.db.QueryContext(ctx, query, args...)
@@ -313,9 +324,9 @@ func (r *SQLRepository) GetStatistics(ctx context.Context) (*SecurityStatistics,
 
 // SecurityStatistics contains aggregate security statistics
 type SecurityStatistics struct {
-	TotalReports           int
-	TotalVulnerabilities   int
+	TotalReports            int
+	TotalVulnerabilities    int
 	CriticalVulnerabilities int
-	HighVulnerabilities    int
-	FailedScans            int
+	HighVulnerabilities     int
+	FailedScans             int
 }

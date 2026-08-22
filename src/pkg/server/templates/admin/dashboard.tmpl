@@ -4,7 +4,7 @@
     <div class="dashboard-header">
         <h1>Dashboard</h1>
         <div class="dashboard-actions">
-            <button class="btn btn-secondary" onclick="refreshDashboard()">
+            <button class="btn btn-secondary" data-action="refresh-dashboard">
                 <span class="icon">🔄</span> Refresh
             </button>
         </div>
@@ -61,7 +61,7 @@
                 <div class="empty-state">No recent builds</div>
                 {{end}}
             </div>
-            <a href="/admin/builds" class="card-link">View all builds →</a>
+            <a href="/server/{{.AdminPath}}" class="card-link">Refresh dashboard →</a>
         </div>
         
         <div class="dashboard-card">
@@ -89,7 +89,7 @@
                     <span class="metric-value">{{.SystemMetrics.DiskUsage}}%</span>
                 </div>
             </div>
-            <a href="/healthz" class="card-link">View full health →</a>
+            <a href="/server/healthz" class="card-link">View full health →</a>
         </div>
     </div>
     
@@ -105,21 +105,13 @@
         <div class="dashboard-card">
             <h2>Quick Actions</h2>
             <div class="quick-actions">
-                <a href="/admin/projects" class="quick-action">
-                    <span class="action-icon">➕</span>
-                    <span class="action-text">New Project</span>
-                </a>
-                <a href="/admin/users" class="quick-action">
-                    <span class="action-icon">👤</span>
-                    <span class="action-text">Add User</span>
-                </a>
-                <a href="/admin/nodes" class="quick-action">
-                    <span class="action-icon">🖥️</span>
-                    <span class="action-text">Add Node</span>
-                </a>
-                <a href="/admin/settings" class="quick-action">
+                <a href="/server/{{.AdminPath}}/config/settings" class="quick-action">
                     <span class="action-icon">⚙️</span>
                     <span class="action-text">Settings</span>
+                </a>
+                <a href="/server/healthz" class="quick-action">
+                    <span class="action-icon">❤️</span>
+                    <span class="action-text">Health</span>
                 </a>
             </div>
         </div>

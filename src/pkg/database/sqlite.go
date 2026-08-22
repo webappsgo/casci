@@ -46,7 +46,7 @@ func (d *SQLiteDriver) Migrate(ctx context.Context, db *sql.DB) error {
 			username TEXT UNIQUE NOT NULL,
 			email TEXT UNIQUE NOT NULL,
 			password_hash TEXT NOT NULL,
-			api_token TEXT UNIQUE,
+			api_token_hash TEXT UNIQUE,
 			is_admin INTEGER DEFAULT 0,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
@@ -101,7 +101,7 @@ func (d *SQLiteDriver) Migrate(ctx context.Context, db *sql.DB) error {
 		// Node tokens table
 		`CREATE TABLE IF NOT EXISTS node_tokens (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			token TEXT UNIQUE NOT NULL,
+			token_hash TEXT UNIQUE NOT NULL,
 			expires_at DATETIME NOT NULL,
 			used_at DATETIME,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -131,29 +131,6 @@ func (d *SQLiteDriver) Migrate(ctx context.Context, db *sql.DB) error {
 			type TEXT,
 			category TEXT,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-		)`,
-
-		// User credentials table
-		`CREATE TABLE IF NOT EXISTS user_credentials (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			user_id INTEGER NOT NULL,
-			credential_type TEXT,
-			public_key TEXT,
-			private_key_encrypted TEXT,
-			metadata TEXT,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (user_id) REFERENCES users(id)
-		)`,
-
-		// Project credentials table
-		`CREATE TABLE IF NOT EXISTS project_credentials (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			project_id INTEGER NOT NULL,
-			credential_type TEXT,
-			name TEXT,
-			value_encrypted TEXT,
-			FOREIGN KEY (project_id) REFERENCES projects(id),
-			UNIQUE(project_id, credential_type, name)
 		)`,
 
 		// Cloud accounts table

@@ -1,7 +1,3 @@
-{{template "layout" .}}
-
-{{define "title"}}Privacy Policy - CASCI{{end}}
-
 {{define "content"}}
 <div class="container">
     <h1>Privacy Policy</h1>
@@ -18,7 +14,7 @@
         <h3>Account Information</h3>
         <ul>
             <li>Username and email address (for account creation)</li>
-            <li>Hashed passwords (bcrypt, never stored in plain text)</li>
+            <li>Hashed passwords (Argon2id, never stored in plain text)</li>
             <li>API tokens (encrypted)</li>
         </ul>
 
@@ -55,7 +51,7 @@
         <h3>Security Measures</h3>
         <ul>
             <li>HTTPS/TLS encryption for all connections</li>
-            <li>Password hashing with bcrypt</li>
+            <li>Password hashing with Argon2id</li>
             <li>JWT tokens for session management</li>
             <li>Role-based access control (RBAC)</li>
             <li>Audit logging of security events</li>
@@ -88,7 +84,7 @@
         <ul>
             <li><a href="/server/contact">Contact Form</a></li>
             <li>Email: privacy@casapps.us</li>
-            <li><a href="https://github.com/casapps/casci/issues" target="_blank">GitHub Issues</a></li>
+            <li><a href="https://github.com/webappsgo/casci/issues" target="_blank">GitHub Issues</a></li>
         </ul>
     </div>
 </div>

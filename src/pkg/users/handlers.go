@@ -2,6 +2,7 @@ package users
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -279,9 +280,13 @@ func (h *Handler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"token": newToken})
 }
 
-// Helper function to write JSON responses
+// writeJSON writes data as a JSON response with the given status code. The
+// status line is already on the wire by the time encoding runs, so a failure
+// can only be logged — the client sees a truncated body either way.
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		log.Printf("users: failed to encode JSON response: %v", err)
+	}
 }

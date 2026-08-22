@@ -22,22 +22,25 @@ type AuthManager struct {
 	jwtSecret []byte
 }
 
-// NewAuthManager creates a new auth manager
-func NewAuthManager() *AuthManager {
-	// Generate a random JWT secret
-	secret := make([]byte, 32)
-	rand.Read(secret)
+// MinJWTSecretLength is the shortest accepted JWT signing secret, matching the
+// 256-bit output of the HS256 signing method
+const MinJWTSecretLength = 32
 
-	return &AuthManager{
-		jwtSecret: secret,
+// NewAuthManager creates a new auth manager from a caller-supplied JWT signing
+// secret. The secret must come from configuration and be stable across
+// restarts: a per-process secret invalidates every session on restart and makes
+// tokens unverifiable on any other node of a cluster.
+func NewAuthManager(secret string) (*AuthManager, error) {
+	if secret == "" {
+		return nil, fmt.Errorf("JWT signing secret is required")
 	}
-}
+	if len(secret) < MinJWTSecretLength {
+		return nil, fmt.Errorf("JWT signing secret must be at least %d bytes", MinJWTSecretLength)
+	}
 
-// NewAuthManagerWithSecret creates a new auth manager with a specific secret
-func NewAuthManagerWithSecret(secret string) *AuthManager {
 	return &AuthManager{
 		jwtSecret: []byte(secret),
-	}
+	}, nil
 }
 
 // GenerateToken generates a JWT token for a user

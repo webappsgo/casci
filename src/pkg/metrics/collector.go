@@ -31,55 +31,55 @@ type Collector struct {
 
 // SystemMetrics tracks system-level metrics
 type SystemMetrics struct {
-	CPUUsagePercent    float64
-	MemoryUsageBytes   uint64
-	MemoryTotalBytes   uint64
-	DiskUsageBytes     uint64
-	DiskTotalBytes     uint64
-	NetworkBytesIn     uint64
-	NetworkBytesOut    uint64
-	ContainerCount     int
-	GoroutineCount     int
-	UptimeSeconds      int64
-	LastUpdated        time.Time
+	CPUUsagePercent  float64
+	MemoryUsageBytes uint64
+	MemoryTotalBytes uint64
+	DiskUsageBytes   uint64
+	DiskTotalBytes   uint64
+	NetworkBytesIn   uint64
+	NetworkBytesOut  uint64
+	ContainerCount   int
+	GoroutineCount   int
+	UptimeSeconds    int64
+	LastUpdated      time.Time
 }
 
 // BuildMetrics tracks build-related metrics
 type BuildMetrics struct {
-	BuildsTotal       int64
-	BuildsQueued      int64
-	BuildsRunning     int64
-	BuildsSuccess     int64
-	BuildsFailed      int64
-	BuildsCancelled   int64
-	BuildDurationSum  float64
+	BuildsTotal        int64
+	BuildsQueued       int64
+	BuildsRunning      int64
+	BuildsSuccess      int64
+	BuildsFailed       int64
+	BuildsCancelled    int64
+	BuildDurationSum   float64
 	BuildDurationCount int64
-	QueueTimeSum      float64
-	QueueTimeCount    int64
-	LastUpdated       time.Time
+	QueueTimeSum       float64
+	QueueTimeCount     int64
+	LastUpdated        time.Time
 }
 
 // NodeMetrics tracks node-related metrics
 type NodeMetrics struct {
-	NodesTotal          int64
-	NodesOnline         int64
-	NodesOffline        int64
-	NodesDraining       int64
-	NodeCapacityCPU     float64
-	NodeCapacityMemory  float64
-	NodeUsageCPU        float64
-	NodeUsageMemory     float64
-	LastUpdated         time.Time
+	NodesTotal         int64
+	NodesOnline        int64
+	NodesOffline       int64
+	NodesDraining      int64
+	NodeCapacityCPU    float64
+	NodeCapacityMemory float64
+	NodeUsageCPU       float64
+	NodeUsageMemory    float64
+	LastUpdated        time.Time
 }
 
 // UserMetrics tracks user-related metrics
 type UserMetrics struct {
-	UsersTotal         int64
-	UsersActive        int64
-	APIRequests        int64
-	APIRequestsByUser  map[int]int64
+	UsersTotal          int64
+	UsersActive         int64
+	APIRequests         int64
+	APIRequestsByUser   map[int]int64
 	ResourceUsageByUser map[int]*ResourceUsage
-	LastUpdated        time.Time
+	LastUpdated         time.Time
 }
 
 // ResourceUsage tracks resource usage per user
@@ -105,13 +105,13 @@ type SecurityMetrics struct {
 
 // APIMetrics tracks API request metrics
 type APIMetrics struct {
-	RequestsTotal       int64
-	RequestsByEndpoint  map[string]int64
-	RequestsByStatus    map[int]int64
-	RequestDurationSum  float64
+	RequestsTotal        int64
+	RequestsByEndpoint   map[string]int64
+	RequestsByStatus     map[int]int64
+	RequestDurationSum   float64
 	RequestDurationCount int64
-	ErrorsTotal         int64
-	LastUpdated         time.Time
+	ErrorsTotal          int64
+	LastUpdated          time.Time
 }
 
 // NewCollector creates a new metrics collector

@@ -1,11 +1,11 @@
 package graphql
 
 import (
-	"github.com/casapps/casci/src/pkg/users"
-	"github.com/casapps/casci/src/pkg/projects"
-	"github.com/casapps/casci/src/pkg/builds"
-	"github.com/casapps/casci/src/pkg/nodes"
-	"github.com/casapps/casci/src/pkg/metrics"
+	"github.com/webappsgo/casci/src/pkg/builds"
+	"github.com/webappsgo/casci/src/pkg/metrics"
+	"github.com/webappsgo/casci/src/pkg/nodes"
+	"github.com/webappsgo/casci/src/pkg/projects"
+	"github.com/webappsgo/casci/src/pkg/users"
 )
 
 // NewResolver creates a new GraphQL resolver with service dependencies

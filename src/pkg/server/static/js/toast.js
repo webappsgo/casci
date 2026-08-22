@@ -83,18 +83,3 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-
-// Example usage in comments:
-/*
-// Basic toast
-showToast('Success', 'Operation completed successfully', 'success');
-
-// Using shortcuts
-successToast('Saved', 'Settings saved successfully');
-errorToast('Error', 'Failed to save settings');
-warningToast('Warning', 'This action cannot be undone');
-infoToast('Info', 'New updates available');
-
-// Persistent toast (doesn't auto-hide)
-showToast('Loading', 'Please wait...', 'info', 0);
-*/

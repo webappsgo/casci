@@ -1,3 +1,4 @@
+{{define "footer"}}
 {{/* MANDATORY PARTIAL - footer.tmpl - Site footer */}}
 
 {{/* Custom branding HTML (if configured) */}}
@@ -22,7 +23,7 @@
         
         {{/* Application branding */}}
         <p class="footer-branding">
-            <a href="https://github.com/casapps/casci" target="_blank" rel="noopener">CASCI</a>
+            <a href="https://github.com/webappsgo/casci" target="_blank" rel="noopener">{{.SiteName}}</a>
             <span>•</span>
             <span>Made with ❤️</span>
             <span>•</span>
@@ -30,7 +31,7 @@
         </p>
         
         <p class="footer-meta">
-            <a href="/health">Status</a>
+            <a href="/server/healthz">Status</a>
             <span>•</span>
             <span>&copy; {{.CurrentYear}} casapps</span>
         </p>
@@ -43,7 +44,7 @@
     <div class="cookie-consent-content">
         <p>{{.CookieConsentMessage}}</p>
         <div class="cookie-consent-buttons">
-            <button onclick="acceptCookies()" class="btn btn-primary btn-small">Accept</button>
+            <button id="cookie-consent-accept" class="btn btn-primary btn-small">Accept</button>
             {{if .CookieConsentPolicyURL}}
             <a href="{{.CookieConsentPolicyURL}}" class="btn btn-secondary btn-small">Learn More</a>
             {{end}}
@@ -51,30 +52,32 @@
     </div>
 </div>
 
-<script>
-function checkCookieConsent() {
-    if (!localStorage.getItem('cookie-consent')) {
-        document.getElementById('cookie-consent').style.display = 'block';
+<script nonce="{{.CSPNonce}}">
+(function () {
+    var banner = document.getElementById('cookie-consent');
+    var accept = document.getElementById('cookie-consent-accept');
+    if (!banner || !accept) {
+        return;
     }
-}
-
-function acceptCookies() {
-    localStorage.setItem('cookie-consent', 'accepted');
-    document.getElementById('cookie-consent').style.display = 'none';
-}
-
-// Check on page load
-checkCookieConsent();
+    if (!localStorage.getItem('cookie-consent')) {
+        banner.style.display = 'block';
+    }
+    accept.addEventListener('click', function () {
+        localStorage.setItem('cookie-consent', 'accepted');
+        banner.style.display = 'none';
+    });
+})();
 </script>
 {{end}}
 
 {{/* Google Analytics (if configured) */}}
 {{if .TrackingID}}
 <script async src="https://www.googletagmanager.com/gtag/js?id={{.TrackingID}}"></script>
-<script>
+<script nonce="{{.CSPNonce}}">
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', '{{.TrackingID}}');
 </script>
+{{end}}
 {{end}}

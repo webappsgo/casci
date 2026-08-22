@@ -30,11 +30,11 @@ func (r *SQLRepository) Log(ctx context.Context, event *AuditEvent) error {
 			details, ip_address, user_agent, success, error
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
-	
+
 	if event.Timestamp.IsZero() {
 		event.Timestamp = time.Now()
 	}
-	
+
 	result, err := r.db.ExecContext(ctx, query,
 		event.Timestamp, event.UserID, event.Username, event.Action,
 		event.Resource, event.ResourceID, event.Details, event.IPAddress,
@@ -43,12 +43,12 @@ func (r *SQLRepository) Log(ctx context.Context, event *AuditEvent) error {
 	if err != nil {
 		return fmt.Errorf("failed to log audit event: %w", err)
 	}
-	
+
 	id, err := result.LastInsertId()
 	if err == nil {
 		event.ID = id
 	}
-	
+
 	return nil
 }
 
@@ -56,7 +56,7 @@ func (r *SQLRepository) Query(ctx context.Context, filter *AuditFilter) ([]Audit
 	query := "SELECT id, timestamp, user_id, username, action, resource, resource_id, details, ip_address, user_agent, success, error FROM audit_log"
 	var conditions []string
 	var args []interface{}
-	
+
 	if filter != nil {
 		if filter.UserID != nil {
 			conditions = append(conditions, "user_id = ?")
@@ -83,34 +83,36 @@ func (r *SQLRepository) Query(ctx context.Context, filter *AuditFilter) ([]Audit
 			args = append(args, *filter.Success)
 		}
 	}
-	
+
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
-	
+
 	query += " ORDER BY timestamp DESC"
-	
+
 	if filter != nil {
 		if filter.Limit > 0 {
-			query += fmt.Sprintf(" LIMIT %d", filter.Limit)
+			query += " LIMIT ?"
+			args = append(args, filter.Limit)
 		}
 		if filter.Offset > 0 {
-			query += fmt.Sprintf(" OFFSET %d", filter.Offset)
+			query += " OFFSET ?"
+			args = append(args, filter.Offset)
 		}
 	}
-	
+
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query audit log: %w", err)
 	}
 	defer rows.Close()
-	
+
 	var events []AuditEvent
 	for rows.Next() {
 		var event AuditEvent
 		var resourceID sql.NullInt64
 		var details, ipAddress, userAgent, errMsg sql.NullString
-		
+
 		err := rows.Scan(
 			&event.ID, &event.Timestamp, &event.UserID, &event.Username,
 			&event.Action, &event.Resource, &resourceID, &details,
@@ -119,7 +121,7 @@ func (r *SQLRepository) Query(ctx context.Context, filter *AuditFilter) ([]Audit
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan audit event: %w", err)
 		}
-		
+
 		if resourceID.Valid {
 			event.ResourceID = resourceID.Int64
 		}
@@ -135,10 +137,10 @@ func (r *SQLRepository) Query(ctx context.Context, filter *AuditFilter) ([]Audit
 		if errMsg.Valid {
 			event.Error = errMsg.String
 		}
-		
+
 		events = append(events, event)
 	}
-	
+
 	return events, rows.Err()
 }
 
@@ -146,7 +148,7 @@ func (r *SQLRepository) Count(ctx context.Context, filter *AuditFilter) (int64, 
 	query := "SELECT COUNT(*) FROM audit_log"
 	var conditions []string
 	var args []interface{}
-	
+
 	if filter != nil {
 		if filter.UserID != nil {
 			conditions = append(conditions, "user_id = ?")
@@ -173,11 +175,11 @@ func (r *SQLRepository) Count(ctx context.Context, filter *AuditFilter) (int64, 
 			args = append(args, *filter.Success)
 		}
 	}
-	
+
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
-	
+
 	var count int64
 	err := r.db.QueryRowContext(ctx, query, args...).Scan(&count)
 	return count, err
@@ -188,11 +190,11 @@ func (r *SQLRepository) Cleanup(ctx context.Context, olderThan time.Time) (int64
 	if err != nil {
 		return 0, fmt.Errorf("failed to cleanup audit log: %w", err)
 	}
-	
+
 	count, err := result.RowsAffected()
 	if err != nil {
 		return 0, err
 	}
-	
+
 	return count, nil
 }

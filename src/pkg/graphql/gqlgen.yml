@@ -22,7 +22,7 @@ resolver:
 
 # Optional: skip generating specific models that already exist
 # autobind:
-#   - "github.com/casapps/casci/src/pkg/users"
+#   - "github.com/webappsgo/casci/src/pkg/users"
 
 # Struct tags for generated models
 struct_tag: json

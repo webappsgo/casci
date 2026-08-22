@@ -2,13 +2,23 @@ package nodes
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/casapps/casci/src/pkg/database"
+	"github.com/webappsgo/casci/src/pkg/database"
 )
+
+// hashJoinToken returns the SHA-256 hex digest of a node join token. Join
+// tokens are already high-entropy random values, so a single unsalted SHA-256
+// round is the correct storage form (AI.md PART 11 - never store plaintext).
+func hashJoinToken(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(sum[:])
+}
 
 // Repository handles node data persistence
 type Repository struct {
@@ -354,15 +364,17 @@ func (r *Repository) Delete(ctx context.Context, id int) error {
 	return nil
 }
 
-// CreateToken creates a new node join token
+// CreateToken creates a new node join token. Only the SHA-256 hash is
+// persisted; the raw token stays on the in-memory struct so the caller can
+// return it to the operator exactly once.
 func (r *Repository) CreateToken(ctx context.Context, token *NodeToken) error {
 	query := `
-		INSERT INTO node_tokens (token, expires_at, created_at)
+		INSERT INTO node_tokens (token_hash, expires_at, created_at)
 		VALUES (?, ?, ?)
 	`
 
 	now := time.Now()
-	result, err := r.db.Exec(ctx, query, token.Token, token.ExpiresAt, now)
+	result, err := r.db.Exec(ctx, query, hashJoinToken(token.Token), token.ExpiresAt, now)
 	if err != nil {
 		return fmt.Errorf("failed to create token: %w", err)
 	}
@@ -378,20 +390,20 @@ func (r *Repository) CreateToken(ctx context.Context, token *NodeToken) error {
 	return nil
 }
 
-// GetToken retrieves a token by token string
+// GetToken retrieves a token by the SHA-256 hash of the presented token
+// string. The stored hash is never loaded back into the returned struct.
 func (r *Repository) GetToken(ctx context.Context, tokenStr string) (*NodeToken, error) {
 	query := `
-		SELECT id, token, expires_at, used_at, created_at
+		SELECT id, expires_at, used_at, created_at
 		FROM node_tokens
-		WHERE token = ?
+		WHERE token_hash = ?
 	`
 
 	var token NodeToken
 	var usedAt sql.NullTime
 
-	err := r.db.QueryRow(ctx, query, tokenStr).Scan(
+	err := r.db.QueryRow(ctx, query, hashJoinToken(tokenStr)).Scan(
 		&token.ID,
-		&token.Token,
 		&token.ExpiresAt,
 		&usedAt,
 		&token.CreatedAt,

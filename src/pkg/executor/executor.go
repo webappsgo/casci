@@ -3,7 +3,7 @@ package executor
 import (
 	"context"
 
-	"github.com/casapps/casci/src/pkg/builds"
+	"github.com/webappsgo/casci/src/pkg/builds"
 )
 
 // Executor interface for build execution

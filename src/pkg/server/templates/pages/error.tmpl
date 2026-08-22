@@ -15,10 +15,10 @@
         
         <div class="error-actions">
             <a href="/" class="btn btn-primary">Go Home</a>
-            <a href="/healthz" class="btn btn-secondary">Check Health</a>
+            <a href="/server/healthz" class="btn btn-secondary">Check Health</a>
             {{if .User}}
             {{if .User.IsAdmin}}
-            <a href="/admin/logs" class="btn btn-secondary">View Logs</a>
+            <a href="/server/healthz" class="btn btn-secondary">Server Status</a>
             {{end}}
             {{end}}
         </div>

@@ -8,40 +8,40 @@ import (
 
 // JobConfig represents a Jenkins job configuration
 type JobConfig struct {
-	XMLName        xml.Name       `xml:"project"`
-	Description    string         `xml:"description,omitempty"`
-	KeepDependencies bool         `xml:"keepDependencies"`
-	Properties     []Property     `xml:"properties>hudson.model.ParametersDefinitionProperty>parameterDefinitions>*"`
-	SCM            *SCMConfig     `xml:"scm"`
-	Triggers       []Trigger      `xml:"triggers>*"`
-	Builders       []Builder      `xml:"builders>*"`
-	Publishers     []Publisher    `xml:"publishers>*"`
-	BuildWrappers  []BuildWrapper `xml:"buildWrappers>*"`
-	Disabled       bool           `xml:"disabled,omitempty"`
+	XMLName          xml.Name       `xml:"project"`
+	Description      string         `xml:"description,omitempty"`
+	KeepDependencies bool           `xml:"keepDependencies"`
+	Properties       []Property     `xml:"properties>hudson.model.ParametersDefinitionProperty>parameterDefinitions>*"`
+	SCM              *SCMConfig     `xml:"scm"`
+	Triggers         []Trigger      `xml:"triggers>*"`
+	Builders         []Builder      `xml:"builders>*"`
+	Publishers       []Publisher    `xml:"publishers>*"`
+	BuildWrappers    []BuildWrapper `xml:"buildWrappers>*"`
+	Disabled         bool           `xml:"disabled,omitempty"`
 }
 
 // Property represents a job property (parameters, etc.)
 type Property struct {
-	XMLName xml.Name
-	Name    string `xml:"name"`
-	Default string `xml:"defaultValue,omitempty"`
+	XMLName     xml.Name
+	Name        string `xml:"name"`
+	Default     string `xml:"defaultValue,omitempty"`
 	Description string `xml:"description,omitempty"`
 }
 
 // SCMConfig represents source control configuration
 type SCMConfig struct {
-	XMLName xml.Name
-	Class   string              `xml:"class,attr"`
-	UserRemoteConfigs []UserRemoteConfig `xml:"userRemoteConfigs>hudson.plugins.git.UserRemoteConfig"`
-	Branches []BranchSpec        `xml:"branches>hudson.plugins.git.BranchSpec"`
-	DoGenerateSubmoduleConfigurations bool `xml:"doGenerateSubmoduleConfigurations"`
+	XMLName                           xml.Name
+	Class                             string             `xml:"class,attr"`
+	UserRemoteConfigs                 []UserRemoteConfig `xml:"userRemoteConfigs>hudson.plugins.git.UserRemoteConfig"`
+	Branches                          []BranchSpec       `xml:"branches>hudson.plugins.git.BranchSpec"`
+	DoGenerateSubmoduleConfigurations bool               `xml:"doGenerateSubmoduleConfigurations"`
 }
 
 // UserRemoteConfig represents a Git remote configuration
 type UserRemoteConfig struct {
-	URL    string `xml:"url"`
-	Name   string `xml:"name,omitempty"`
-	Refspec string `xml:"refspec,omitempty"`
+	URL           string `xml:"url"`
+	Name          string `xml:"name,omitempty"`
+	Refspec       string `xml:"refspec,omitempty"`
 	CredentialsId string `xml:"credentialsId,omitempty"`
 }
 
@@ -68,8 +68,8 @@ type Builder struct {
 
 // Publisher represents a post-build action
 type Publisher struct {
-	XMLName xml.Name
-	Pattern string `xml:"pattern,omitempty"`
+	XMLName   xml.Name
+	Pattern   string `xml:"pattern,omitempty"`
 	Artifacts string `xml:"artifacts,omitempty"`
 }
 
@@ -279,14 +279,14 @@ type CASCIProject struct {
 
 // Jenkinsfile represents a parsed Jenkinsfile (Groovy-based)
 type Jenkinsfile struct {
-	Pipeline     *PipelineBlock
-	Agent        string
-	Stages       []Stage
-	Post         *PostBlock
-	Environment  map[string]string
-	Parameters   []Parameter
-	Triggers     []string
-	Tools        map[string]string
+	Pipeline    *PipelineBlock
+	Agent       string
+	Stages      []Stage
+	Post        *PostBlock
+	Environment map[string]string
+	Parameters  []Parameter
+	Triggers    []string
+	Tools       map[string]string
 }
 
 // PipelineBlock represents pipeline { } block

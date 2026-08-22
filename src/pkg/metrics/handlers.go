@@ -173,10 +173,10 @@ func (h *Handler) ServeBuildMetrics(w http.ResponseWriter, r *http.Request) {
 	metrics := h.exporter.collector.GetBuildMetrics()
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"builds":                metrics,
-		"average_duration":      h.exporter.collector.GetAverageBuildDuration(),
-		"average_queue_time":    h.exporter.collector.GetAverageQueueTime(),
-		"success_rate_percent":  h.exporter.collector.GetSuccessRate(),
+		"builds":               metrics,
+		"average_duration":     h.exporter.collector.GetAverageBuildDuration(),
+		"average_queue_time":   h.exporter.collector.GetAverageQueueTime(),
+		"success_rate_percent": h.exporter.collector.GetSuccessRate(),
 	})
 }
 

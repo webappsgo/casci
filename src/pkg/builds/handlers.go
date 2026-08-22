@@ -3,13 +3,14 @@ package builds
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 
-	"github.com/casapps/casci/src/pkg/projects"
-	"github.com/casapps/casci/src/pkg/users"
+	"github.com/webappsgo/casci/src/pkg/projects"
+	"github.com/webappsgo/casci/src/pkg/users"
 )
 
 // Handler handles HTTP requests for builds
@@ -407,9 +408,13 @@ func (h *Handler) GetStats(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, stats)
 }
 
-// Helper function to write JSON responses
+// writeJSON writes data as a JSON response with the given status code. The
+// status line is already on the wire by the time encoding runs, so a failure
+// can only be logged — the client sees a truncated body either way.
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		log.Printf("builds: failed to encode JSON response: %v", err)
+	}
 }

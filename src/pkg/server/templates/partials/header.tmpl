@@ -1,3 +1,4 @@
+{{define "header"}}
 {{/* MANDATORY PARTIAL - header.tmpl - Site header */}}
 <header class="site-header">
     <div class="container header-content">
@@ -15,14 +16,14 @@
                     <span class="icon">▼</span>
                 </button>
                 <div class="user-dropdown" id="user-dropdown">
-                    <a href="/admin" class="dropdown-item">Admin Panel</a>
+                    <a href="/server/{{.AdminPath}}" class="dropdown-item">Admin Panel</a>
                     <a href="/profile" class="dropdown-item">Profile</a>
                     <hr class="dropdown-divider">
-                    <button class="dropdown-item btn-logout" onclick="logout()">Logout</button>
+                    <button class="dropdown-item btn-logout" data-action="logout">Logout</button>
                 </div>
             </div>
             {{else}}
-            <a href="/admin" class="btn btn-primary">Login</a>
+            <a href="/server/{{.AdminPath}}" class="btn btn-primary">Login</a>
             {{end}}
             
             <button class="btn-theme" id="theme-toggle" title="Toggle theme">
@@ -31,3 +32,4 @@
         </div>
     </div>
 </header>
+{{end}}

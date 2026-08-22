@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/casapps/casci/src/pkg/database"
+	"github.com/webappsgo/casci/src/pkg/database"
 )
 
 // Service handles artifact business logic
@@ -386,14 +386,14 @@ func (s *Service) GetStorageStats(ctx context.Context) (map[string]interface{}, 
 	}
 
 	stats := map[string]interface{}{
-		"total_artifacts":  totalArtifacts,
-		"total_size":       totalSize,
-		"unique_files":     uniqueFiles,
-		"dedup_ratio":      fmt.Sprintf("%.1f%%", dedupRatio),
-		"storage_type":     s.config.Type,
-		"compression":      s.config.Compression,
-		"deduplication":    s.config.Deduplication,
-		"retention_days":   s.config.RetentionDays,
+		"total_artifacts": totalArtifacts,
+		"total_size":      totalSize,
+		"unique_files":    uniqueFiles,
+		"dedup_ratio":     fmt.Sprintf("%.1f%%", dedupRatio),
+		"storage_type":    s.config.Type,
+		"compression":     s.config.Compression,
+		"deduplication":   s.config.Deduplication,
+		"retention_days":  s.config.RetentionDays,
 	}
 
 	return stats, nil

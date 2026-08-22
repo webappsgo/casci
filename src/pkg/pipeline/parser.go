@@ -14,24 +14,24 @@ import (
 type PipelineFormat string
 
 const (
-	FormatJenkinsfile      PipelineFormat = "jenkinsfile"
-	FormatGitHubActions    PipelineFormat = "github-actions"
-	FormatGitLabCI         PipelineFormat = "gitlab-ci"
-	FormatCircleCI         PipelineFormat = "circleci"
-	FormatTravisCI         PipelineFormat = "travis-ci"
-	FormatAzurePipelines   PipelineFormat = "azure-pipelines"
+	FormatJenkinsfile        PipelineFormat = "jenkinsfile"
+	FormatGitHubActions      PipelineFormat = "github-actions"
+	FormatGitLabCI           PipelineFormat = "gitlab-ci"
+	FormatCircleCI           PipelineFormat = "circleci"
+	FormatTravisCI           PipelineFormat = "travis-ci"
+	FormatAzurePipelines     PipelineFormat = "azure-pipelines"
 	FormatBitbucketPipelines PipelineFormat = "bitbucket-pipelines"
-	FormatDroneCI          PipelineFormat = "drone-ci"
-	FormatBuildkite        PipelineFormat = "buildkite"
-	FormatUnknown          PipelineFormat = "unknown"
+	FormatDroneCI            PipelineFormat = "drone-ci"
+	FormatBuildkite          PipelineFormat = "buildkite"
+	FormatUnknown            PipelineFormat = "unknown"
 )
 
 // Pipeline represents the internal pipeline format
 type Pipeline struct {
-	Version     string                 `json:"version"`
-	Environment map[string]string      `json:"environment"`
-	Secrets     []string               `json:"secrets"`
-	Stages      []Stage                `json:"stages"`
+	Version     string            `json:"version"`
+	Environment map[string]string `json:"environment"`
+	Secrets     []string          `json:"secrets"`
+	Stages      []Stage           `json:"stages"`
 }
 
 // Stage represents a pipeline stage
@@ -251,11 +251,11 @@ func (p *Parser) convertGitHubActionsJob(name string, data interface{}) Job {
 
 func (p *Parser) mapGitHubRunsOnToContainer(runsOn string) string {
 	mapping := map[string]string{
-		"ubuntu-latest":   "ubuntu:22.04",
-		"ubuntu-22.04":    "ubuntu:22.04",
-		"ubuntu-20.04":    "ubuntu:20.04",
-		"macos-latest":    "",
-		"windows-latest":  "",
+		"ubuntu-latest":  "ubuntu:22.04",
+		"ubuntu-22.04":   "ubuntu:22.04",
+		"ubuntu-20.04":   "ubuntu:20.04",
+		"macos-latest":   "",
+		"windows-latest": "",
 	}
 
 	if container, ok := mapping[runsOn]; ok {

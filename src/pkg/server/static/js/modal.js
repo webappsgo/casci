@@ -1,30 +1,48 @@
-// Modal.js - Custom Modal System (NO JS alerts - TEMPLATE.md compliant)
+// Modal.js - Custom Modal System (no native alert/confirm/prompt)
+// Modals are built with DOM nodes and delegated listeners: the Content-Security-Policy
+// serves a per-request nonce and allows neither inline handlers nor eval, so
+// onclick attributes and new Function() callbacks would silently never run.
+
+// Callbacks are held here rather than serialized into data attributes so they
+// survive as real closures instead of being re-parsed from source text.
+const modalCallbacks = new Map();
 
 // Open Modal
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'block';
-        document.body.style.overflow = 'hidden';
-        
-        // Focus trap
-        const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-        if (focusableElements.length > 0) {
-            focusableElements[0].focus();
-        }
+    if (!modal) return;
+
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+
+    const focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (focusable.length > 0) {
+        focusable[0].focus();
     }
 }
 
 // Close Modal
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = '';
-    }
+    if (!modal) return;
+
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+// Build one modal button carrying the delegated action metadata
+function createModalButton(modalId, action, label, className) {
+    const button = document.createElement('button');
+    button.className = className;
+    button.textContent = label;
+    button.dataset.action = action;
+    button.dataset.modal = modalId;
+    return button;
 }
 
 // Create Custom Modal
+// content may be a DOM node or a plain string; strings are inserted as text so
+// caller-supplied values can never inject markup.
 function createModal(options) {
     const {
         id = 'custom-modal-' + Date.now(),
@@ -37,41 +55,60 @@ function createModal(options) {
         onConfirm = () => {},
         onCancel = () => {}
     } = options;
-    
-    // Remove existing modal with same ID
+
     const existing = document.getElementById(id);
     if (existing) {
         existing.remove();
     }
-    
+
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.id = id;
-    modal.innerHTML = `
-        <div class="modal-overlay" onclick="closeModal('${id}')"></div>
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3 class="modal-title">${title}</h3>
-                <button class="modal-close" onclick="closeModal('${id}')" aria-label="Close">×</button>
-            </div>
-            <div class="modal-body">
-                ${content}
-            </div>
-            <div class="modal-footer">
-                ${showCancel ? `<button class="btn btn-secondary" onclick="handleModalAction('${id}', 'cancel')">${cancelText}</button>` : ''}
-                ${showConfirm ? `<button class="btn btn-primary" onclick="handleModalAction('${id}', 'confirm')">${confirmText}</button>` : ''}
-            </div>
-        </div>
-    `;
-    
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.dataset.action = 'modal-close';
+    overlay.dataset.modal = id;
+
+    const container = document.createElement('div');
+    container.className = 'modal-container';
+
+    const header = document.createElement('div');
+    header.className = 'modal-header';
+    const heading = document.createElement('h3');
+    heading.className = 'modal-title';
+    heading.textContent = title;
+    const close = createModalButton(id, 'modal-close', '×', 'modal-close');
+    close.setAttribute('aria-label', 'Close');
+    header.append(heading, close);
+
+    const body = document.createElement('div');
+    body.className = 'modal-body';
+    if (content instanceof Node) {
+        body.appendChild(content);
+    } else if (content) {
+        const paragraph = document.createElement('p');
+        paragraph.textContent = content;
+        body.appendChild(paragraph);
+    }
+
+    const footer = document.createElement('div');
+    footer.className = 'modal-footer';
+    if (showCancel) {
+        footer.appendChild(createModalButton(id, 'modal-cancel', cancelText, 'btn btn-secondary'));
+    }
+    if (showConfirm) {
+        footer.appendChild(createModalButton(id, 'modal-confirm', confirmText, 'btn btn-primary'));
+    }
+
+    container.append(header, body, footer);
+    modal.append(overlay, container);
     document.body.appendChild(modal);
-    
-    // Store callbacks
-    modal.dataset.onConfirm = onConfirm.toString();
-    modal.dataset.onCancel = onCancel.toString();
-    
+
+    modalCallbacks.set(id, { onConfirm, onCancel });
+
     openModal(id);
-    
+
     return id;
 }
 
@@ -79,27 +116,24 @@ function createModal(options) {
 function handleModalAction(modalId, action) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
-    
-    if (action === 'confirm' && modal.dataset.onConfirm) {
-        try {
-            const fn = new Function('return ' + modal.dataset.onConfirm)();
-            fn();
-        } catch (e) {
-            console.error('Error in modal confirm callback:', e);
-        }
-    } else if (action === 'cancel' && modal.dataset.onCancel) {
-        try {
-            const fn = new Function('return ' + modal.dataset.onCancel)();
-            fn();
-        } catch (e) {
-            console.error('Error in modal cancel callback:', e);
+
+    const callbacks = modalCallbacks.get(modalId);
+    if (callbacks) {
+        const callback = action === 'confirm' ? callbacks.onConfirm : callbacks.onCancel;
+        if (typeof callback === 'function') {
+            try {
+                callback();
+            } catch (e) {
+                console.error('Error in modal ' + action + ' callback:', e);
+            }
         }
     }
-    
+
     closeModal(modalId);
-    
-    // Remove modal after animation
+
+    // Remove modal after the close animation has run
     setTimeout(() => {
+        modalCallbacks.delete(modalId);
         modal.remove();
     }, 300);
 }
@@ -108,7 +142,7 @@ function handleModalAction(modalId, action) {
 function confirmDialog(title, message, onConfirm, onCancel) {
     return createModal({
         title,
-        content: `<p>${message}</p>`,
+        content: message,
         confirmText: 'Yes',
         cancelText: 'No',
         onConfirm: onConfirm || (() => {}),
@@ -120,7 +154,7 @@ function confirmDialog(title, message, onConfirm, onCancel) {
 function alertDialog(title, message, onClose) {
     return createModal({
         title,
-        content: `<p>${message}</p>`,
+        content: message,
         showCancel: false,
         confirmText: 'OK',
         onConfirm: onClose || (() => {})
@@ -130,60 +164,62 @@ function alertDialog(title, message, onClose) {
 // Prompt Dialog (replacement for JS prompt)
 function promptDialog(title, message, defaultValue = '', onConfirm, onCancel) {
     const inputId = 'prompt-input-' + Date.now();
-    const content = `
-        <p>${message}</p>
-        <input type="text" id="${inputId}" class="form-control" value="${defaultValue}" 
-               onkeypress="if(event.key==='Enter') handlePromptSubmit('${inputId}', arguments[0])">
-    `;
-    
+
+    const wrapper = document.createElement('div');
+    const text = document.createElement('p');
+    text.textContent = message;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.id = inputId;
+    input.className = 'form-control';
+    input.value = defaultValue;
+    // Enter submits the prompt without needing an inline onkeypress attribute
+    input.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        const confirmButton = wrapper.closest('.modal').querySelector('[data-action="modal-confirm"]');
+        if (confirmButton) confirmButton.click();
+    });
+    wrapper.append(text, input);
+
     const modalId = createModal({
         title,
-        content,
+        content: wrapper,
         confirmText: 'OK',
         onConfirm: () => {
-            const input = document.getElementById(inputId);
-            if (input && onConfirm) {
+            if (onConfirm) {
                 onConfirm(input.value);
             }
         },
         onCancel: onCancel || (() => {})
     });
-    
-    // Focus input after modal opens
-    setTimeout(() => {
-        const input = document.getElementById(inputId);
-        if (input) input.focus();
-    }, 100);
-    
+
+    input.focus();
+
     return modalId;
 }
 
-function handlePromptSubmit(inputId, event) {
-    if (event.key === 'Enter') {
-        const input = document.getElementById(inputId);
-        const modal = input.closest('.modal');
-        if (modal) {
-            modal.querySelector('.btn-primary').click();
-        }
+// Delegated dispatcher for every modal control, including modals injected after
+// page load. Registered once at module scope.
+document.addEventListener('click', (e) => {
+    const target = e.target.closest('[data-action][data-modal]');
+    if (!target) return;
+
+    const modalId = target.dataset.modal;
+    switch (target.dataset.action) {
+        case 'modal-open':
+            openModal(modalId);
+            break;
+        case 'modal-close':
+            closeModal(modalId);
+            break;
+        case 'modal-cancel':
+            handleModalAction(modalId, 'cancel');
+            break;
+        case 'modal-confirm':
+            handleModalAction(modalId, 'confirm');
+            break;
+        default:
+            break;
     }
-}
-
-// Example usage in comments:
-/*
-// Replace confirm():
-confirmDialog('Delete Project', 'Are you sure you want to delete this project?', () => {
-    // User clicked Yes
-    console.log('Confirmed');
-}, () => {
-    // User clicked No
-    console.log('Cancelled');
 });
-
-// Replace alert():
-alertDialog('Success', 'Project created successfully!');
-
-// Replace prompt():
-promptDialog('New Project', 'Enter project name:', '', (value) => {
-    console.log('User entered:', value);
-});
-*/

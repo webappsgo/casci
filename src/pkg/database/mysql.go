@@ -38,7 +38,7 @@ func (d *MySQLDriver) Migrate(ctx context.Context, db *sql.DB) error {
 			username VARCHAR(255) UNIQUE NOT NULL,
 			email VARCHAR(255) UNIQUE NOT NULL,
 			password_hash VARCHAR(255) NOT NULL,
-			api_token VARCHAR(255) UNIQUE,
+			api_token_hash VARCHAR(255) UNIQUE,
 			is_admin BOOLEAN DEFAULT FALSE,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
@@ -103,11 +103,11 @@ func (d *MySQLDriver) Migrate(ctx context.Context, db *sql.DB) error {
 		// Node tokens table
 		`CREATE TABLE IF NOT EXISTS node_tokens (
 			id INT AUTO_INCREMENT PRIMARY KEY,
-			token VARCHAR(255) UNIQUE NOT NULL,
+			token_hash VARCHAR(255) UNIQUE NOT NULL,
 			expires_at TIMESTAMP NOT NULL,
 			used_at TIMESTAMP NULL,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			INDEX idx_token (token)
+			INDEX idx_token_hash (token_hash)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
 		// Artifacts table
@@ -137,31 +137,6 @@ func (d *MySQLDriver) Migrate(ctx context.Context, db *sql.DB) error {
 			"category VARCHAR(50)," +
 			"updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP" +
 			") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-
-		// User credentials table
-		`CREATE TABLE IF NOT EXISTS user_credentials (
-			id INT AUTO_INCREMENT PRIMARY KEY,
-			user_id INT NOT NULL,
-			credential_type VARCHAR(50),
-			public_key TEXT,
-			private_key_encrypted TEXT,
-			metadata JSON,
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-			INDEX idx_user_id (user_id)
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-		// Project credentials table
-		`CREATE TABLE IF NOT EXISTS project_credentials (
-			id INT AUTO_INCREMENT PRIMARY KEY,
-			project_id INT NOT NULL,
-			credential_type VARCHAR(50),
-			name VARCHAR(255),
-			value_encrypted TEXT,
-			UNIQUE KEY unique_project_cred (project_id, credential_type, name),
-			FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
-			INDEX idx_project_id (project_id)
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
 		// Cloud accounts table
 		`CREATE TABLE IF NOT EXISTS cloud_accounts (
@@ -284,7 +259,7 @@ func (d *MySQLDriver) Migrate(ctx context.Context, db *sql.DB) error {
 			"FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE," +
 			"INDEX idx_user_id (user_id)," +
 			"INDEX idx_credential_type (credential_type)" +
-		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+			") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
 		// Project credentials table
 		"CREATE TABLE IF NOT EXISTS project_credentials (" +
@@ -304,7 +279,7 @@ func (d *MySQLDriver) Migrate(ctx context.Context, db *sql.DB) error {
 			"FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE," +
 			"INDEX idx_project_id (project_id)," +
 			"INDEX idx_user_id (user_id)" +
-		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+			") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 	}
 
 	// Execute migrations

@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/casapps/casci/src/pkg/database"
+	"github.com/webappsgo/casci/src/pkg/database"
 )
 
 // Repository handles build data operations
@@ -233,10 +233,7 @@ func (r *Repository) ListByProject(ctx context.Context, projectID int, limit int
 		WHERE project_id = ?
 		ORDER BY build_number DESC
 	`
-
-	if limit > 0 {
-		query += fmt.Sprintf(" LIMIT %d", limit)
-	}
+	limitPlaceholder := "?"
 
 	if r.db.GetType() == "postgres" {
 		query = `
@@ -245,12 +242,17 @@ func (r *Repository) ListByProject(ctx context.Context, projectID int, limit int
 			WHERE project_id = $1
 			ORDER BY build_number DESC
 		`
-		if limit > 0 {
-			query += fmt.Sprintf(" LIMIT %d", limit)
-		}
+		limitPlaceholder = "$2"
 	}
 
-	rows, err := r.db.Query(ctx, query, projectID)
+	// Bind LIMIT as a parameter instead of interpolating it into the SQL text
+	args := []interface{}{projectID}
+	if limit > 0 {
+		query += " LIMIT " + limitPlaceholder
+		args = append(args, limit)
+	}
+
+	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list builds: %w", err)
 	}

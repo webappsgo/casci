@@ -4,32 +4,47 @@ import (
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"strings"
 
-	"github.com/casapps/casci/src/pkg/builds"
-	"github.com/casapps/casci/src/pkg/projects"
+	"github.com/webappsgo/casci/src/pkg/builds"
+	"github.com/webappsgo/casci/src/pkg/projects"
 )
 
 // Handler handles webhook requests from various Git providers
 type Handler struct {
 	projectService *projects.Service
 	buildService   *builds.Service
-	secrets        map[string]string // Project ID -> Secret
+	// Project ID -> Secret
+	secrets map[string]string
+	// Server-wide fallback secret, used when a project has no secret of its own
+	defaultSecret string
 }
 
-// NewHandler creates a new webhook handler
-func NewHandler(projectService *projects.Service, buildService *builds.Service) *Handler {
+// NewHandler creates a new webhook handler. The shared secret comes from
+// server.yml (server.security.webhook_secret); an empty secret rejects every
+// inbound delivery rather than skipping verification.
+func NewHandler(projectService *projects.Service, buildService *builds.Service, defaultSecret string) *Handler {
 	return &Handler{
 		projectService: projectService,
 		buildService:   buildService,
 		secrets:        make(map[string]string),
+		defaultSecret:  defaultSecret,
 	}
+}
+
+// webhookSecret returns the configured shared secret, or an empty string when
+// none is configured. Callers MUST treat an empty secret as "reject", never as
+// "skip verification".
+func (h *Handler) webhookSecret() string {
+	return h.defaultSecret
 }
 
 // ServeHTTP handles incoming webhook requests
@@ -96,7 +111,7 @@ type GitHubPushPayload struct {
 type GitHubPullRequestPayload struct {
 	Action      string `json:"action"`
 	PullRequest struct {
-		Number int    `json:"number"`
+		Number int `json:"number"`
 		Head   struct {
 			Ref string `json:"ref"`
 			SHA string `json:"sha"`
@@ -113,21 +128,27 @@ type GitHubPullRequestPayload struct {
 
 // handleGitHub handles GitHub webhooks
 func (h *Handler) handleGitHub(w http.ResponseWriter, r *http.Request) {
-	// Verify signature if secret is configured
+	// Signature verification is mandatory. Treating a missing header as
+	// "no secret configured" would let any caller skip verification entirely
+	// by simply omitting the header.
 	signature := r.Header.Get("X-Hub-Signature-256")
-	if signature != "" {
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, "Failed to read body", http.StatusBadRequest)
-			return
-		}
-		r.Body = io.NopCloser(strings.NewReader(string(body)))
+	if signature == "" {
+		log.Printf("Rejected GitHub webhook with no X-Hub-Signature-256 header")
+		http.Error(w, "Missing signature", http.StatusUnauthorized)
+		return
+	}
 
-		if !h.verifyGitHubSignature(signature, body) {
-			log.Printf("Invalid GitHub signature")
-			http.Error(w, "Invalid signature", http.StatusUnauthorized)
-			return
-		}
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read body", http.StatusBadRequest)
+		return
+	}
+	r.Body = io.NopCloser(strings.NewReader(string(body)))
+
+	if !h.verifyGitHubSignature(signature, body) {
+		log.Printf("Invalid GitHub signature")
+		http.Error(w, "Invalid signature", http.StatusUnauthorized)
+		return
 	}
 
 	event := r.Header.Get("X-GitHub-Event")
@@ -241,8 +262,13 @@ func (h *Handler) handleGitHubPullRequest(w http.ResponseWriter, r *http.Request
 }
 
 func (h *Handler) verifyGitHubSignature(signature string, body []byte) bool {
-	// TODO: Get secret from project configuration
-	secret := []byte("your-webhook-secret")
+	// Fail closed: with no secret configured there is nothing to verify
+	// against, so no signature can be considered valid.
+	secret := []byte(h.webhookSecret())
+	if len(secret) == 0 {
+		log.Printf("Webhook signature verification failed: no webhook secret configured")
+		return false
+	}
 
 	mac := hmac.New(sha256.New, secret)
 	mac.Write(body)
@@ -270,11 +296,14 @@ type GitLabPushPayload struct {
 
 // handleGitLab handles GitLab webhooks
 func (h *Handler) handleGitLab(w http.ResponseWriter, r *http.Request) {
-	// Verify token if configured
+	// Fail closed: a GitLab webhook is only trusted when its token matches the
+	// configured secret. Compared in constant time to avoid a timing oracle.
 	token := r.Header.Get("X-GitLab-Token")
-	if token != "" {
-		// TODO: Verify token
-		_ = token
+	secret := h.webhookSecret()
+	if secret == "" || subtle.ConstantTimeCompare([]byte(token), []byte(secret)) != 1 {
+		log.Printf("Rejected GitLab webhook with missing or invalid X-GitLab-Token")
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return
 	}
 
 	event := r.Header.Get("X-GitLab-Event")
@@ -384,19 +413,72 @@ func (h *Handler) handleGitea(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// findProjectByURL finds a project by its repository URL
+// ErrProjectNotFound is returned when no project matches a webhook's repository
+// URL.
+var ErrProjectNotFound = errors.New("no project matches repository URL")
+
+// canonicalRepoURL reduces a repository URL to "host/path" so the clone-URL
+// spellings that refer to one repository all compare equal. A project may be
+// registered as https://github.com/user/repo while the webhook delivers
+// git@github.com:user/repo.git, so matching on the raw string would miss.
+// Comparison is case-insensitive because hosts are case-insensitive and the
+// forges this talks to treat owner and repository names that way too.
+func canonicalRepoURL(repoURL string) string {
+	s := strings.TrimSpace(repoURL)
+
+	// scp-style SSH ("git@host:owner/repo") is not a URL, so convert the first
+	// colon after the host into a path separator before any parsing.
+	if !strings.Contains(s, "://") {
+		if at := strings.Index(s, "@"); at >= 0 {
+			s = s[at+1:]
+		}
+		s = strings.Replace(s, ":", "/", 1)
+	} else {
+		s = s[strings.Index(s, "://")+3:]
+		if at := strings.Index(s, "@"); at >= 0 {
+			s = s[at+1:]
+		}
+	}
+
+	// Drop any port, query, or fragment so they cannot split a match.
+	if i := strings.IndexAny(s, "?#"); i >= 0 {
+		s = s[:i]
+	}
+	if host, rest, ok := strings.Cut(s, "/"); ok {
+		if h, _, found := strings.Cut(host, ":"); found {
+			host = h
+		}
+		s = host + "/" + rest
+	}
+
+	s = strings.TrimSuffix(s, "/")
+	s = strings.TrimSuffix(s, ".git")
+	s = strings.TrimSuffix(s, "/")
+
+	return strings.ToLower(s)
+}
+
+// findProjectByURL finds the project whose repository URL refers to the same
+// repository as repoURL.
 func (h *Handler) findProjectByURL(ctx context.Context, repoURL string) (*projects.Project, error) {
-	// Normalize URL (remove .git suffix, trailing slash, etc.)
-	normalizedURL := strings.TrimSuffix(repoURL, ".git")
-	normalizedURL = strings.TrimSuffix(normalizedURL, "/")
+	want := canonicalRepoURL(repoURL)
+	if want == "" {
+		return nil, ErrProjectNotFound
+	}
 
-	// Convert HTTPS to SSH URL variants for matching
-	// github.com/user/repo could be:
-	// - https://github.com/user/repo
-	// - https://github.com/user/repo.git
-	// - git@github.com:user/repo.git
+	// There is no repository-URL index to query: the stored spelling and the
+	// delivered spelling differ often enough that an equality lookup would miss
+	// most matches, so candidates are canonicalised in Go instead.
+	all, err := h.projectService.ListAll(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list projects: %w", err)
+	}
 
-	// TODO: Query database for matching project
-	// For now, return error
-	return nil, fmt.Errorf("project lookup not implemented")
+	for _, p := range all {
+		if canonicalRepoURL(p.RepositoryURL) == want {
+			return p, nil
+		}
+	}
+
+	return nil, ErrProjectNotFound
 }

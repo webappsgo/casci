@@ -1,7 +1,3 @@
-{{template "layout" .}}
-
-{{define "title"}}About - CASCI{{end}}
-
 {{define "content"}}
 <div class="container">
     <h1>About CASCI</h1>
@@ -44,8 +40,8 @@
         <h3>API Documentation</h3>
         <p>This application provides a full REST API with interactive documentation.</p>
         <ul>
-            <li><a href="/swagger/">Swagger UI</a> - Interactive REST API explorer</li>
-            <li><a href="/graphql/playground">GraphQL Playground</a> - Interactive GraphQL explorer</li>
+            <li><a href="/server/docs/swagger">Swagger UI</a> - Interactive REST API explorer</li>
+            <li><a href="/server/docs/graphql">GraphQL Playground</a> - Interactive GraphQL explorer</li>
             <li><a href="/openapi.json">OpenAPI Specification (JSON)</a></li>
             <li><a href="/openapi.yaml">OpenAPI Specification (YAML)</a></li>
         </ul>
@@ -54,7 +50,7 @@
     <div class="section">
         <h3>Links</h3>
         <ul>
-            <li><a href="https://github.com/casapps/casci" target="_blank">GitHub Repository</a></li>
+            <li><a href="https://github.com/webappsgo/casci" target="_blank">GitHub Repository</a></li>
             <li><a href="/server/help">Help & Documentation</a></li>
             <li><a href="/server/privacy">Privacy Policy</a></li>
             <li><a href="/server/contact">Contact Us</a></li>

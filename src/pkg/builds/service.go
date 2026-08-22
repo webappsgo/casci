@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/casapps/casci/src/pkg/database"
+	"github.com/webappsgo/casci/src/pkg/database"
 )
 
 // MetricsCollector defines the interface for metrics collection

@@ -200,12 +200,12 @@ func (h *Handler) TriggerScan(w http.ResponseWriter, r *http.Request) {
 
 // WebhookPayload represents a webhook notification payload
 type WebhookPayload struct {
-	BuildID    int            `json:"build_id"`
-	Status     string         `json:"status"`
-	Passed     bool           `json:"passed"`
-	Summary    *ScanSummary   `json:"summary"`
-	ReportURLs []string       `json:"report_urls"`
-	Timestamp  string         `json:"timestamp"`
+	BuildID    int          `json:"build_id"`
+	Status     string       `json:"status"`
+	Passed     bool         `json:"passed"`
+	Summary    *ScanSummary `json:"summary"`
+	ReportURLs []string     `json:"report_urls"`
+	Timestamp  string       `json:"timestamp"`
 }
 
 // SendWebhook sends security scan results to a webhook (helper function)

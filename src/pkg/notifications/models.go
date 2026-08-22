@@ -9,12 +9,12 @@ type NotificationType string
 
 const (
 	// Chat/Messaging
-	NotificationTypeSlack     NotificationType = "slack"
-	NotificationTypeDiscord   NotificationType = "discord"
-	NotificationTypeTeams     NotificationType = "teams"
-	NotificationTypeTelegram  NotificationType = "telegram"
-	NotificationTypeMatrix    NotificationType = "matrix"
-	NotificationTypeIRC       NotificationType = "irc"
+	NotificationTypeSlack      NotificationType = "slack"
+	NotificationTypeDiscord    NotificationType = "discord"
+	NotificationTypeTeams      NotificationType = "teams"
+	NotificationTypeTelegram   NotificationType = "telegram"
+	NotificationTypeMatrix     NotificationType = "matrix"
+	NotificationTypeIRC        NotificationType = "irc"
 	NotificationTypeMattermost NotificationType = "mattermost"
 
 	// Email
@@ -28,10 +28,10 @@ const (
 	NotificationTypeAsana  NotificationType = "asana"
 
 	// Git Providers
-	NotificationTypeGithubStatus   NotificationType = "github_status"
-	NotificationTypeGitlabStatus   NotificationType = "gitlab_status"
+	NotificationTypeGithubStatus    NotificationType = "github_status"
+	NotificationTypeGitlabStatus    NotificationType = "gitlab_status"
 	NotificationTypeBitbucketStatus NotificationType = "bitbucket_status"
-	NotificationTypeGiteaStatus    NotificationType = "gitea_status"
+	NotificationTypeGiteaStatus     NotificationType = "gitea_status"
 
 	// Incident Management
 	NotificationTypePagerDuty NotificationType = "pagerduty"
@@ -59,59 +59,59 @@ const (
 
 // NotificationConfig represents a notification channel configuration
 type NotificationConfig struct {
-	ID        int              `json:"id"`
-	UserID    int              `json:"user_id"`
-	ProjectID *int             `json:"project_id,omitempty"` // nil = global
-	Name      string           `json:"name"`
-	Type      NotificationType `json:"type"`
-	Enabled   bool             `json:"enabled"`
-	Config    map[string]string `json:"config"` // Type-specific configuration
-	Events    []EventType      `json:"events"`  // Which events to notify on
-	Filter    string           `json:"filter,omitempty"` // Conditional filter
-	Template  string           `json:"template,omitempty"` // Custom message template
-	CreatedAt time.Time        `json:"created_at"`
-	UpdatedAt time.Time        `json:"updated_at"`
+	ID        int               `json:"id"`
+	UserID    int               `json:"user_id"`
+	ProjectID *int              `json:"project_id,omitempty"` // nil = global
+	Name      string            `json:"name"`
+	Type      NotificationType  `json:"type"`
+	Enabled   bool              `json:"enabled"`
+	Config    map[string]string `json:"config"`             // Type-specific configuration
+	Events    []EventType       `json:"events"`             // Which events to notify on
+	Filter    string            `json:"filter,omitempty"`   // Conditional filter
+	Template  string            `json:"template,omitempty"` // Custom message template
+	CreatedAt time.Time         `json:"created_at"`
+	UpdatedAt time.Time         `json:"updated_at"`
 }
 
 // NotificationData represents data passed to notification templates
 type NotificationData struct {
-	Event       EventType          `json:"event"`
-	ProjectName string             `json:"project_name"`
-	ProjectID   int                `json:"project_id"`
-	BuildID     int                `json:"build_id"`
-	BuildNumber int                `json:"build_number"`
-	Branch      string             `json:"branch"`
-	Commit      string             `json:"commit"`
-	CommitShort string             `json:"commit_short"`
-	Author      string             `json:"author"`
-	Status      string             `json:"status"`
-	Duration    string             `json:"duration"`
-	StartedAt   time.Time          `json:"started_at"`
-	FinishedAt  time.Time          `json:"finished_at"`
-	URL         string             `json:"url"`
-	LogsURL     string             `json:"logs_url"`
-	Artifacts   []string           `json:"artifacts,omitempty"`
-	Error       string             `json:"error,omitempty"`
-	Changes     []CommitChange     `json:"changes,omitempty"`
+	Event       EventType              `json:"event"`
+	ProjectName string                 `json:"project_name"`
+	ProjectID   int                    `json:"project_id"`
+	BuildID     int                    `json:"build_id"`
+	BuildNumber int                    `json:"build_number"`
+	Branch      string                 `json:"branch"`
+	Commit      string                 `json:"commit"`
+	CommitShort string                 `json:"commit_short"`
+	Author      string                 `json:"author"`
+	Status      string                 `json:"status"`
+	Duration    string                 `json:"duration"`
+	StartedAt   time.Time              `json:"started_at"`
+	FinishedAt  time.Time              `json:"finished_at"`
+	URL         string                 `json:"url"`
+	LogsURL     string                 `json:"logs_url"`
+	Artifacts   []string               `json:"artifacts,omitempty"`
+	Error       string                 `json:"error,omitempty"`
+	Changes     []CommitChange         `json:"changes,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // CommitChange represents a single commit in the change list
 type CommitChange struct {
-	SHA     string    `json:"sha"`
-	ShortSHA string   `json:"short_sha"`
-	Message string    `json:"message"`
-	Author  string    `json:"author"`
-	Time    time.Time `json:"time"`
+	SHA      string    `json:"sha"`
+	ShortSHA string    `json:"short_sha"`
+	Message  string    `json:"message"`
+	Author   string    `json:"author"`
+	Time     time.Time `json:"time"`
 }
 
 // NotificationResult represents the result of sending a notification
 type NotificationResult struct {
-	ConfigID  int       `json:"config_id"`
-	Success   bool      `json:"success"`
-	Error     string    `json:"error,omitempty"`
-	SentAt    time.Time `json:"sent_at"`
-	Duration  time.Duration `json:"duration"`
+	ConfigID int           `json:"config_id"`
+	Success  bool          `json:"success"`
+	Error    string        `json:"error,omitempty"`
+	SentAt   time.Time     `json:"sent_at"`
+	Duration time.Duration `json:"duration"`
 }
 
 // SlackConfig represents Slack-specific configuration
@@ -144,23 +144,23 @@ type WebhookConfig struct {
 
 // GitHubStatusConfig represents GitHub status API configuration
 type GitHubStatusConfig struct {
-	Token      string `json:"token"`
-	Owner      string `json:"owner"`
-	Repo       string `json:"repo"`
-	Context    string `json:"context"`    // Status context name
-	TargetURL  string `json:"target_url"` // Link back to build
+	Token     string `json:"token"`
+	Owner     string `json:"owner"`
+	Repo      string `json:"repo"`
+	Context   string `json:"context"`    // Status context name
+	TargetURL string `json:"target_url"` // Link back to build
 }
 
 // NotificationLog represents a log entry for sent notifications
 type NotificationLog struct {
-	ID        int              `json:"id"`
-	ConfigID  int              `json:"config_id"`
-	BuildID   int              `json:"build_id"`
-	Event     EventType        `json:"event"`
-	Success   bool             `json:"success"`
-	Error     string           `json:"error,omitempty"`
-	SentAt    time.Time        `json:"sent_at"`
-	Duration  time.Duration    `json:"duration"`
+	ID       int           `json:"id"`
+	ConfigID int           `json:"config_id"`
+	BuildID  int           `json:"build_id"`
+	Event    EventType     `json:"event"`
+	Success  bool          `json:"success"`
+	Error    string        `json:"error,omitempty"`
+	SentAt   time.Time     `json:"sent_at"`
+	Duration time.Duration `json:"duration"`
 }
 
 // Template constants for default templates

@@ -12,7 +12,7 @@ type Artifact struct {
 	Path        string    `json:"path"`
 	Size        int64     `json:"size"`
 	ContentType string    `json:"content_type"`
-	Hash        string    `json:"hash"` // SHA256 for deduplication
+	Hash        string    `json:"hash"`         // SHA256 for deduplication
 	StorageType string    `json:"storage_type"` // local, s3, gcs, azure
 	StoragePath string    `json:"storage_path"`
 	Compressed  bool      `json:"compressed"`
@@ -70,6 +70,6 @@ type UploadRequest struct {
 // DownloadResponse represents an artifact download response
 type DownloadResponse struct {
 	Artifact *Artifact `json:"artifact"`
-	Contents []byte    `json:"-"` // Binary data
+	Contents []byte    `json:"-"`             // Binary data
 	URL      string    `json:"url,omitempty"` // Pre-signed URL for cloud storage
 }

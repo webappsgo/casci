@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"io"
+	"strconv"
 
 	"golang.org/x/crypto/pbkdf2"
 )
@@ -123,8 +124,11 @@ func (e *Encryptor) DecryptWithUserKey(ciphertext string, userID int) (string, e
 
 // deriveUserKey derives a user-specific encryption key
 func (e *Encryptor) deriveUserKey(userID int) []byte {
-	// Combine master key with user ID
-	userSalt := []byte("user-" + string(rune(userID)))
+	// Combine master key with the user ID. The ID must be rendered as its
+	// decimal string: string(rune(id)) UTF-8-encodes the ID as a code point,
+	// which collapses every value in the surrogate range or above 0x10FFFF to
+	// U+FFFD and so hands distinct users the same derived key.
+	userSalt := []byte("user-" + strconv.Itoa(userID))
 	return pbkdf2.Key(e.masterKey, userSalt, iterations, keySize, sha256.New)
 }
 
@@ -135,10 +139,4 @@ func GenerateMasterKey() (string, error) {
 		return "", err
 	}
 	return base64.StdEncoding.EncodeToString(key), nil
-}
-
-// HashPassword hashes a password for secure storage
-func HashPassword(password string) string {
-	hash := sha256.Sum256([]byte(password))
-	return base64.StdEncoding.EncodeToString(hash[:])
 }

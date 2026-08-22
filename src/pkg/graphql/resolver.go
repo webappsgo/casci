@@ -4,15 +4,15 @@ package graphql
 
 import (
 	"context"
-	
-	"github.com/casapps/casci/src/pkg/users"
-	"github.com/casapps/casci/src/pkg/projects"
-	"github.com/casapps/casci/src/pkg/builds"
-	"github.com/casapps/casci/src/pkg/nodes"
-	"github.com/casapps/casci/src/pkg/metrics"
+
+	"github.com/webappsgo/casci/src/pkg/builds"
+	"github.com/webappsgo/casci/src/pkg/metrics"
+	"github.com/webappsgo/casci/src/pkg/nodes"
+	"github.com/webappsgo/casci/src/pkg/projects"
+	"github.com/webappsgo/casci/src/pkg/users"
 )
 
-type Resolver struct{
+type Resolver struct {
 	userService      *users.Service
 	authManager      *users.AuthManager
 	projectService   *projects.Service

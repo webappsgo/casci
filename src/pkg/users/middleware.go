@@ -63,17 +63,6 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 			}
 		}
 
-		// Try API token from query parameter (for webhooks, etc.)
-		apiToken = r.URL.Query().Get("token")
-		if apiToken != "" {
-			user, err := m.service.GetByAPIToken(r.Context(), apiToken)
-			if err == nil {
-				ctx := context.WithValue(r.Context(), UserContextKey, user)
-				next.ServeHTTP(w, r.WithContext(ctx))
-				return
-			}
-		}
-
 		// No valid authentication found
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 	})

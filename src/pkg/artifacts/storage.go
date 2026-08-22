@@ -6,10 +6,12 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Storage interface for artifact storage backends
@@ -31,9 +33,35 @@ func NewLocalStorage(basePath string) *LocalStorage {
 	return &LocalStorage{basePath: basePath}
 }
 
+// ErrPathEscapesBase is returned when an artifact path would resolve outside
+// the storage root.
+var ErrPathEscapesBase = errors.New("artifact path escapes storage root")
+
+// resolve turns a caller-supplied artifact path into an absolute path inside
+// basePath. Artifact paths derive from build configuration and are therefore
+// untrusted: filepath.Join alone is not a boundary because it cleans "../"
+// segments into a real parent-directory traversal, so the resolved path is
+// explicitly re-checked against the root.
+func (ls *LocalStorage) resolve(path string) (string, error) {
+	base, err := filepath.Abs(ls.basePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve storage root: %w", err)
+	}
+
+	full := filepath.Join(base, filepath.Clean("/"+path))
+	if full != base && !strings.HasPrefix(full, base+string(os.PathSeparator)) {
+		return "", ErrPathEscapesBase
+	}
+
+	return full, nil
+}
+
 // Store stores data to local filesystem
 func (ls *LocalStorage) Store(ctx context.Context, path string, data []byte) error {
-	fullPath := filepath.Join(ls.basePath, path)
+	fullPath, err := ls.resolve(path)
+	if err != nil {
+		return err
+	}
 
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(fullPath)
@@ -51,7 +79,10 @@ func (ls *LocalStorage) Store(ctx context.Context, path string, data []byte) err
 
 // Retrieve retrieves data from local filesystem
 func (ls *LocalStorage) Retrieve(ctx context.Context, path string) ([]byte, error) {
-	fullPath := filepath.Join(ls.basePath, path)
+	fullPath, err := ls.resolve(path)
+	if err != nil {
+		return nil, err
+	}
 
 	data, err := os.ReadFile(fullPath)
 	if err != nil {
@@ -63,7 +94,10 @@ func (ls *LocalStorage) Retrieve(ctx context.Context, path string) ([]byte, erro
 
 // Delete deletes data from local filesystem
 func (ls *LocalStorage) Delete(ctx context.Context, path string) error {
-	fullPath := filepath.Join(ls.basePath, path)
+	fullPath, err := ls.resolve(path)
+	if err != nil {
+		return err
+	}
 
 	if err := os.Remove(fullPath); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("failed to delete file: %w", err)
@@ -74,9 +108,12 @@ func (ls *LocalStorage) Delete(ctx context.Context, path string) error {
 
 // Exists checks if a file exists
 func (ls *LocalStorage) Exists(ctx context.Context, path string) (bool, error) {
-	fullPath := filepath.Join(ls.basePath, path)
+	fullPath, err := ls.resolve(path)
+	if err != nil {
+		return false, err
+	}
 
-	_, err := os.Stat(fullPath)
+	_, err = os.Stat(fullPath)
 	if err == nil {
 		return true, nil
 	}
@@ -88,8 +125,7 @@ func (ls *LocalStorage) Exists(ctx context.Context, path string) (bool, error) {
 
 // GetURL returns a local file path (not a URL)
 func (ls *LocalStorage) GetURL(ctx context.Context, path string, expiryMinutes int) (string, error) {
-	fullPath := filepath.Join(ls.basePath, path)
-	return fullPath, nil
+	return ls.resolve(path)
 }
 
 // CompressData compresses data using gzip

@@ -15,11 +15,11 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 
-	"github.com/casapps/casci/src/pkg/builds"
-	"github.com/casapps/casci/src/pkg/detection"
-	"github.com/casapps/casci/src/pkg/git"
-	"github.com/casapps/casci/src/pkg/security"
-	"github.com/casapps/casci/src/pkg/workspace"
+	"github.com/webappsgo/casci/src/pkg/builds"
+	"github.com/webappsgo/casci/src/pkg/detection"
+	"github.com/webappsgo/casci/src/pkg/git"
+	"github.com/webappsgo/casci/src/pkg/security"
+	"github.com/webappsgo/casci/src/pkg/workspace"
 )
 
 // ContainerExecutor executes builds in Docker containers

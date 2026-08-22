@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/casapps/casci/src/pkg/database"
+	"github.com/webappsgo/casci/src/pkg/database"
 )
 
 // Service handles node business logic
@@ -31,7 +31,7 @@ func NewService(db *database.Database) *Service {
 
 // Register registers a new node
 func (s *Service) Register(ctx context.Context, reg *NodeRegistration) (*Node, error) {
-	// Validate token
+	// Validate token. GetToken hashes the value before querying.
 	token, err := s.repo.GetToken(ctx, reg.Token)
 	if err != nil {
 		return nil, fmt.Errorf("invalid token: %w", err)
@@ -189,7 +189,8 @@ func (s *Service) Delete(ctx context.Context, id int) error {
 	return nil
 }
 
-// GenerateToken generates a new node join token
+// GenerateToken generates a new node join token. The raw token is returned to
+// the caller exactly once here — only its SHA-256 hash is persisted.
 func (s *Service) GenerateToken(ctx context.Context, expiryMinutes int) (*NodeToken, error) {
 	// Generate random token
 	bytes := make([]byte, 32)
@@ -199,6 +200,8 @@ func (s *Service) GenerateToken(ctx context.Context, expiryMinutes int) (*NodeTo
 
 	tokenStr := "ci_" + hex.EncodeToString(bytes)
 
+	// The repository hashes on write, so the raw value is passed here and the
+	// struct keeps it for the single response that returns it to the caller.
 	token := &NodeToken{
 		Token:     tokenStr,
 		ExpiresAt: time.Now().Add(time.Duration(expiryMinutes) * time.Minute),

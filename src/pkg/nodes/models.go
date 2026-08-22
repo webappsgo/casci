@@ -25,12 +25,12 @@ type Node struct {
 type NodeCapacity struct {
 	CPUCores      int   `json:"cpu_cores"`
 	CPUAvailable  int   `json:"cpu_available"`
-	MemoryTotal   int64 `json:"memory_total"`    // bytes
-	MemoryFree    int64 `json:"memory_free"`     // bytes
-	DiskTotal     int64 `json:"disk_total"`      // bytes
-	DiskFree      int64 `json:"disk_free"`       // bytes
-	MaxConcurrent int   `json:"max_concurrent"`  // max concurrent builds
-	CurrentBuilds int   `json:"current_builds"`  // current running builds
+	MemoryTotal   int64 `json:"memory_total"`   // bytes
+	MemoryFree    int64 `json:"memory_free"`    // bytes
+	DiskTotal     int64 `json:"disk_total"`     // bytes
+	DiskFree      int64 `json:"disk_free"`      // bytes
+	MaxConcurrent int   `json:"max_concurrent"` // max concurrent builds
+	CurrentBuilds int   `json:"current_builds"` // current running builds
 }
 
 // NodeRegistration represents a node registration request
@@ -59,9 +59,9 @@ type NodeHealth struct {
 
 // NodeToken represents a node join token
 type NodeToken struct {
-	ID        int       `json:"id"`
-	Token     string    `json:"token"`
-	ExpiresAt time.Time `json:"expires_at"`
+	ID        int        `json:"id"`
+	Token     string     `json:"token"`
+	ExpiresAt time.Time  `json:"expires_at"`
 	UsedAt    *time.Time `json:"used_at,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt time.Time  `json:"created_at"`
 }

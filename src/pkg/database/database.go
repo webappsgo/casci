@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/casapps/casci/src/internal/config"
+	"github.com/webappsgo/casci/src/internal/config"
 )
 
 // Database represents the database abstraction layer

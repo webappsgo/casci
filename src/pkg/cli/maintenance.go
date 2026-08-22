@@ -1,43 +1,46 @@
 package cli
 
-import (
-"fmt"
-"time"
-)
+import "fmt"
 
+// HandleMaintenance dispatches --maintenance subcommands.
 func HandleMaintenance(command, arg string) error {
-switch command {
-case "backup":
-file := arg
-if file == "" {
-file = fmt.Sprintf("casci-backup-%s.tar.gz", time.Now().Format("20060102-150405"))
-}
-fmt.Printf("📦 Creating backup: %s\n", file)
-fmt.Println("⚠️  Backup not yet implemented")
-return nil
+	switch command {
+	case "help", "--help":
+		showMaintenanceHelp()
+		return nil
 
-case "restore":
-if arg == "" {
-return fmt.Errorf("backup file required")
-}
-fmt.Printf("📥 Restoring from: %s\n", arg)
-fmt.Println("⚠️  Restore not yet implemented")
-return nil
+	case "backup", "update", "setup":
+		return fmt.Errorf("maintenance %s is not implemented yet", command)
 
-case "update":
-fmt.Println("⬆️  Running maintenance update...")
-fmt.Println("⚠️  Maintenance update not yet implemented")
-return nil
+	case "restore":
+		if arg == "" {
+			return fmt.Errorf("backup file required")
+		}
+		return fmt.Errorf("maintenance restore is not implemented yet")
 
-case "mode":
-if arg == "" {
-return fmt.Errorf("mode required (production|development)")
-}
-fmt.Printf("🔄 Changing mode to: %s\n", arg)
-fmt.Println("⚠️  Mode change not yet implemented")
-return nil
+	case "mode":
+		switch arg {
+		case "":
+			return fmt.Errorf("mode required (production|development|debug)")
+		case "production", "development", "debug":
+			return fmt.Errorf("maintenance mode change is not implemented yet")
+		default:
+			return fmt.Errorf("unknown mode: %s", arg)
+		}
 
-default:
-return fmt.Errorf("unknown maintenance command: %s", command)
+	default:
+		return fmt.Errorf("unknown maintenance command: %s", command)
+	}
 }
+
+// showMaintenanceHelp prints the --maintenance subcommand reference.
+func showMaintenanceHelp() {
+	fmt.Print(`Maintenance:
+  backup [FILE]               Create a backup archive
+  restore FILE                Restore from a backup archive
+  update                      Apply pending maintenance updates
+  mode {production|development|debug}
+                              Change the persisted application mode
+  setup                       Run first-time setup
+`)
 }

@@ -241,21 +241,37 @@ func (h *Handler) GetProjectConfigs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Verify user owns this project
-
-	configs, err := h.service.GetConfigsByProject(r.Context(), projectID)
+	all, err := h.service.GetConfigsByProject(r.Context(), projectID)
 	if err != nil {
 		log.Printf("Failed to get project notification configs: %v", err)
 		http.Error(w, "Failed to retrieve notification configs", http.StatusInternalServerError)
 		return
 	}
 
+	// A NotificationConfig carries provider credentials in its Config map, so
+	// only the owning user's configs may be returned. Filtering here rather
+	// than returning 403 avoids disclosing whether the project exists.
+	configs := make([]*NotificationConfig, 0, len(all))
+	for _, cfg := range all {
+		if cfg.UserID == userID {
+			configs = append(configs, cfg)
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(configs)
+	if err := json.NewEncoder(w).Encode(configs); err != nil {
+		log.Printf("Failed to encode project notification configs: %v", err)
+	}
 }
 
 // GetBuildLogs retrieves notification logs for a build
 func (h *Handler) GetBuildLogs(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIDFromContext(r)
+	if userID == 0 {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	// Extract build ID from path
 	buildID, err := extractIDFromPath(r.URL.Path, "/api/v1/builds/")
 	if err != nil {
@@ -263,17 +279,39 @@ func (h *Handler) GetBuildLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Verify user has access to this build
-
-	logs, err := h.service.GetNotificationLogs(r.Context(), buildID)
+	all, err := h.service.GetNotificationLogs(r.Context(), buildID)
 	if err != nil {
 		log.Printf("Failed to get notification logs for build %d: %v", buildID, err)
 		http.Error(w, "Failed to retrieve notification logs", http.StatusInternalServerError)
 		return
 	}
 
+	// Each log belongs to a notification config; only surface the entries whose
+	// config is owned by the requesting user. Config ownership is cached per
+	// request so a build with many logs does not re-query the same config.
+	owned := make(map[int]bool, len(all))
+	logs := make([]*NotificationLog, 0, len(all))
+	for _, entry := range all {
+		isOwned, seen := owned[entry.ConfigID]
+		if !seen {
+			cfg, err := h.service.GetConfig(r.Context(), entry.ConfigID)
+			if err != nil {
+				log.Printf("Failed to resolve notification config %d: %v", entry.ConfigID, err)
+				isOwned = false
+			} else {
+				isOwned = cfg.UserID == userID
+			}
+			owned[entry.ConfigID] = isOwned
+		}
+		if isOwned {
+			logs = append(logs, entry)
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(logs)
+	if err := json.NewEncoder(w).Encode(logs); err != nil {
+		log.Printf("Failed to encode notification logs for build %d: %v", buildID, err)
+	}
 }
 
 // GetSupportedTypes returns a list of supported notification types
