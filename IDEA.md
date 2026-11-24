@@ -135,3 +135,55 @@ CASCI must NOT:
   control. Because provider billing APIs lag in real time, budget
   enforcement is explicitly best-effort, not a hard guarantee, and this
   limitation must be disclosed to the user.
+
+### Data model & sensitivity
+
+- Users own projects, pipeline definitions, builds, logs, artifacts, infrastructure connections, credentials, budgets, and notification settings. Administrators own server configuration and node/server settings; they do not own or browse user project data.
+- Account identifiers, password hashes, session records, API tokens, provider credentials, private keys, pipeline contents, source metadata, build logs, artifacts, security scan results, audit records, and per-user encryption keys are sensitive. Provider spend limits and usage data are private to the user who connected that provider.
+- Secrets are injected only for the owning user's build, are never emitted in logs or artifacts, and are removed after use. Build workspaces and queues are isolated between users.
+- Build outputs are signed, accompanied by an SBOM, and scanned for vulnerabilities, secrets, and license issues by default.
+
+### Trust boundaries & external services
+
+- Repository content, pipeline files, build scripts, dependencies, webhook payloads, and build outputs are untrusted input, including when supplied by a user's own repository.
+- Each user's cloud accounts, private servers, storage, and optional databases are trusted only for that user's builds. Their credentials and resulting resources are not shared with other users or used outside the scope the user granted.
+- Git hosting and CI compatibility protocols, cloud APIs, hourly compute providers, user-supplied servers, and user-supplied storage are external dependencies. Their outages or rejected requests must not be reported as successful operations or weaken user/data isolation. Capacity provisioning must not proceed when provider authorization or the budget pre-check fails; a provider's delayed billing data means budget enforcement remains best-effort as stated above.
+- CASCI does not aggregate or bill users for their infrastructure charges. Users pay their providers directly.
+
+### Threat model & abuse cases
+
+- **Assets:** user credentials and secrets; source and pipeline content; build workspaces, logs, and artifacts; provider accounts and spending; user identity and project ownership; audit evidence; server and cluster availability.
+- **Attacker inputs:** anonymous HTTP/API traffic, authenticated users, repository and dependency contents, webhooks, pipeline scripts, artifacts, and responses from external providers.
+- **Attacker goals:** read another user's projects or secrets, execute code outside an isolated build, steal credentials from logs/artifacts, tamper with build results, consume another user's quota, exhaust shared capacity, or evade required scans and audit records.
+- **Required defenses:** strict per-user authorization and encryption boundaries; clean isolated build environments; just-in-time secret injection and cleanup; safe handling of untrusted files and scripts; resource quotas and fair scheduling; authenticated and validated webhooks; signed outputs, SBOMs, default vulnerability/secret/license scanning; immutable audit trails; and fail-closed authorization and provisioning checks. An external provider failure is surfaced as a failed or degraded operation, never as a success.
+
+### Security decisions & exceptions
+
+- There are no intentionally weaker authentication, authorization, transport, build-isolation, secret-handling, or abuse-control modes. Compatibility with an existing CI/CD format does not grant its pipeline access to another user's resources or relax build isolation.
+- Spending limits are explicitly best-effort because provider billing APIs can lag. This is a documented limitation, not a guarantee that a limit cannot be exceeded.
+
+### API routes
+
+These are CASCI product routes beyond the common server routes defined by AI.md. User-owned resources require the owning user's authentication; server-wide administration routes require a server administrator. Requests and responses use the canonical API envelopes defined by AI.md.
+
+| Method | Path | Auth | Purpose and request/response summary |
+|---|---|---|---|
+| GET, POST | `/api/{api_version}/projects` | User | List the caller's projects; create a project from repository/source and project settings. |
+| GET, PATCH, DELETE | `/api/{api_version}/projects/{project_id}` | Owning user | Read, update, or delete one owned project. |
+| GET | `/api/{api_version}/projects/{project_id}/pipelines` | Owning user | List detected or configured pipelines and their source format. |
+| GET | `/api/{api_version}/projects/{project_id}/pipelines/{pipeline_id}` | Owning user | Read a pipeline definition and its validation/detection result. |
+| GET, POST | `/api/{api_version}/projects/{project_id}/builds` | Owning user | List builds or trigger a build with revision, ref, and permitted inputs; return the build record. |
+| GET | `/api/{api_version}/builds/{build_id}` | Owning user | Read build state, timing, status, and scan summary. |
+| POST | `/api/{api_version}/builds/{build_id}/cancel` | Owning user | Cancel an active build and return its resulting state. |
+| GET | `/api/{api_version}/builds/{build_id}/logs` | Owning user | Read or stream the build's logs. |
+| GET | `/api/{api_version}/builds/{build_id}/artifacts` | Owning user | List signed build artifacts and their metadata. |
+| GET | `/api/{api_version}/builds/{build_id}/artifacts/{artifact_id}` | Owning user | Download an owned build artifact with safe content headers. |
+| GET, POST | `/api/{api_version}/infrastructure/connections` | User | List or add the caller's cloud, private-server, or storage connection; secrets are write-only. |
+| GET, PATCH, DELETE | `/api/{api_version}/infrastructure/connections/{connection_id}` | Owning user | Read safe connection metadata, update, or revoke one owned connection. |
+| GET, PUT | `/api/{api_version}/budgets` | User | Read or set the caller's monthly and per-provider spending limits. |
+| POST | `/api/{api_version}/infrastructure/hourly-instances/destroy-all` | User | Emergency destruction of the caller's hourly/burst instances; returns per-instance outcomes. |
+| GET | `/api/{api_version}/security/reports` | Owning user | List security scan reports for the caller's builds. |
+| GET | `/api/{api_version}/security/reports/{report_id}` | Owning user | Read one scan report belonging to the caller's build. |
+| POST | `/api/{api_version}/webhooks/{provider}` | Provider signature | Accept a provider-signed event and enqueue the associated user's build without exposing credentials. |
+
+Compatibility interfaces are additional to these native routes: Jenkins REST and Blue Ocean resources, Jenkins crumb and CLI operations; GitHub Actions, GitLab CI, Travis CI, CircleCI, Azure Pipelines, Bitbucket Pipelines, Drone, Buildkite, Tekton, Woodpecker, and CodeFresh pipeline formats; and the provider-specific webhook event routes required to trigger those pipelines. Each protocol must preserve the compatibility level stated above while enforcing the same user ownership, build isolation, and secret boundaries.
