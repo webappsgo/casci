@@ -4,8 +4,8 @@ CASCI (CI/CD Application Server for Continuous Integration) is a complete CI/CD
 platform delivered as a single static Go binary. It replaces Jenkins, GitHub
 Actions, GitLab CI, CircleCI, Travis CI, and similar tools for teams and
 individuals who want one deployable that runs existing CI/CD pipelines
-unchanged, requires no configuration files, and scales from a laptop to a
-cluster of 1000+ build nodes.
+unchanged, starts without hand-written configuration, and scales from a
+laptop to a cluster of 1000+ build nodes.
 
 The problem CASCI solves: current CI/CD tooling is fragmented (a different
 product per platform), fragile (plugin dependency hell, breaking updates),
@@ -34,9 +34,9 @@ CASCI must:
 - Run as a single static binary with no required external services (embedded
   database by default; external database is opt-in, and when present the
   database — not a config file — is the source of truth).
-- Work with zero configuration on first run and never require CLI flags to
-  operate; all configuration is database-driven and manageable from the web
-  UI.
+- Work with zero operator-supplied configuration on first run and never
+  require CLI flags for normal operation; operators can manage supported
+  settings from the web UI, and cluster nodes share consistent configuration.
 - Be self-healing: automatic error recovery, graceful degradation, and
   resistance to misconfiguration are product requirements, not aspirational.
 - Scale from a single laptop instance up to clusters of 1000+ build nodes
@@ -94,16 +94,17 @@ CASCI must NOT:
 
 - **Administrator** — manages server configuration, nodes, and settings
   only. Cannot create builds and cannot access other users' data. Default
-  username `administrator` (changeable). The first user created on a fresh
-  install becomes the administrator.
+  username `administrator` (changeable). The primary server administrator is
+  created through first-run setup; regular-user registration never grants
+  server-administrator access.
 - **Regular user** — creates and manages their own projects, runs builds,
   manages their own infrastructure connections (cloud accounts, private
   servers, storage, optional databases), and can only see their own
   projects, logs, and metrics.
 - **Service account** — API-only access with limited, token-scoped
   permissions and a full audit trail; not a human login.
-- Permission model is intentionally simple: admin or user, no general-purpose
-  RBAC. Users own and are isolated within their own resources.
+- Regular-user access is owner-scoped; regular-user roles do not grant
+  server-administrator access. Server-administrator roles follow AI.md PART 17.
 
 ### Multi-tenancy & trust boundaries
 

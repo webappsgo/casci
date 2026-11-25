@@ -1,67 +1,56 @@
-# casci
+# CASCI documentation
 
-CASCI is a complete CI/CD platform delivered as a single static Go binary. It runs existing Jenkins, GitHub Actions, GitLab CI, Travis CI, CircleCI, Azure Pipelines, Bitbucket Pipelines, Drone CI, and Buildkite pipelines without rewriting them, needs zero configuration on first run, and ships with security scanning, a credential vault, and compliance auditing built in.
+CASCI is a Go CI/CD application server under active development. These pages
+describe the implementation in this repository; they distinguish available
+routes and components from planned product capabilities.
 
-## Quick Start
+## Start here
 
-```bash
-# Docker
-docker run --name "casci-$(tr -dc 'a-z0-9' </dev/urandom | head -c8)" -p 172.17.0.1:64580:80 ghcr.io/webappsgo/casci:latest
+- [Install CASCI](installation.md) with the provided Docker Compose files or a
+  locally built binary.
+- Review [configuration](configuration.md) before exposing an instance.
+- Use the [API reference](api.md) for the currently mounted HTTP routes.
+- Read the [security notes](security.md) before running pipelines from
+  untrusted repositories.
 
-# Binary
-./casci-linux-amd64
-```
+## Current application surface
 
-The binary needs no flags. On first run it creates its config, data, cache, log, and backup directories, selects a random port in the `64000-64999` range, and persists that port to `server.yml` so it stays stable across restarts. Inside a container the port defaults to `80`.
+The server exposes a public web shell, sign-in, user profile, preference and
+help pages, an admin dashboard, settings, Pages → Help and user management,
+versioned API handlers, health and
+readiness endpoints, Swagger UI, GraphQL, MCP, webhooks, and Jenkins-shaped
+compatibility endpoints. Several subsystems are incomplete; consult the
+limitations below and the relevant reference pages before relying on them.
 
-## Features
+## Current limitations
 
-- Multi-format pipeline engine covering Jenkinsfile, GitHub Actions, GitLab CI, CircleCI, Travis CI, Azure Pipelines, Bitbucket Pipelines, Drone CI, and Buildkite
-- Project auto-detection for Go, JavaScript, Python, Java, Rust, Ruby, and PHP when no pipeline file is present
-- Jenkins-compatible REST surface at `/api/json` and `/crumbIssuer/api/json`
-- Container-isolated build execution with per-build workspace cleanup
-- Build queue with dispatch to local execution or registered remote build nodes
-- Artifact storage and retrieval per build
-- Git clone, branch/tag checkout, and commit metadata capture
-- GitHub and GitLab webhook signature verification, with Gitea reusing the GitHub payload format
-- Security scanning by delegating to `trivy`, `grype`, `gitleaks`, `semgrep`, and `syft` on the host
-- Encrypted credential vault scoped per user and per project
-- Notifications across chat, email, issue trackers, commit status, and paging providers
-- Compliance modes for HIPAA, SOX, PCI-DSS, GDPR, FedRAMP, and ISO 27001
-- Audit log with admin-managed retention and cleanup
-- System, build, node, security, and API metrics
-- REST API under `/api/v1/` and Swagger UI with OpenAPI output
-- WebSocket build log streaming
-- SQLite, PostgreSQL, and MySQL storage backends
+- The project is not yet a production-complete replacement for Jenkins or the
+  other CI systems whose formats it parses.
+- The OpenAPI document is currently empty/incomplete, and GraphQL resolver
+  coverage is incomplete.
+- The contact form currently validates a basic form but cannot deliver reports.
+- MCP tool routing covers only a subset of the API and does not yet implement
+  all required token scopes, rate limits, or audit integration.
+- Build isolation, multi-user isolation, workload fairness, provider
+  provisioning, and several security controls remain incomplete.
+- `--service`, `--maintenance`, `--update`, and `--shell` CLI operations are
+  not implemented; use the repository's service installer scripts where
+  applicable.
+- The configured build test gate requires at least 60% statement coverage.
+  The current suite has not yet met that threshold.
 
-## Current Limitations
+## Documentation pages
 
-CASCI is under active development. These parts are mounted but not yet functional, and are called out again on the page that covers each one:
+- [Installation](installation.md)
+- [Configuration](configuration.md)
+- [API reference](api.md)
+- [API quick reference](api-quickref.md)
+- [CLI reference](cli.md)
+- [Admin panel](admin.md)
+- [Security](security.md)
+- [Integrations](integrations.md)
+- [Service installers](services.md)
+- [Development](development.md)
+- [Translation guidance](translating.md)
 
-- **GraphQL** resolvers are stubs; the endpoint and playground exist but return nothing
-- **Webhooks** verify signatures but cannot yet resolve a repository URL to a project, so they do not queue builds
-- **Bitbucket** webhook events are acknowledged and discarded
-- **S3, GCS, and Azure** artifact backends return "not yet implemented"; local disk storage is the working backend
-- **`--service`, `--maintenance`, `--update`, and `--shell`** report that they are not implemented; use the platform installers in [Installation](installation.md)
-
-## Documentation
-
-- [Installation](installation.md) - How to install and run
-- [Configuration](configuration.md) - All configuration options
-- [API Reference](api.md) - REST API, Swagger, GraphQL
-- [CLI Reference](cli.md) - Server binary flags
-- [Admin Panel](admin.md) - WebUI administration
-- [Security](security.md) - Auth, public endpoints, reporting, and hardening behavior
-- [Integrations](integrations.md) - Webhooks, notifications, discovery, and platform integrations
-- [Development](development.md) - Contributing guide
-
-## Links
-
-- [Repository](https://github.com/webappsgo/casci)
-- [Official Site](https://casci.casapps.us)
-- [API Documentation](https://casci.casapps.us/server/docs/swagger) (Swagger UI)
-- [GraphQL Playground](https://casci.casapps.us/server/docs/graphql)
-
-## License
-
-MIT - See [LICENSE.md](https://github.com/webappsgo/casci/blob/main/LICENSE.md)
+The official site is [https://casci.casapps.us](https://casci.casapps.us).

@@ -4,6 +4,7 @@ Implementation order follows the dependencies in AI.md: foundation and configura
 
 ## Critical (P0)
 
+- [x] Make credential and notification handlers derive user identity only from the typed authentication context; remove spoofable `X-User-ID` fallback handling.
 - [ ] Fix security and tenant-isolation defects in existing handlers, repositories, middleware, credential storage, build execution, logs, and artifacts against IDEA.md and AI.md PARTS 10, 11, 14, 16, and 34.
 - [ ] Complete the first-run server-admin flow, setup-token lifecycle, authentication/session management, and admin-only route protection required by PART 17.
 - [ ] Implement isolated, clean-per-build execution, secret injection and cleanup, resource quotas, fair scheduling, artifact signing, SBOM generation, and default vulnerability/secret/license scans required by IDEA.md and PARTS 10, 11, 14, and 34.
@@ -12,7 +13,9 @@ Implementation order follows the dependencies in AI.md: foundation and configura
 
 ## High (P1)
 
-- [ ] Move the Go source into the exact PART 3 layout; remove prohibited `src/pkg/` and `src/internal/` directories and update all imports and references.
+- [x] Add the required application-mode package, canonical mode aliases, `MODE`/`DEBUG` precedence, and startup profiling/logging integration from PART 6.
+- [x] Remove prohibited `src/pkg/` and `src/internal/` trees, move packages under `src/`, and extract path resolution into `src/paths`.
+- [ ] Complete the remaining exact PART 3 layout, including required client/common/mode/ssl/scheduler/service/admin packages and the server handler/service/model/store/template structure.
 - [ ] Complete platform-aware path resolution, mode detection, static binary metadata, the full server/CLI/agent command interface, and runtime lifecycle from PARTS 4, 6, 7, 8, and 24.
 - [ ] Implement the complete YAML configuration system, drop-in files, database-backed settings, environment/flag precedence, validation, hot reload, secret-file handling, and admin UI from PARTS 5 and 12.
 - [ ] Complete the embedded database schema, PostgreSQL cluster mode, migrations-by-idempotent-startup, connection management, and cluster node protocol from PART 10.
@@ -40,7 +43,7 @@ Implementation order follows the dependencies in AI.md: foundation and configura
 - [ ] Complete Makefile targets, version metadata, all eight OS/architecture builds, release checksums/SBOM/provenance, Docker production/development/test images, Compose files, and entrypoint behavior from PARTS 7, 26, and 27.
 - [ ] Complete GitHub, GitLab, Gitea, Forgejo, and Jenkins CI/CD definitions, security scanning, pinned actions, workflow policy checks, release flows, and provider-specific parity from PART 28.
 - [ ] Complete container, Incus, and browser end-to-end test runners; achieve the specified coverage gate; add regression, security, conformance, i18n, API, and compatibility tests from PART 29.
-- [ ] Reconcile IDEA.md with the required three-section structure and add the required data sensitivity, trust/failure assumptions, threat/abuse cases, security exceptions, and complete API route inventory without inventing behavior.
+- [x] Reconcile IDEA.md with the required three-section structure and document data sensitivity, external-service trust/failure assumptions, threat/abuse cases and defenses, security exceptions, and the project-specific API route inventory; SPEC.md activates PART 34 only.
 
 ## Low (P3)
 
