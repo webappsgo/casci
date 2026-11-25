@@ -1,11 +1,13 @@
 # Admin panel
 
-The current web admin surface has four registered routes:
+The current web admin surface has six registered pages:
 
 | Page | Default path | Purpose |
 |------|-------------|---------|
 | Dashboard | `/server/administration` | Server overview |
 | Settings | `/server/administration/settings` | Read the settings currently exposed by the server configuration model |
+| Metrics | `/server/administration/metrics` | System, build, node, security, and API measurements |
+| Server info | `/server/administration/info` | Runtime, version, process, and database driver details |
 | Pages | `/server/administration/pages/help` | Edit the MCP help page's project guidance |
 | Users | `/server/administration/users` | View accounts and update an account's email or password |
 
@@ -25,7 +27,8 @@ server prints a one-time setup token and serves `/server/{admin_path}/setup`.
 That page creates the primary administrator and stores only the token hash in
 `{config_dir}/setup_token.txt`. The current setup flow does not yet implement
 all setup wizard steps required by AI.md.
-The setup response also displays one hashed-at-rest `adm_` API token once.
+The setup response displays the initial `adm_` API token once; the database
+stores only its hash.
 
 Successful browser logins set role-specific HTTP-only cookies. The API login
 route is `POST /api/{api_version}/server/auth/login`; it sets the matching
@@ -39,8 +42,10 @@ once. The administrator cookie is
 
 The settings page is read-only and reflects only fields currently carried by
 the server config model. It is not a full editor for application configuration,
-and settings do not generally hot-reload. Consult [Configuration](configuration.md) for the
-actual current configuration source and supported keys.
+and settings do not generally hot-reload. The metrics and server information
+pages display live collector values and process metadata. Consult
+[Configuration](configuration.md) for the current configuration source and
+supported keys.
 
 The Pages form currently edits only the Markdown project guidance on the MCP
 help page. It is saved under `server.pages.help.mcp` in

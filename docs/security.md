@@ -76,6 +76,19 @@ scheduling, or signed artifact chain required by the product design. Pipeline
 commands are repository-controlled code. Run CASCI only on a host where that
 execution risk is acceptable.
 
+Build security scanning is enabled by default for vulnerability, SAST, secret,
+license, and SBOM checks. Scanners run before the executor reports a build as
+successful. A missing scanner executable, malformed scanner output, or report
+storage error fails the build closed. The scanner adapters currently expect
+`trivy`, `semgrep`, `gitleaks`, `go-licenses`, and `syft` in the server
+process's `PATH`; the minimal production image does not currently bundle all
+of these tools. Provisioning the complete scanner toolchain in every runtime
+is still required for production use. Secret matches are not persisted in the
+scanner result, and Gitleaks report output is redacted. Manual scans require
+the caller to own the build's project and an existing build workspace; scan
+requests cannot override the administrator's scan policy. Queue saturation is
+reported as unavailable instead of silently dropping a scan.
+
 ## MCP
 
 The MCP endpoint requires a bearer JWT on every request, ignores browser
