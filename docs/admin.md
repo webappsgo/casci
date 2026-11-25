@@ -25,6 +25,7 @@ server prints a one-time setup token and serves `/server/{admin_path}/setup`.
 That page creates the primary administrator and stores only the token hash in
 `{config_dir}/setup_token.txt`. The current setup flow does not yet implement
 all setup wizard steps required by AI.md.
+The setup response also displays one hashed-at-rest `adm_` API token once.
 
 Successful browser logins set role-specific HTTP-only cookies. The API login
 route is `POST /api/{api_version}/server/auth/login`; it sets the matching

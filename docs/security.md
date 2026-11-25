@@ -87,10 +87,14 @@ and named token scopes are not implemented. See
 
 ## Webhooks
 
-The webhook route is `/webhook`. GitHub uses HMAC signature verification and
-GitLab uses a shared token. Provider support and build triggering are
-incomplete; a successful response is not proof that a build was queued. Keep
-the webhook secret private and configure the provider to send its signature.
+The webhook route is `POST /webhook`; it caps request bodies at 1 MiB. GitHub
+uses `X-Hub-Signature-256`, GitLab uses `X-GitLab-Token`, Bitbucket uses
+`X-Hub-Signature` with a SHA-256 HMAC, and Gitea uses `X-Gitea-Signature` with
+a raw SHA-256 HMAC digest. Every provider fails closed if the shared
+`server.security.webhook_secret` is unset or its credential is invalid. Keep
+that secret private and configure the provider with the same value. A
+`202 Accepted` response means a build was queued; it does not mean execution
+completed.
 
 ## Public endpoints and data
 

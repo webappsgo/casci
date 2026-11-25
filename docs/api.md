@@ -39,6 +39,10 @@ scopes, rate limits, request IDs, or response-envelope rules from AI.md.
 | POST | `/api/v1/server/auth/register` | Public when multi-user mode is enabled and registration is open | Register a regular-user account |
 | POST | `/api/v1/server/auth/login` | Public | Authenticate a server administrator or enabled regular user; sets the matching cookie and returns a bearer JWT for regular users |
 | POST | `/api/v1/server/auth/refresh` | Authenticated | Refresh a JWT |
+| GET | `/api/v1/server/{admin_path}/setup` | Public during first run | Report whether primary administrator setup is required |
+| POST | `/api/v1/server/{admin_path}/setup/verify` | Setup token | Verify the one-time first-run setup token |
+| POST | `/api/v1/server/{admin_path}/setup/account` | Setup token + CSRF for browser forms | Create the primary administrator and return the one-time `adm_` API token |
+| POST | `/api/v1/server/{admin_path}/setup/complete` | Public | Report whether primary administrator creation is complete |
 
 The HTML login page is `/server/auth/login`. The `/healthz` root alias is
 disabled unless `server.healthz.root.enabled` is true.

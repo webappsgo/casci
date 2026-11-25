@@ -26,14 +26,18 @@ The parser does not yet implement every format listed in IDEA.md.
 
 ## Source-control webhooks
 
-The shared receiver is `POST https://casci.casapps.us/webhook`. The handler
-recognizes GitHub, GitLab, Bitbucket, and Gitea headers. GitHub deliveries
-require a valid `X-Hub-Signature-256`; GitLab uses `X-GitLab-Token`. The
-configured shared secret is `server.security.webhook_secret`.
+The shared receiver is `POST /webhook`. GitHub push and opened/synchronized
+pull request deliveries require `X-Hub-Signature-256`; GitLab push and merge
+request events use `X-GitLab-Token`; Bitbucket push and pull request events use
+`X-Hub-Signature: sha256=<hex>`; Gitea push and pull request events use
+`X-Gitea-Signature` with the raw HMAC-SHA256 hex digest. All use
+`server.security.webhook_secret`. Request bodies are capped at 1 MiB.
 
-Webhook event support and repository-to-project resolution are incomplete.
-Verify the response and application state before assuming a delivery queued a
-build. Do not treat a webhook `200` as proof of completed pipeline execution.
+Matching repository URLs trigger queued builds and receive `202 Accepted`.
+Ping, ignored action, branch deletion, and unsupported event deliveries receive
+a successful empty or small response without queuing a build. Repository
+matching normalizes HTTPS, SSH, and `.git` URL spellings. A queued build does
+not prove that its pipeline completed successfully.
 
 ## Notifications
 

@@ -33,9 +33,8 @@ limitations below and the relevant reference pages before relying on them.
   all required token scopes, rate limits, or audit integration.
 - Build isolation, multi-user isolation, workload fairness, provider
   provisioning, and several security controls remain incomplete.
-- `--service`, `--maintenance`, `--update`, and `--shell` CLI operations are
-  not implemented; use the repository's service installer scripts where
-  applicable.
+- `--shell` completion and init output are available; service, maintenance,
+  and update CLI operations remain incomplete.
 - The configured build test gate requires at least 60% statement coverage.
   The current suite has not yet met that threshold.
 
