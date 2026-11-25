@@ -27,10 +27,12 @@ That page creates the primary administrator and stores only the token hash in
 all setup wizard steps required by AI.md.
 
 Successful browser logins set role-specific HTTP-only cookies. The API login
-route is `POST /api/{api_version}/server/auth/login`; it returns a JSON session
-token and also sets the matching cookie. The administrator cookie is
+route is `POST /api/{api_version}/server/auth/login`; it sets the matching
+cookie. Regular-user login also returns a bearer JWT. Administrator API
+requests use an `adm_` API token; first-run setup displays the initial token
+once. The administrator cookie is
 `admin_session` (30-day default); the regular-user cookie is `user_session`
-(7-day default). Authenticated API routes accept bearer JWTs.
+(7-day default). Admin API routes require an administrator bearer token.
 
 ## Current settings page
 

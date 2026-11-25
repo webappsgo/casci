@@ -9,10 +9,12 @@ your requirements.
 
 Regular-user passwords and local administrator passwords are hashed with
 Argon2id. The shared login endpoint checks administrators first and then,
-when enabled, regular users. It returns a signed JWT and sets an HTTP-only
-`admin_session` cookie for administrators (30-day default) or `user_session`
-cookie for regular users (7-day default). Administrator accounts use the
-separate `admins` table and their own session issuer. The signing secret is
+when enabled, regular users. It sets an HTTP-only `admin_session` cookie for
+administrators (30-day default) or `user_session` cookie for regular users
+(7-day default). Regular-user API login returns a signed JWT. Administrator
+API routes use hashed `adm_` bearer tokens; first-run setup displays the
+initial token once. Administrator accounts use the separate `admins` table
+and their own session issuer. The signing secret is
 loaded from configuration and must be at least 32 bytes. Administrator login
 locks the account for 15 minutes after five failed password attempts.
 Both browser and API login also return HTTP 429 after five failed attempts

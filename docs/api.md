@@ -37,7 +37,7 @@ scopes, rate limits, request IDs, or response-envelope rules from AI.md.
 | GET, POST | `/api/v1/server/preferences/sync` | Public | Preference sync API handler |
 | GET, POST | `/api/v1/server/preferences/sync/import` | Public | Preference import API handler |
 | POST | `/api/v1/server/auth/register` | Public when multi-user mode is enabled and registration is open | Register a regular-user account |
-| POST | `/api/v1/server/auth/login` | Public | Authenticate a server administrator or enabled regular user; returns a signed token and sets the matching session cookie |
+| POST | `/api/v1/server/auth/login` | Public | Authenticate a server administrator or enabled regular user; sets the matching cookie and returns a bearer JWT for regular users |
 | POST | `/api/v1/server/auth/refresh` | Authenticated | Refresh a JWT |
 
 The HTML login page is `/server/auth/login`. The `/healthz` root alias is
