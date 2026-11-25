@@ -28,8 +28,9 @@ all setup wizard steps required by AI.md.
 
 Successful browser logins set role-specific HTTP-only cookies. The API login
 route is `POST /api/{api_version}/server/auth/login`; it returns a JSON session
-token and also sets the matching cookie. Authenticated API routes accept
-bearer JWTs.
+token and also sets the matching cookie. The administrator cookie is
+`admin_session` (30-day default); the regular-user cookie is `user_session`
+(7-day default). Authenticated API routes accept bearer JWTs.
 
 ## Current settings page
 

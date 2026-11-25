@@ -15,6 +15,9 @@ cookie for regular users (7-day default). Administrator accounts use the
 separate `admins` table and their own session issuer. The signing secret is
 loaded from configuration and must be at least 32 bytes. Administrator login
 locks the account for 15 minutes after five failed password attempts.
+Both browser and API login also return HTTP 429 after five failed attempts
+from the same direct client address within 15 minutes. The handlers do not
+trust `X-Forwarded-For` without an explicit trusted-proxy policy.
 
 The middleware also supports a legacy per-user API token through
 `X-API-Token`; the database stores its SHA-256 digest. This token is distinct
