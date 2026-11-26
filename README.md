@@ -32,6 +32,8 @@ CASCI aims to support.
   handlers, audit logging, compliance configuration, and metrics packages
 - Versioned REST endpoints, Swagger UI, a generated OpenAPI endpoint, GraphQL
   endpoint, and authenticated Streamable HTTP MCP endpoint
+- Companion `casci-cli` for health checks, owner-scoped project list/create,
+  login, and authenticated versioned API requests
 - Docker image and Compose configurations, plus service installer scripts
 
 ## Production
@@ -55,10 +57,11 @@ selecting an external database.
 
 ### Binary
 
-Build the current-platform binary with `make dev` or the release platform set
-with `make build`. Builds run in Docker using `casjaysdev/go:latest`. The
-platform targets are Linux, macOS, Windows, and FreeBSD on amd64 and arm64.
-Build output from `make build` is written to the ignored `binaries/` directory.
+Build the current-platform server and client with `make dev` or the release
+platform set with `make build`. Builds run in Docker using
+`casjaysdev/go:latest`. The platform targets are Linux, macOS, Windows, and
+FreeBSD on amd64 and arm64. Build output from `make build` is written to the
+ignored `binaries/` directory.
 
 ### Service installers
 

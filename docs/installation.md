@@ -1,9 +1,9 @@
 # Installation
 
-CASCI can be run from the provided container image or built as a static Go
-binary. The repository also contains service installer scripts. The service
-management flags in the binary are not implemented; the scripts are separate
-deployment helpers.
+CASCI can be run from the provided container image or built as static Go
+binaries. `make build` produces the server and companion `casci-cli` client.
+The repository also contains service installer scripts; service management
+flags in the server binary remain incomplete.
 
 ## Docker Compose
 
@@ -33,9 +33,9 @@ All Go builds use the Docker toolchain configured in the Makefile.
 make dev
 ```
 
-`make dev` builds for the current platform into an OS temporary directory and
-prints the output path. `make build` builds the configured Linux, macOS,
-Windows, and FreeBSD amd64/arm64 targets into `binaries/`.
+`make dev` builds the current-platform binaries into an OS temporary directory
+and prints the output paths. `make build` builds the server and CLI for Linux,
+macOS, Windows, and FreeBSD on amd64 and arm64 into `binaries/`.
 
 Run the resulting binary with no arguments to start the server. On first run,
 CASCI creates its configuration and data directories and writes `server.yml`.
@@ -84,4 +84,4 @@ service lifecycle.
   before exposing the service.
 - Review [Security](security.md), especially build execution and user
   isolation limitations.
-- Use [CLI Reference](cli.md) for supported startup flags.
+- Use [CLI Reference](cli.md) for server flags and client commands.
