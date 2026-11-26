@@ -9,6 +9,16 @@ route against the running build before depending on it.
 The default API prefix is `https://casci.casapps.us/api/v1`. The `v1` segment
 comes from `server.api_version`. Some machine routes have unversioned aliases.
 
+## Frontend response formats
+
+Frontend pages normally return server-rendered HTML. Requests from recognized
+text browsers (Lynx, w3m, Links, ELinks, Browsh, Carbonyl, and NetSurf) receive
+the same server-rendered content with script elements removed; navigation and
+forms remain usable through links and standard form submissions. Requests from
+recognized command-line HTTP tools, or requests that explicitly accept
+`text/plain`, receive an 80-column text rendering of the page. API paths and
+static assets keep their own response formats.
+
 Authenticated handlers accept a bearer JWT in the `Authorization` header:
 
 ```http
