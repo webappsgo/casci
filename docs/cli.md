@@ -13,7 +13,7 @@ casci-cli [flags] COMMAND
 
 | Flag | Description |
 |------|-------------|
-| `--server URL` | CASCI server URL; defaults to `http://127.0.0.1:64580` |
+| `--server URL` | CASCI server URL; required unless an official site was embedded at build time |
 | `--api-version VERSION` | Versioned API path; defaults to `v1` |
 | `--token TOKEN` | API token (highest token-source priority) |
 | `--token-file FILE` | Read an API token from a private file |
@@ -52,7 +52,8 @@ printf '%s\n' "$CASCI_PASSWORD" | casci-cli --server https://casci.example login
 casci-cli --server https://casci.example --token "$CASCI_TOKEN" api GET /projects
 ```
 
-The client sends tokens only in the `Authorization: Bearer` header and uses
+The client requires `--server URL` unless the build embeds an official site
+from `site.txt` or `OFFICIAL_SITE`. It sends tokens only in the `Authorization: Bearer` header and uses
 the `casci-cli/{version}` User-Agent. HTTPS is required for non-local server
 URLs; plain HTTP is accepted only for loopback development instances. Login
 for a server administrator returns a browser session rather than a user API
