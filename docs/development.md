@@ -60,10 +60,11 @@ Go unit tests are kept beside the package source as `*_test.go` files.
 
 ## Test runners
 
-The repository includes `tests/run_tests.sh`, `tests/docker.sh`,
-`tests/api.sh`, `tests/incus.sh`, and `tests/e2e.sh`. Review each runner before
-using it; some require an existing container runtime, browser, network access,
-or a running application. The primary Go unit suite runs through `make test`.
+`tests/run_tests.sh` runs the basic Docker suite in `tests/docker.sh` and exits
+with status 69 when Docker is unavailable. It accepts no arguments. Run
+`tests/incus.sh` and `tests/e2e.sh` explicitly for their separate integration
+and browser suites; `tests/api.sh` targets an already-running server. The
+primary Go unit suite runs through `make test`.
 
 ## Documentation
 
