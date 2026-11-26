@@ -174,10 +174,8 @@ for the current tool list and request format.
 
 | Method | Path | Behavior |
 |--------|------|----------|
-| GET | `/api/v1/server/swagger` | OpenAPI JSON (currently incomplete) |
+| GET | `/api/v1/server/swagger` | OpenAPI JSON (generated route inventory is incomplete) |
 | GET | `/api/swagger` | Unversioned OpenAPI JSON alias |
-| GET | `/api/v1/server/swagger.yaml` | OpenAPI YAML (currently incomplete) |
-| GET | `/api/swagger.yaml` | Unversioned OpenAPI YAML alias |
 | GET | `/server/docs/swagger` | Swagger UI |
 | GET, POST | `/api/v1/server/graphql` | GraphQL handler; resolver coverage is incomplete |
 | GET, POST | `/api/graphql` | Unversioned GraphQL alias |
@@ -186,6 +184,8 @@ for the current tool list and request format.
 | GET | `/crumbIssuer/api/json` | Jenkins-shaped crumb response |
 | POST | `/webhook` | Provider webhook handler |
 | GET | `/ws` | WebSocket endpoint |
+
+OpenAPI uses JSON only. There is no YAML endpoint.
 
 ## Error and response formats
 
