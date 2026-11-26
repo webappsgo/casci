@@ -21,9 +21,9 @@ Both browser and API login also return HTTP 429 after five failed attempts
 from the same direct client address within 15 minutes. The handlers do not
 trust `X-Forwarded-For` without an explicit trusted-proxy policy.
 
-The middleware also supports a legacy per-user API token through
-`X-API-Token`; the database stores its SHA-256 digest. This token is distinct
-from the bearer JWT path used by MCP. There are no named token records, granular
+The middleware also supports a legacy per-user API token through the Bearer
+authorization scheme; the database stores its SHA-256 digest. The deprecated
+`X-API-Token` header is ignored. There are no named token records, granular
 scopes, service-account tokens, MFA, OAuth, OIDC, or LDAP integration in the
 current user/auth implementation.
 

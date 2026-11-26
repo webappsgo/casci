@@ -23,9 +23,9 @@ the [full API reference](api.md) for access notes and limitations.
 ## Authentication
 
 Sign-in endpoints are `/api/v1/server/auth/register` and
-`/api/v1/server/auth/login`. Authenticated REST handlers accept a JWT as a
-Bearer token. Some middleware also accepts `X-API-Token`; this legacy API
-token is not the same token path used by MCP.
+`/api/v1/server/auth/login`. Authenticated REST handlers accept user JWTs and
+legacy user API tokens only through `Authorization: Bearer`. Other token
+headers are ignored.
 
 ```bash
 curl -q -LSsf https://casci.casapps.us/api/v1/users/me \
