@@ -22,7 +22,7 @@ that segment. Registered admin routes include:
 | Server info | `/server/administration/info` | Runtime, version, process, and database driver details |
 | Pages | `/server/administration/pages/help` | Edit the MCP help page's project guidance |
 | Users | `/server/administration/users` | View accounts and update an account's email or password |
-| Agents | `/server/administration/agents` | Create scoped agent credentials, review reports, rotate credentials, and remove agents |
+| Agents | `/server/administration/agents`, `/server/administration/agents/add`, `/server/administration/agents/remove` | Create scoped agent credentials, review reports, rotate credentials, and confirm removals |
 
 The admin path segment is configurable with `server.admin_path`. Guests are
 redirected to `/server/auth/login`; authenticated regular users are redirected
