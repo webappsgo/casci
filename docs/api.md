@@ -164,6 +164,9 @@ untrusted clients or model contexts.
 | GET | `/api/v1/security/reports/{id}` | Authenticated |
 | GET | `/api/v1/security/statistics` | Authenticated |
 | GET, PUT | `/api/v1/security/config` | Administrator |
+| GET | `/api/v1/server/{admin_path}/logs` | Administrator Bearer token; list log files |
+| GET | `/api/v1/server/{admin_path}/logs/{type}` | Administrator Bearer token; read entries with `limit`, `offset`, and `search` |
+| GET | `/api/v1/server/{admin_path}/logs/{type}/download` | Administrator Bearer token; download a log file |
 | GET | `/api/v1/audit/events` | Authenticated |
 | GET | `/api/v1/audit/status` | Administrator |
 | PUT, PATCH | `/api/v1/audit/config` | Administrator |

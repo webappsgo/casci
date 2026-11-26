@@ -9,7 +9,8 @@ that segment. Registered admin routes include:
 | Settings | `/server/administration/settings` | Read the settings currently exposed by the server configuration model |
 | Branding | `/server/administration/branding` | Edit the application name and tagline |
 | SSL/TLS | `/server/administration/ssl` | Review the active TLS configuration |
-| Email and logs | `/server/administration/email`, `/server/administration/logs` | Show current delivery and process-log availability |
+| Email | `/server/administration/email` | SMTP configuration status |
+| Logs | `/server/administration/logs` | Filter recent access, error, security, or audit logs; download or clear non-audit logs |
 | Audit log | `/server/administration/logs/audit` | Review, filter, paginate, and export retained audit events as JSON or CSV |
 | Security | `/server/administration/security/{auth,tokens,ratelimit,firewall,allowlist}` | Security and access-control section pages |
 | Network | `/server/administration/network/{tor,i2p,geoip,blocklists}` | Overlay and network section pages |
@@ -36,10 +37,28 @@ flows required by AI.md.
 The audit log page is `/server/administration/logs/audit`. It supports
 category, severity, result, date, actor, and IP filters, 50-event pages,
 JSON/CSV exports for the current page, all matching events, or the full log,
-and displays the configured retention period. Category and
-severity labels are derived from the legacy event action and success fields;
-they do not yet represent the complete structured audit event contract in
-AI.md.
+and displays the configured database retention period. Category and severity
+are persisted and filterable in the database. Each newly logged event is also
+appended as JSONL to `{log_dir}/audit.log`; the file chains entry hashes and
+uses a protected tail checkpoint and rotation anchor. It currently rotates
+daily and deletes closed files; AI.md's keep, compression, and event-category
+settings are not configurable yet. The admin viewer and exports currently read
+the database records. AI.md defines both database and file storage without
+specifying which is authoritative or how they stay in sync; that template
+issue is recorded in `~/Projects/github/webappsgo/TODO.SERVER.md`.
+
+The logs page shows access, error, and security files, supports type/search/page
+filters, optional 30-second refresh, downloads, and CSRF-protected clearing for
+non-audit files. Audit records remain append-only and link to the dedicated
+viewer. The API log routes require an administrator Bearer token. Server and
+debug output are not yet routed into persistent log files, and file-log search
+is bounded to the most recent 10,000 lines.
+
+Both the API and browser login flows record admin and user successes and
+failures. Failed user events omit the attempted username; admin failures retain
+the attempted admin name. Login and logout events include the request IP and
+user agent, and logout records the session duration when the cookie is valid.
+Rate-limit rejections are recorded as security events.
 
 ## Sign in
 

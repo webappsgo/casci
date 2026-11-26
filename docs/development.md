@@ -69,7 +69,8 @@ primary Go unit suite runs through `make test`.
 The browser suite builds the production image, starts the application and a
 pinned headless Chromium container on an isolated Docker network, and checks
 server-rendered pages, a JavaScript-disabled preferences submission, and the
-administrator login/logout flow. It requires Docker and OpenSSL. A temporary
+administrator login, audit-page, settings, and logout flow. It requires Docker
+and OpenSSL. A temporary
 test CA enables HTTPS so the browser exercises the same `Secure` session-cookie
 rules as a deployed server; the test keys and certificates are removed when
 the runner exits.
