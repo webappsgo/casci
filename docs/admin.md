@@ -1,11 +1,23 @@
 # Admin panel
 
-The current web admin surface has six registered pages:
+The default admin root is `/server/administration`; `server.admin_path` changes
+that segment. Registered admin routes include:
 
 | Page | Default path | Purpose |
 |------|-------------|---------|
 | Dashboard | `/server/administration` | Server overview |
 | Settings | `/server/administration/settings` | Read the settings currently exposed by the server configuration model |
+| Branding | `/server/administration/branding` | Edit the application name and tagline |
+| SSL/TLS | `/server/administration/ssl` | Review the active TLS configuration |
+| Email and logs | `/server/administration/email`, `/server/administration/logs` | Show current delivery and process-log availability |
+| Security | `/server/administration/security/{auth,tokens,ratelimit,firewall,allowlist}` | Security and access-control section pages |
+| Network | `/server/administration/network/{tor,i2p,geoip,blocklists}` | Overlay and network section pages |
+| User operations | `/server/administration/moderation/users`, `/server/administration/users/invites` | Moderation and invitation section pages |
+| Scheduler | `/server/administration/scheduler` | View, edit, and trigger scheduled tasks |
+| Backup | `/server/administration/backup` | View retention and archives, trigger a scheduled backup |
+| Maintenance | `/server/administration/maintenance` | Show maintenance-mode availability |
+| Updates | `/server/administration/updates` | Review status and change the persisted release channel |
+| Cluster | `/server/administration/cluster/{nodes,add}` | Node and enrollment section pages |
 | Metrics | `/server/administration/metrics` | System, build, node, security, and API measurements |
 | Server info | `/server/administration/info` | Runtime, version, process, and database driver details |
 | Pages | `/server/administration/pages/help` | Edit the MCP help page's project guidance |
@@ -14,8 +26,10 @@ The current web admin surface has six registered pages:
 The admin path segment is configurable with `server.admin_path`. Guests are
 redirected to `/server/auth/login`; authenticated regular users are redirected
 to `/users`. Administrators use a separate account table and session cookie.
-The admin page set is not yet the complete settings and operations panel
-described by AI.md.
+The admin panel is still incomplete. Branding, scheduler, backup, and update
+pages expose server-rendered actions; the other listed section routes currently
+provide status or overview content and do not implement the full management
+flows required by AI.md.
 
 ## Sign in
 

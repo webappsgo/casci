@@ -2,8 +2,10 @@
 
 CASCI can be run from the provided container image or built as static Go
 binaries. `make build` produces the server and companion `casci-cli` client.
-The repository also contains service installer scripts; service management
-flags in the server binary remain incomplete.
+The server binary also supports native service installation and lifecycle
+commands on the documented service managers. See [Service management](services.md)
+for supported operations and platform details; installer scripts remain
+available for systemd and other platform-specific setups.
 
 ## Docker Compose
 
