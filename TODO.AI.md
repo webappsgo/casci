@@ -12,6 +12,7 @@ Implementation order follows the dependencies in AI.md: foundation and configura
 - [ ] Implement isolated, clean-per-build execution, secret injection and cleanup, resource quotas, fair scheduling, artifact signing, SBOM generation, and default vulnerability/secret/license scans required by IDEA.md and PARTS 10, 11, 14, and 34.
 - [ ] Replace placeholder/incomplete API behavior with the required versioned REST surface, canonical response/error envelopes, authorization, request IDs, validation, rate limits, and synchronized OpenAPI/GraphQL/MCP routes from PART 14.
 - [x] Add owner-scoped user API token list, create, inspect, revoke endpoints, hashed storage, and the `/users/tokens` server-rendered no-JavaScript page.
+- [x] Preserve published daily incremental backups by removing only staged files, and keep coverage data in a project-scoped directory reachable by service-identity child tests.
 - [ ] Complete the server-rendered public and admin page flows, including no-JavaScript forms, CSRF, accessibility, shared shell, preferences/help hubs, page registry, and required admin pages from PARTS 16 and 17.
 
 ## High (P1)
