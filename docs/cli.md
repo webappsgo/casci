@@ -53,9 +53,10 @@ casci-cli --server https://casci.example --token "$CASCI_TOKEN" api GET /project
 ```
 
 The client sends tokens only in the `Authorization: Bearer` header and uses
-the `casci-cli/{version}` User-Agent. Login for a server administrator returns
-a browser session rather than a user API token; the CLI login flow therefore
-requires regular-user login to be enabled.
+the `casci-cli/{version}` User-Agent. HTTPS is required for non-local server
+URLs; plain HTTP is accepted only for loopback development instances. Login
+for a server administrator returns a browser session rather than a user API
+token; the CLI login flow therefore requires regular-user login to be enabled.
 
 ## Server executable
 

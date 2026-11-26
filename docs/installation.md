@@ -21,6 +21,17 @@ The container listens on port `80`. The included health check runs
 `casci --status`. The Compose file does not configure an external SQL database;
 SQLite is the current default.
 
+### All-in-One image
+
+`docker/Dockerfile.aio` packages CASCI with PostgreSQL, Valkey, Tor, and i2pd
+in a Debian-based image. The server does not yet manage Tor or I2P processes.
+The `docker/all-in-one.yml` Compose file
+publishes the application at `172.17.0.1:64580` and stores configuration and
+data under `./volumes/` relative to the Compose file's working directory.
+Database and cache services remain internal to the container. Build and
+publish this image through the provider's `docker-aio.yml` workflow; it is
+tagged with the `-aio` suffix.
+
 For development or tests, inspect `docker/docker-compose.dev.yml` and
 `docker/docker-compose.test.yml`. Those files are project tooling, not
 production configuration.
