@@ -1,7 +1,8 @@
 # Configuration
 
 CASCI reads `server.yml` from its resolved configuration directory and reads
-the MCP help content from `yaml.d/pages.yml`. The current file-backed
+area settings from `yaml.d/` files, including MCP help from `pages.yml` and
+CLI binary distribution settings from `maintenance.yml`. The current file-backed
 configuration holds server, web, database, TLS, branding, footer,
 security-contact, encryption-key, and webhook-secret values. This
 implementation does not yet provide the full database-backed configuration
@@ -133,6 +134,28 @@ than a URL subdirectory.
 `web.security.contact`, and `web.security.expires`. `/.well-known/llms.txt`
 and `/llms.txt` are also served. Other paths under `/.well-known/` return
 `404` unless implemented by a handler.
+
+## CLI binary downloads
+
+The server publishes only CLI binaries found in `{data_dir}/cli` whose hashes
+match the colocated `sha256.txt` file. `version.txt` supplies the release
+version. `/api/autodiscover` includes the verified platform, version, and
+SHA-256 values; `/cli/binaries/{project}-cli-{os}-{arch}` streams a matching
+binary. The server does not build or modify release files.
+
+These settings belong in `{config_dir}/yaml.d/maintenance.yml`:
+
+```yaml
+cli:
+  binary_download:
+    dir: "{data_dir}/cli"
+    require_auth: false
+```
+
+The default download is public. Set `require_auth: true` to require an
+`Authorization: Bearer` token. A relative `dir` is resolved under
+`{data_dir}`; the `{data_dir}` placeholder can also be used in an explicit
+path.
 
 ## Admin settings
 
