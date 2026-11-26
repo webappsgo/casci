@@ -17,10 +17,12 @@ routes and components from planned product capabilities.
 
 The server exposes a public web shell, sign-in, user profile, preference and
 help pages, an admin dashboard, settings, Pages → Help and user management,
-versioned API handlers, health and
-readiness endpoints, Swagger UI, GraphQL, MCP, webhooks, and Jenkins-shaped
-compatibility endpoints. Several subsystems are incomplete; consult the
-limitations below and the relevant reference pages before relying on them.
+versioned API handlers, health and readiness endpoints, Swagger UI, GraphQL,
+MCP, webhooks, and Jenkins-shaped compatibility endpoints. The browser shell
+includes an installable PWA with versioned static assets, offline fallback for
+eligible public pages, and a user-controlled service worker update prompt.
+Several subsystems are incomplete; consult the limitations below and the
+relevant reference pages before relying on them.
 
 ## Current limitations
 
@@ -33,8 +35,10 @@ limitations below and the relevant reference pages before relying on them.
   all required token scopes, rate limits, or audit integration.
 - Build isolation, multi-user isolation, workload fairness, provider
   provisioning, and several security controls remain incomplete.
-- `--shell` completion and init output are available; service, maintenance,
-  and update CLI operations remain incomplete.
+- Shell completion, native service lifecycle commands, backup and restore
+  maintenance commands, and staged update operations are implemented. Service
+  manager support varies by operating system; see the [CLI](cli.md) and
+  [service](services.md) references.
 - The configured build test gate requires at least 60% statement coverage.
   The current suite has not yet met that threshold.
 

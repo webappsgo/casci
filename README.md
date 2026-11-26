@@ -22,6 +22,8 @@ CASCI aims to support.
 
 - Server-rendered home, health, account sign-in, preferences, help, legal, and
   security pages
+- Installable PWA shell with build-stamped assets, public-page offline fallback,
+  and user-controlled service worker updates
 - SQLite, PostgreSQL, and MySQL database drivers
 - User registration and login, bearer-token authentication, project CRUD, and
   build lifecycle API handlers
