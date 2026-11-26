@@ -1,6 +1,8 @@
 # Agent management
 
 CASCI includes a companion agent for collecting machine health and metrics.
+Its `--version` output reports the embedded release version, commit ID, and
+UTC build timestamp, matching the server and client binaries.
 Server administrators manage server agents at
 `/server/{admin_path}/agents`; regular users manage only their own agents at
 `/users/agents`. The default administrator path is `administration`.

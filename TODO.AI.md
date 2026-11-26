@@ -5,16 +5,20 @@ Implementation order follows the dependencies in AI.md: foundation and configura
 ## Critical (P0)
 
 - [x] Make credential and notification handlers derive user identity only from the typed authentication context; remove spoofable `X-User-ID` fallback handling.
+- [x] Restrict API user authentication to Bearer credentials, ignore `X-API-Token`, prevent invalid Authorization headers from falling back to browser cookies, and return the required Bearer challenge on failure.
+- [x] Limit CSRF validation to server-rendered page routes; backend and compatibility routes bypass the browser form token check, while malformed and non-Bearer Authorization values do not bypass page CSRF.
 - [ ] Fix security and tenant-isolation defects in existing handlers, repositories, middleware, credential storage, build execution, logs, and artifacts against IDEA.md and AI.md PARTS 10, 11, 14, 16, and 34.
 - [ ] Complete the first-run server-admin flow, setup-token lifecycle, authentication/session management, and admin-only route protection required by PART 17.
 - [ ] Implement isolated, clean-per-build execution, secret injection and cleanup, resource quotas, fair scheduling, artifact signing, SBOM generation, and default vulnerability/secret/license scans required by IDEA.md and PARTS 10, 11, 14, and 34.
 - [ ] Replace placeholder/incomplete API behavior with the required versioned REST surface, canonical response/error envelopes, authorization, request IDs, validation, rate limits, and synchronized OpenAPI/GraphQL/MCP routes from PART 14.
+- [x] Add owner-scoped user API token list, create, inspect, revoke endpoints, hashed storage, and the `/users/tokens` server-rendered no-JavaScript page.
 - [ ] Complete the server-rendered public and admin page flows, including no-JavaScript forms, CSRF, accessibility, shared shell, preferences/help hubs, page registry, and required admin pages from PARTS 16 and 17.
 
 ## High (P1)
 
 - [x] Add the required application-mode package, canonical mode aliases, `MODE`/`DEBUG` precedence, and startup profiling/logging integration from PART 6.
 - [x] Remove prohibited `src/pkg/` and `src/internal/` trees, move packages under `src/`, and extract path resolution into `src/paths`.
+- [x] Embed the release version, commit ID, and UTC build timestamp in server, client, and agent binaries; use cross-platform service helper definitions so the required OS/architecture matrix compiles.
 - [ ] Complete the remaining exact PART 3 layout, including required client/common/mode/ssl/scheduler/service/admin packages and the server handler/service/model/store/template structure.
 - [ ] Complete platform-aware path resolution, mode detection, static binary metadata, the full server/CLI/agent command interface, and runtime lifecycle from PARTS 4, 6, 7, 8, and 24.
 - [ ] Implement the complete YAML configuration system, drop-in files, database-backed settings, environment/flag precedence, validation, hot reload, secret-file handling, and admin UI from PARTS 5 and 12.

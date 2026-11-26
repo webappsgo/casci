@@ -1,9 +1,9 @@
 # CLI reference
 
-CASCI ships a server executable (`casci`) and a companion API client
-(`casci-cli`). Both use the same release version. The client is built from
-`src/client` by `make build` and is available for the eight supported OS and
-architecture combinations.
+CASCI ships a server executable (`casci`), an API client (`casci-cli`), and a
+build-node agent (`casci-agent`). All three binaries use the same release
+version, commit ID, and UTC build timestamp. The client and agent are built by
+`make build` for the eight supported OS and architecture combinations.
 
 ```text
 casci-cli [flags] COMMAND
@@ -17,7 +17,7 @@ casci-cli [flags] COMMAND
 | `--api-version VERSION` | Versioned API path; defaults to `v1` |
 | `--token TOKEN` | API token (highest token-source priority) |
 | `--token-file FILE` | Read an API token from a private file |
-| `--version` | Print the invoked binary name and version |
+| `--version` | Print the invoked binary name, version, commit ID, and build timestamp |
 | `--help`, `-h` | Print usage |
 
 The token source order is `--token`, `--token-file`, `CASCI_TOKEN`, the
@@ -71,3 +71,5 @@ The client currently provides command-line API access. Its interactive
 TUI/GUI setup wizard, full command tree, localized output, and automatic
 version compatibility check are not implemented. The server binary provides
 shell completion scripts through `casci --shell completions {bash,zsh,fish}`.
+The client and agent are documented separately in [Agent management](agents.md);
+their `--version` output also includes the commit ID and build timestamp.

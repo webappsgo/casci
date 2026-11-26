@@ -25,8 +25,8 @@ CASCI aims to support.
 - Installable PWA shell with build-stamped assets, public-page offline fallback,
   and user-controlled service worker updates
 - SQLite, PostgreSQL, and MySQL database drivers
-- User registration and login, bearer-token authentication, project CRUD, and
-  build lifecycle API handlers
+- User registration and login, named per-user `usr_` API tokens with one-time
+  display and scoped revocation, project CRUD, and build lifecycle API handlers
 - Container executor and build queue, with local build-node management routes
 - Parsers for several common CI configuration formats; parser support does not
   mean full runtime compatibility with those CI systems

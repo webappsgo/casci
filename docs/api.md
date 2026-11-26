@@ -41,7 +41,7 @@ scopes, rate limits, request IDs, or response-envelope rules from AI.md.
 | POST | `/api/v1/server/auth/refresh` | Authenticated | Refresh a JWT |
 | GET | `/api/v1/server/{admin_path}/setup` | Public during first run | Report whether primary administrator setup is required |
 | POST | `/api/v1/server/{admin_path}/setup/verify` | Setup token | Verify the one-time first-run setup token |
-| POST | `/api/v1/server/{admin_path}/setup/account` | Setup token + CSRF for browser forms | Create the primary administrator and return the one-time `adm_` API token |
+| POST | `/api/v1/server/{admin_path}/setup/account` | Setup token | Create the primary administrator and return the one-time `adm_` API token |
 | POST | `/api/v1/server/{admin_path}/setup/complete` | Public | Report whether primary administrator creation is complete |
 
 The HTML login page is `/server/auth/login`. The `/healthz` root alias is
@@ -54,6 +54,8 @@ disabled unless `server.healthz.root.enabled` is true.
 | GET, PATCH | `/api/v1/users` | Authenticated user; reads or updates the caller's own profile |
 | GET | `/api/v1/users/me` | Authenticated user; compatibility alias for the caller profile |
 | POST | `/api/v1/users/me/token` | Authenticated user; regenerates the legacy API token |
+| GET, POST | `/api/v1/users/tokens` | Authenticated user; list token metadata or create a named `usr_` token (the value is returned once) |
+| GET, DELETE | `/api/v1/users/tokens/{token_id}` | Authenticated owner; inspect metadata or immediately revoke a token |
 | GET | `/api/v1/server/administration/users` | Administrator; lists accounts |
 | GET, PUT, PATCH, DELETE | `/api/v1/server/administration/users/{id}` | Administrator; manages one account |
 
@@ -63,7 +65,9 @@ profile through `/api/v1/users`.
 
 The server-rendered profile page is `/users`; it uses the same self-scoped
 account data and accepts a no-JavaScript form POST for email or password
-updates.
+updates. `/users/tokens` lists the caller's tokens and supports no-JavaScript
+create and revoke forms. Token values are returned only at creation; the
+database stores a SHA-256 digest and the first eight characters for display.
 
 ## Projects and builds
 

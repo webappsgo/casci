@@ -21,11 +21,14 @@ Both browser and API login also return HTTP 429 after five failed attempts
 from the same direct client address within 15 minutes. The handlers do not
 trust `X-Forwarded-For` without an explicit trusted-proxy policy.
 
-The middleware also supports a legacy per-user API token through the Bearer
-authorization scheme; the database stores its SHA-256 digest. The deprecated
-`X-API-Token` header is ignored. There are no named token records, granular
-scopes, service-account tokens, MFA, OAuth, OIDC, or LDAP integration in the
-current user/auth implementation.
+Regular users can create named `usr_` API tokens from `/users/tokens` or
+`POST /api/v1/users/tokens`. Token values are shown once; the database stores
+the SHA-256 digest and display prefix. Users can list, inspect, and revoke only
+their own tokens. The supported scopes are `global`, `read-write`, and `read`;
+read-only tokens cannot make state-changing requests, and read-write tokens
+cannot delete resources or use server administration routes. The deprecated
+`X-API-Token` header is ignored. MFA, OAuth, OIDC, and LDAP integration are not
+implemented in the current user/auth system.
 
 ## Authorization and tenant boundaries
 
@@ -41,9 +44,15 @@ incomplete.
 ## Browser protections
 
 Server-rendered forms include CSRF tokens. The CSRF manager binds issued tokens
-to a browser session identifier and expires them. Login, registration, node
-registration, and the signed webhook route are exempt from the general CSRF
-check because they use other entry conditions or create the session.
+to a browser session identifier and expires them. CSRF validation applies only
+to frontend form actions that use browser cookies; `/api/**` routes and
+compatibility routes never require CSRF tokens. Bearer-authenticated frontend
+actions also skip the check because browsers do not attach Bearer credentials
+automatically. API login and registration, node registration, and signed
+webhooks are outside the frontend CSRF scope and use their own entry conditions.
+Administrator and user session cookies are `HttpOnly`, `Secure`, and
+`SameSite=Strict`; CSRF tokens are bound to the corresponding signed session
+cookie and cannot be reused between user and administrator sessions.
 
 CORS is configured with `web.cors`, which accepts a single origin, a
 comma-separated list, or `*`. The generated first-run default is `*`; change
