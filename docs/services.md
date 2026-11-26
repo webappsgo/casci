@@ -1,37 +1,41 @@
-# Service installers
+# Service management
 
-The repository includes installer scripts and service definitions, but the
-binary's `--service` command is not implemented. The scripts and units have
-not been validated as a complete lifecycle and currently contain paths and
-environment variable names that do not all match the application's config
-resolver. Review them before installation; do not use them on a host with
-existing CASCI data without first resolving those differences.
+The `casci` server binary installs and controls native service managers. Use
+`casci --service --help` to inspect the detected manager and current state.
 
-## Available files
+## Commands
 
-| Platform | Files |
-|----------|-------|
-| Linux/systemd | `scripts/install-systemd.sh`, `scripts/casci.service` |
-| macOS/launchd | `scripts/install-launchd.sh`, `scripts/com.casapps.casci.plist` |
-| Windows | `scripts/install-windows.ps1` |
-| Linux/macOS removal | `scripts/uninstall-service.sh` |
+| Command | Behavior |
+|---------|----------|
+| `casci --service --install` | Install, enable, and start the service |
+| `casci --service start` | Start an installed service |
+| `casci --service stop` | Stop the service |
+| `casci --service restart` | Restart the service |
+| `casci --service reload` | Ask the service manager to reload or reconfigure |
+| `casci --service --disable` | Stop and disable automatic start while keeping application data |
+| `casci --service --uninstall` | Remove the service and application data after confirmation; keeps the binary |
 
-The installers require administrative privileges and modify system accounts,
-service managers, and install paths. Read the script and service definition
-before running it.
+Run user-level systemd or launchd operations without elevation when that manager
+is available. System-level installation and management may prompt for elevated
+privileges. Linux supports systemd, OpenRC, runit, s6, and SysVinit; macOS uses
+launchd, FreeBSD uses rc.d, and Windows uses the Service Control Manager.
 
-## Known integration gaps
+## Data and paths
 
-- The systemd and launchd unit files define `CASCI_DB_TYPE` and
-  `CASCI_DB_DSN`; the current application reads `DATABASE_DRIVER` and
-  `DATABASE_URL` instead.
-- Installer paths do not consistently match the application's resolved
-  `casapps/casci` config/data/log paths.
-- The Windows installer registers a service but its environment values use
-  the same unsupported `CASCI_DB_*` names.
-- The binary does not currently implement `--service install`, start, stop,
-  restart, or reload operations.
+System installation prepares the service account and application directories.
+The server binds its listener before dropping privileges to that account.
+Windows service paths are under `%PROGRAMDATA%/{org}/{internal_name}`. On Unix,
+paths follow the configured project path resolver; inspect `casci --help` and
+the [configuration reference](configuration.md) for overrides.
 
-See [Installation](installation.md) for the high-level deployment options and
-[Configuration](configuration.md) for environment variables the application
-actually reads.
+Uninstall is destructive: it deletes the service's config, data, cache, logs,
+backups, and service account when the application created that account. Back up
+data first if it must be retained. `--disable` is the reversible option that
+keeps data.
+
+## Installer scripts
+
+The repository also contains scripts and unit examples under `scripts/` for
+platforms that need operator-managed installation. The binary command is the
+supported lifecycle interface; inspect any script before running it because
+scripts execute host-level changes outside the binary's service lifecycle.

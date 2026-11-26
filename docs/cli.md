@@ -67,6 +67,7 @@ The `casci` binary starts the server. Its flags include `--help`, `--version`,
 `--service`, `--maintenance`, `--update`, and `--shell`. See
 [Configuration](configuration.md) for runtime paths and precedence.
 
-The client currently provides command-line API access; the interactive TUI/GUI
-setup wizard, full command tree, shell completion, localized output, and
-automatic version compatibility check are not implemented yet.
+The client currently provides command-line API access. Its interactive
+TUI/GUI setup wizard, full command tree, localized output, and automatic
+version compatibility check are not implemented. The server binary provides
+shell completion scripts through `casci --shell completions {bash,zsh,fish}`.

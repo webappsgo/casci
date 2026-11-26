@@ -65,10 +65,10 @@ ignored `binaries/` directory.
 
 ### Service installers
 
-The repository contains installers for systemd, launchd, and Windows services
-under `scripts/`. Review the selected script and its service definition before
-running it with elevated privileges. The application's `--service` command
-does not install or control these services yet.
+The server binary can install and control supported native service managers
+with `--service --install`, `start`, `stop`, `restart`, `reload`, `--disable`,
+and `--uninstall`. Review [Service management](docs/services.md) before using
+system-level actions; uninstall removes application data after confirmation.
 
 ## Configuration
 
