@@ -99,6 +99,33 @@ exposing these operations to users.
 | POST | `/api/v1/nodes/{id}/heartbeat` | Node handler |
 | POST | `/api/v1/nodes/{id}/drain` | Administrator |
 
+## Agents
+
+Agent management is available to administrators under the configured admin
+path and to signed-in users under `/api/v1/users/agents`. Management requests
+require the matching account credential; user routes require a user bearer JWT.
+Machine registration, heartbeat, report, and binary download requests require
+an agent-scoped `adm_` or `usr_` bearer token. The full route behavior and
+payload examples are in the [Agent guide](agents.md).
+
+| Method | Path | Access |
+|--------|------|--------|
+| GET, POST | `/api/v1/server/{admin_path}/agents` | Administrator |
+| GET, PATCH, DELETE | `/api/v1/server/{admin_path}/agents/{id}` | Administrator |
+| POST | `/api/v1/server/{admin_path}/agents/{id}/token` | Administrator |
+| GET | `/api/v1/server/{admin_path}/agents/{id}/metrics` | Administrator |
+| POST | `/api/v1/server/{admin_path}/agents/{register,heartbeat,report}` | Admin-scoped agent token |
+| GET, POST | `/api/v1/users/agents` | Authenticated user |
+| GET, PATCH, DELETE | `/api/v1/users/agents/{id}` | Authenticated user; owner scoped |
+| POST | `/api/v1/users/agents/{id}/token` | Authenticated user; owner scoped |
+| GET | `/api/v1/users/agents/{id}/metrics` | Authenticated user; owner scoped |
+| POST | `/api/v1/users/agents/{register,heartbeat,report}` | User-scoped agent token |
+| GET, HEAD | `/agent/binaries/{name}` | Any valid agent-scoped bearer token |
+
+Agent management API paths return a JSON `ok`/`data` envelope. Agent tokens
+are stored as SHA-256 hashes and are shown only when created or rotated.
+Organization-scoped agent routes are not currently implemented.
+
 ## Credentials and notifications
 
 | Method | Path | Access |

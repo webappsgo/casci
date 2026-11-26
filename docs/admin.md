@@ -22,6 +22,7 @@ that segment. Registered admin routes include:
 | Server info | `/server/administration/info` | Runtime, version, process, and database driver details |
 | Pages | `/server/administration/pages/help` | Edit the MCP help page's project guidance |
 | Users | `/server/administration/users` | View accounts and update an account's email or password |
+| Agents | `/server/administration/agents` | Create scoped agent credentials, review reports, rotate credentials, and remove agents |
 
 The admin path segment is configurable with `server.admin_path`. Guests are
 redirected to `/server/auth/login`; authenticated regular users are redirected
@@ -43,6 +44,11 @@ That page creates the primary administrator and stores only the token hash in
 all setup wizard steps required by AI.md.
 The setup response displays the initial `adm_` API token once; the database
 stores only its hash.
+
+The Agents page is also available to signed-in users at `/users/agents` for
+their own agents. Admin and user agent management APIs are described in the
+[Agent guide](agents.md). Organization agent management is not currently
+registered.
 
 Successful browser logins set role-specific HTTP-only cookies. The API login
 route is `POST /api/{api_version}/server/auth/login`; it sets the matching
