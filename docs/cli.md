@@ -38,7 +38,7 @@ rejected; use `chmod 0600` to secure them.
 
 The generic `api` command accepts `GET`, `POST`, `PUT`, `PATCH`, and `DELETE`.
 Its resource path is appended to `/api/{api-version}`; it must start with `/`
-and cannot contain a query, fragment, or `..` path component. Supply request
+and cannot contain a query, fragment, or `..` sequence. Supply request
 data as one JSON argument.
 
 ## Examples
