@@ -10,6 +10,7 @@ that segment. Registered admin routes include:
 | Branding | `/server/administration/branding` | Edit the application name and tagline |
 | SSL/TLS | `/server/administration/ssl` | Review the active TLS configuration |
 | Email and logs | `/server/administration/email`, `/server/administration/logs` | Show current delivery and process-log availability |
+| Audit log | `/server/administration/logs/audit` | Review, filter, paginate, and export retained audit events as JSON or CSV |
 | Security | `/server/administration/security/{auth,tokens,ratelimit,firewall,allowlist}` | Security and access-control section pages |
 | Network | `/server/administration/network/{tor,i2p,geoip,blocklists}` | Overlay and network section pages |
 | User operations | `/server/administration/moderation/users`, `/server/administration/users/invites` | Moderation and invitation section pages |
@@ -31,6 +32,14 @@ The admin panel is still incomplete. Branding, scheduler, backup, and update
 pages expose server-rendered actions; the other listed section routes currently
 provide status or overview content and do not implement the full management
 flows required by AI.md.
+
+The audit log page is `/server/administration/logs/audit`. It supports
+category, severity, result, date, actor, and IP filters, 50-event pages,
+JSON/CSV exports for the current page, all matching events, or the full log,
+and displays the configured retention period. Category and
+severity labels are derived from the legacy event action and success fields;
+they do not yet represent the complete structured audit event contract in
+AI.md.
 
 ## Sign in
 
