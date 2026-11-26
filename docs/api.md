@@ -70,14 +70,14 @@ updates.
 | Method | Path | Access | Handler behavior |
 |--------|------|--------|------------------|
 | GET | `/api/v1/projects` | Authenticated | List projects |
-| POST | `/api/v1/projects/` | Authenticated | Create project through the trailing-slash subroute |
+| POST | `/api/v1/projects` | Authenticated | Create project |
 | GET, PUT, PATCH, DELETE | `/api/v1/projects/{id}` | Authenticated | Project CRUD |
 | GET, POST | `/api/v1/projects/{id}/builds` | Authenticated | List or trigger builds |
 | GET | `/api/v1/projects/{id}/builds/stats` | Authenticated | Project build statistics |
 | GET | `/api/v1/projects/{id}/notifications` | Authenticated | Project notification configurations |
 | GET, POST | `/api/v1/projects/{id}/credentials` | Authenticated | List or create project credentials |
 | GET | `/api/v1/builds/{id}` | Authenticated | Read a build |
-| GET | `/api/v1/builds/{id}/log` | Authenticated | Read a build log |
+| GET | `/api/v1/builds/{id}/logs` | Authenticated | Read a build log |
 | POST | `/api/v1/builds/{id}/cancel` | Authenticated | Cancel a build |
 | POST | `/api/v1/builds/{id}/restart` | Authenticated | Restart a build |
 | GET | `/api/v1/builds/{id}/security` | Authenticated | Read build security reports |

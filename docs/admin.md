@@ -17,7 +17,7 @@ that segment. Registered admin routes include:
 | Backup | `/server/administration/backup` | View retention and archives, trigger a scheduled backup |
 | Maintenance | `/server/administration/maintenance` | Show maintenance-mode availability |
 | Updates | `/server/administration/updates` | Review status and change the persisted release channel |
-| Cluster | `/server/administration/cluster/{nodes,add}` | Node and enrollment section pages |
+| Cluster | `/server/administration/nodes`, `/server/administration/nodes/add` | Node and enrollment section pages |
 | Metrics | `/server/administration/metrics` | System, build, node, security, and API measurements |
 | Server info | `/server/administration/info` | Runtime, version, process, and database driver details |
 | Pages | `/server/administration/pages/help` | Edit the MCP help page's project guidance |
