@@ -11,7 +11,8 @@ that segment. Registered admin routes include:
 | Settings | `/server/administration/settings` | Read the settings currently exposed by the server configuration model |
 | Branding | `/server/administration/branding` | Edit the application name and tagline |
 | SSL/TLS | `/server/administration/ssl` | Review the active TLS configuration |
-| Email | `/server/administration/email` | Configure SMTP sender/connection details, test the SMTP connection, and save credentials to encrypted secrets storage |
+| Email | `/server/administration/email` | Configure SMTP sender/connection details, send a test message, and save credentials to encrypted secrets storage |
+| Email templates | `/server/administration/email/templates` | Edit, preview, send a sample message, or reset embedded email templates |
 | Logs | `/server/administration/logs` | Filter recent access, error, security, or audit logs; download or clear non-audit logs |
 | Audit log | `/server/administration/logs/audit` | Review, filter, paginate, and export retained audit events as JSON or CSV |
 | Security | `/server/administration/security/{auth,tokens,ratelimit,firewall,allowlist}` | Security and access-control section pages |
@@ -19,7 +20,7 @@ that segment. Registered admin routes include:
 | Network | `/server/administration/network/{tor,i2p,geoip,blocklists}` | Overlay and network section pages |
 | User operations | `/server/administration/moderation/users`, `/server/administration/users/invites` | Review moderation status and create/revoke expiring user or server-admin invitations |
 | Scheduler | `/server/administration/scheduler` | View, edit, and trigger scheduled tasks |
-| Backup | `/server/administration/backup` | Create, list, download, and verify archives; restore an archive after entering its password (when encrypted) and typing its exact filename to confirm; the server restarts through its supervisor |
+| Backup | `/server/administration/backup` | Configure schedule and retention, create, list, download, and verify archives; restore an archive after entering its password (when encrypted) and typing its exact filename to confirm; the server restarts through its supervisor |
 | Maintenance | `/server/administration/maintenance` | Current status and guidance; automatic critical-error recovery and manual mode controls are incomplete |
 | Updates | `/server/administration/updates` | Review status and change the persisted release channel |
 | Cluster | `/server/administration/nodes`, `/server/administration/nodes/add` | Node and enrollment section pages |
@@ -32,7 +33,7 @@ that segment. Registered admin routes include:
 The admin path segment is configurable with `server.admin_path`. Guests are
 redirected to `/server/auth/login`; authenticated regular users are redirected
 to `/users`. Administrators use a separate account table and session cookie.
-The Email and Invitations pages use server-rendered forms with CSRF protection.
+The Email, Email templates, and Invitations pages use server-rendered forms with CSRF protection. Email templates use embedded defaults and store administrator overrides in `{config_dir}/template/email/` with owner-only file permissions. The editor lists account and operational messages, validates template variables, previews sample data, sends test mail to the entered address (defaulting to the signed-in administrator email), and restores a default after explicit confirmation.
 Several section routes remain informational rather than full management interfaces. The Authentication section links to external provider configuration; firewall, allowlist, GeoIP, Tor, I2P, and some cluster controls are still incomplete.
 
 The audit log page is `/server/administration/logs/audit`. It supports

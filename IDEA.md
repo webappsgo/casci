@@ -194,6 +194,7 @@ These are CASCI product routes beyond the common server routes defined by AI.md.
 | POST | `/api/{api_version}/nodes/{node_id}/heartbeat` | Node credential | Submit node health and capacity. |
 | POST | `/api/{api_version}/nodes/{node_id}/drain` | Server administrator | Drain a worker node from new work. |
 | GET, POST | `/api/{api_version}/server/{admin_path}/backup` | Server administrator | List safe archive metadata or create and verify a full backup; an optional password is write-only. |
+| GET, PUT | `/api/{api_version}/server/{admin_path}/backup/settings` | Server administrator | Read or update scheduled-backup enablement, hourly incremental enablement, and validated retention policy. |
 | GET, DELETE | `/api/{api_version}/server/{admin_path}/backup/{id}` | Server administrator | Read metadata or delete an archive; deletion is refused when an incremental depends on it. |
 | GET | `/api/{api_version}/server/{admin_path}/backup/{id}/download` | Server administrator | Download an archive as an attachment. |
 | POST | `/api/{api_version}/server/{admin_path}/backup/test` | Server administrator | Verify an existing archive's checksum, manifest, and encryption using its filename and optional password. |

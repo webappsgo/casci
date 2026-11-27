@@ -150,11 +150,16 @@ rotation:
 | GET, POST | `/api/{api_version}/server/{admin_path}/users/invites` | Administrator; list or create user/admin invitations (the raw code is returned once) |
 | GET, DELETE | `/api/{api_version}/server/{admin_path}/users/invites/{id}` | Administrator; inspect safe metadata or revoke an invitation |
 | GET, PATCH | `/api/{api_version}/server/{admin_path}/email` | Administrator; read safe SMTP settings or save settings (password is write-only) |
-| POST | `/api/{api_version}/server/{admin_path}/email/test` | Administrator; test settings without returning credentials |
+| POST | `/api/{api_version}/server/{admin_path}/email/test` | Administrator; send a `[TEST]` message using a selected template and recipient (defaults to the administrator email and `test` template) |
+| GET | `/api/{api_version}/server/{admin_path}/email/templates` | Administrator; list template names, subjects, account classification, and default/custom status |
+| GET, PUT | `/api/{api_version}/server/{admin_path}/email/templates/{name}` | Administrator; read or save a template's plain-text subject and body |
+| POST | `/api/{api_version}/server/{admin_path}/email/templates/{name}/preview` | Administrator; render a subject and body with sample data |
+| POST | `/api/{api_version}/server/{admin_path}/email/templates/{name}/reset` | Administrator; remove the custom file and return the embedded default |
 | GET, POST | `/api/{api_version}/server/{admin_path}/security/auth/{oidc,ldap,saml}/providers` | Administrator | List safe provider settings or create a provider |
 | GET, PATCH, DELETE | `/api/{api_version}/server/{admin_path}/security/auth/{oidc,ldap,saml}/providers/{name}` | Administrator | Read safe settings, update, or remove an identity provider |
 | POST | `/api/{api_version}/server/{admin_path}/security/auth/{oidc,ldap,saml}/providers/{name}/test` | Administrator | Test provider connectivity without returning credentials |
 | GET, POST | `/api/{api_version}/server/{admin_path}/backup` | Administrator | List safe archive metadata or create and verify a full backup; the optional password is never returned |
+| GET, PUT | `/api/{api_version}/server/{admin_path}/backup/settings` | Administrator | Read or update scheduled backup enablement, hourly incrementals, and validated retention settings |
 | GET, DELETE | `/api/{api_version}/server/{admin_path}/backup/{id}` | Administrator | Read archive metadata or delete it when no retained incremental depends on it |
 | GET | `/api/{api_version}/server/{admin_path}/backup/{id}/download` | Administrator | Download a backup archive as an attachment |
 | POST | `/api/{api_version}/server/{admin_path}/backup/test` | Administrator | Verify an existing backup archive using its filename and optional password |
@@ -176,8 +181,9 @@ lists API-token sessions and provides CSRF-protected revoke forms. Both pages
 use no-store/noindex headers.
 `/users/consents` accepts both a CSRF-protected POST form and the PATCH JSON
 action. The administrator invitation page is
-`/server/{admin_path}/users/invites`; the SMTP settings page is
-`/server/{admin_path}/email` and provides save and connection-test forms.
+`/server/{admin_path}/users/invites`; SMTP settings and template editing are
+available at `/server/{admin_path}/email` and
+`/server/{admin_path}/email/templates` with CSRF-protected forms.
 
 ## Projects and builds
 
