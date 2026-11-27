@@ -4,7 +4,7 @@ CASCI reads `server.yml` from its resolved configuration directory and reads
 area settings from `yaml.d/` files, including MCP help from `pages.yml` and
 CLI binary distribution settings from `maintenance.yml`. The current file-backed
 configuration holds server, web, database, TLS, branding, footer,
-security-contact, encryption-key, webhook-secret, and log-output values. This
+security-contact, encrypted SMTP credentials, privacy/report sampling, encryption-key, webhook-secret, and log-output values. This
 implementation does not yet provide the full database-backed configuration
 system or hot reload described in the product specification.
 
@@ -51,6 +51,16 @@ server:
     max_conns: 25
     max_idle: 5
     replica_urls: []
+  notifications:
+    email:
+      smtp:
+        host: ""
+        port: 587
+        username: ""
+        tls: auto
+      from:
+        name: casci
+        email: ""
 web:
   cors: "*"
   robots:
@@ -60,7 +70,31 @@ web:
     report_url: https://github.com/webappsgo/casci/security/advisories/new
     contact: ""
     expires: ""
+  reports:
+    rate_limit_per_minute: 60
+    rate_limit_per_ip_burst: 10
+  csp:
+    reports_sample_rate: 1.0
+privacy:
+  hash_report_ips: true
 ```
+
+SMTP passwords are stored encrypted in `secrets.yml`; they are omitted from
+`server.yml`. `SMTP_*` environment variables override file values at startup,
+including the sender name and address. The defaults are port 587, automatic TLS
+mode, the application name as the sender name, and `no-reply@{fqdn}` as the
+sender address when a public FQDN is configured. Email remains disabled until
+the SMTP connection check succeeds.
+
+TLS mode `auto` uses implicit TLS on port 465 and otherwise starts in plain SMTP
+and upgrades with STARTTLS when the server offers it. `starttls` requires that
+upgrade; `tls` uses implicit TLS on any port; `none` explicitly uses plaintext.
+Authentication is never sent without TLS. Certificates are verified normally
+for hostnames and public IPs; only configured private IP literals use the
+documented relaxed certificate policy. `web.reports.rate_limit_per_minute`
+defaults to 60 per client IP, `web.reports.rate_limit_per_ip_burst` defaults to
+10, and `web.csp.reports_sample_rate` defaults to 1.0. Report IP hashing is
+enabled by default and can be changed with `privacy.hash_report_ips`.
 
 The example omits generated key material. Protect `server.yml` because it can
 contain the encryption and webhook secrets. Do not commit real configuration
@@ -114,6 +148,13 @@ Current configuration-related environment variables:
 | `DOMAIN` | Overrides the configured public FQDN at startup |
 | `DATABASE_DRIVER` | Overrides the database driver at startup |
 | `DATABASE_URL` | Overrides the database connection string at startup |
+| `SMTP_HOST` | Overrides `server.notifications.email.smtp.host` |
+| `SMTP_PORT` | Overrides the SMTP port (default `587`) |
+| `SMTP_USERNAME` | Overrides the SMTP username |
+| `SMTP_PASSWORD` | Overrides the SMTP password without persisting it |
+| `SMTP_TLS` | Overrides TLS mode (`auto`, `starttls`, `tls`, or `none`) |
+| `SMTP_FROM_NAME` | Overrides the sender display name |
+| `SMTP_FROM_EMAIL` | Overrides the sender address |
 | `NO_COLOR` | Disables color and emoji output when non-empty |
 | `TERM` | `dumb` disables ANSI and emoji output |
 

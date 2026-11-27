@@ -19,14 +19,16 @@ recognized command-line HTTP tools, or requests that explicitly accept
 `text/plain`, receive an 80-column text rendering of the page. API paths and
 static assets keep their own response formats.
 
-Authenticated handlers accept a bearer JWT in the `Authorization` header:
+Authenticated handlers accept the account's bearer API token (or a signed user
+session token where that route explicitly supports it) in the `Authorization` header:
 
 ```http
 Authorization: Bearer <bearer-token>
 ```
 
 Browser middleware also accepts the CASCI authentication cookie for routes
-that use the shared user middleware. MCP accepts only the bearer header.
+that use the shared user middleware. API login returns a revocable, role-scoped
+`adm_` or `usr_` API token and does not set a cookie. MCP accepts only the bearer header.
 Login is public. Registration is mounted only when `server.users.enabled` is
 `true` and `server.users.registration.mode` is `open`; otherwise the route
 returns 404. User, admin, and node handlers apply different checks. The API
@@ -52,7 +54,14 @@ scopes, rate limits, request IDs, or response-envelope rules from AI.md.
 | POST | `/api/v1/server/auth/register` | Public when multi-user mode is enabled and registration is open | Register a regular-user account |
 | POST | `/api/v1/server/auth/login` | Public | Authenticate a server administrator or enabled regular user; returns a revocable 24-hour `adm_` or `usr_` Bearer API token named `login` and sets no cookie |
 | GET | `/api/v1/server/auth/check` | Public; Bearer token required | Validate an administrator or user credential and return `data.kind` (`operator` or `user`) without returning the token; invalid or missing credentials return 401 |
-| POST | `/api/v1/server/auth/refresh` | Authenticated | Refresh a JWT |
+| POST | `/api/v1/server/auth/logout` | Bearer token | Revoke the login API token |
+| POST | `/api/v1/server/auth/2fa` | Partial login token | Complete TOTP or recovery-code verification |
+| POST | `/api/v1/server/auth/refresh` | Authenticated | Refresh a supported signed session token |
+| POST | `/api/v1/server/auth/password/forgot` | Public, rate-limited | Request password reset instructions without revealing whether the email exists |
+| POST | `/api/v1/server/auth/password/reset` | One-time reset token | Set a new password and consume the reset token |
+| POST | `/api/v1/server/auth/username/forgot` | Public, rate-limited | Request a username reminder without revealing whether the email exists |
+| POST | `/api/v1/server/auth/verify` | One-time verification token | Verify the account email address |
+| POST | `/api/v1/server/reports/{type}` | Public, anonymous, rate-limited | Accept allow-listed browser telemetry, sanitize it, and write only to operational logs; success returns 204 |
 | GET | `/api/v1/server/{admin_path}/setup` | Public | Report setup requirement and primary-account recovery status |
 | POST | `/api/v1/server/{admin_path}/setup/verify` | Setup token | Verify the one-time first-run setup token |
 | POST | `/api/v1/server/{admin_path}/setup/account` | Setup token | Create the primary administrator and return the one-time `adm_` API token |
@@ -101,6 +110,16 @@ rotation:
 | GET, PATCH | `/api/v1/users` | Authenticated user; reads or updates the caller's own profile |
 | GET, POST | `/api/v1/users/tokens` | Authenticated user; list token metadata or create a named `usr_` token (the value is returned once) |
 | GET, DELETE | `/api/v1/users/tokens/{token_id}` | Authenticated owner; inspect metadata or immediately revoke a token |
+| POST | `/api/v1/users/security/password` | Authenticated user; verify the current password and change the caller's password |
+| GET | `/api/v1/users/security/sessions` | Authenticated user; list the caller's API-token sessions |
+| DELETE | `/api/v1/users/security/sessions/{session_id}` | Authenticated owner; revoke one API-token session |
+| GET | `/api/v1/users/security/2fa` | Authenticated user; read TOTP, passkey, and recovery-code status |
+| POST | `/api/v1/users/security/2fa/enable` | Authenticated user; begin or confirm TOTP enrollment and return one-time recovery codes |
+| POST | `/api/v1/users/security/2fa/disable` | Authenticated user; disable TOTP after verifying a current TOTP or recovery code |
+| GET | `/api/v1/users/security/recovery` | Authenticated user; read remaining recovery-code status |
+| POST | `/api/v1/users/security/recovery/regenerate` | Authenticated user; replace recovery codes and return them once |
+| GET, POST | `/api/v1/users/security/passkeys` | Authenticated user; list passkeys or begin registration |
+| DELETE | `/api/v1/users/security/passkeys/{passkey_id}` | Authenticated owner; revoke one passkey |
 | GET | `/api/{api_version}/server/{admin_path}/users` | Administrator; lists accounts |
 | GET, PUT, PATCH, DELETE | `/api/{api_version}/server/{admin_path}/users/{id}` | Administrator; manages one account |
 
@@ -114,6 +133,10 @@ updates. `/users/tokens` and, when regular-user accounts are enabled,
 `/server/preferences/tokens` list the caller's tokens and support no-JavaScript
 create and revoke forms. Token values are returned only at creation; the
 database stores a SHA-256 digest and the first eight characters for display.
+The `/users/security` page supports password changes, TOTP enrollment,
+passkey management, and recovery-code acknowledgment. `/users/security/sessions`
+lists API-token sessions and provides CSRF-protected revoke forms. Both pages
+use no-store/noindex headers.
 
 ## Projects and builds
 
@@ -234,8 +257,10 @@ untrusted clients or model contexts.
 | GET | `/api/v1/compliance/preset` | Administrator |
 | POST, PUT | `/api/v1/compliance/mode` | Administrator |
 | POST | `/api/v1/compliance/check` | Administrator |
-| GET | `/metrics`, `/metrics/json` | Administrator |
-| GET | `/api/v1/metrics/{system,builds,nodes,security,api}` | Administrator |
+| GET | `/server/metrics/{prometheus,grafana,loki}` | Per-service bearer token; internal Prometheus, Grafana-compatible, or bounded Loki data |
+| GET | `/api/v1/server/metrics/{prometheus,grafana,loki}` | Per-service bearer token; versioned alias |
+| GET | `/api/metrics/{service}` | Per-service bearer token; unversioned API alias |
+| GET | `/metrics/{prometheus,grafana,loki}` | Per-service bearer token; optional root alias |
 
 ## MCP
 

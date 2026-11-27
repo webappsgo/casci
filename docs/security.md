@@ -27,8 +27,12 @@ registration and login ceremonies use expiring, single-use server-side
 challenges. First-factor passkey login and passkey second-factor login both
 issue the normal administrator session. Enabling the first security factor
 requires acknowledging one-time recovery codes before it becomes active.
-Recovery codes are stored as hashes and can be consumed only once. Regular-user
-MFA and WebAuthn are not implemented in the current user/auth system.
+Recovery codes are stored as hashes and can be consumed only once. Regular users
+can enroll TOTP and passkeys from `/users/security`; registration and login use
+single-use challenges, and recovery-code acknowledgment is required before a
+factor becomes active. User login completes a pending TOTP challenge before
+issuing the session token. `/users/security/sessions` lists and revokes the
+caller's API-token sessions.
 
 Regular users can create named `usr_` API tokens from `/users/tokens` or
 `POST /api/v1/users/tokens`. Token values are shown once; the database stores

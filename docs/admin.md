@@ -93,10 +93,9 @@ their own agents. Admin and user agent management APIs are described in the
 registered.
 
 Successful browser logins set role-specific HTTP-only cookies. The API login
-route is `POST /api/{api_version}/server/auth/login`; it sets the matching
-cookie. Regular-user login also returns a bearer JWT. Administrator API
-requests use an `adm_` API token; first-run setup displays the initial token
-once. The administrator cookie is
+route is `POST /api/{api_version}/server/auth/login`; it returns a revocable,
+role-scoped `adm_` or `usr_` bearer API token and sets no cookie. First-run
+setup displays the initial administrator token once. The administrator cookie is
 `admin_session` (30-day default); the regular-user cookie is `user_session`
 (7-day default). Admin API routes require an administrator bearer token.
 

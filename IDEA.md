@@ -186,5 +186,36 @@ These are CASCI product routes beyond the common server routes defined by AI.md.
 | GET | `/api/{api_version}/security/reports` | Owning user | List security scan reports for the caller's builds. |
 | GET | `/api/{api_version}/security/reports/{report_id}` | Owning user | Read one scan report belonging to the caller's build. |
 | POST | `/api/{api_version}/webhooks/{provider}` | Provider signature | Accept a provider-signed event and enqueue the associated user's build without exposing credentials. |
+| GET | `/api/{api_version}/nodes` | Server administrator | List registered worker nodes and their health. |
+| GET, PUT, PATCH, DELETE | `/api/{api_version}/nodes/{node_id}` | Server administrator | Read, update, or delete a worker node. |
+| POST | `/api/{api_version}/nodes/register` | Node registration token | Register a worker node. |
+| POST | `/api/{api_version}/nodes/token` | Server administrator | Generate a node registration token. |
+| POST | `/api/{api_version}/nodes/{node_id}/heartbeat` | Node credential | Submit node health and capacity. |
+| POST | `/api/{api_version}/nodes/{node_id}/drain` | Server administrator | Drain a worker node from new work. |
+| GET | `/api/{api_version}/security/reports` | Owning user | List the caller's security scan reports. |
+| GET | `/api/{api_version}/security/reports/{report_id}` | Owning user | Read one owned security report. |
+| GET, PUT | `/api/{api_version}/security/config` | Server administrator | Read or update scanning configuration. |
+| GET | `/api/{api_version}/security/statistics` | Server administrator | Read aggregate scan statistics. |
+| GET, POST | `/api/{api_version}/notifications` | User | List or create the caller's notification integrations. |
+| GET, PUT, PATCH, DELETE | `/api/{api_version}/notifications/{notification_id}` | Owning user | Read, update, or remove one notification integration. |
+| POST | `/api/{api_version}/notifications/{notification_id}/test` | Owning user | Send a test notification. |
+| GET | `/api/{api_version}/notifications/types` | User | List supported notification channels. |
+| GET | `/api/{api_version}/notifications/events` | User | List supported notification event types. |
+| GET, POST | `/api/{api_version}/credentials/user` | User | List or create the caller's encrypted credentials. |
+| GET, PUT, PATCH, DELETE | `/api/{api_version}/credentials/user/{credential_id}` | Owning user | Read safe metadata, update, or remove one user credential. Secret values are write-only. |
+| GET, PUT, PATCH, DELETE | `/api/{api_version}/credentials/project/{project_id}/{credential_id}` | Owning user | Read safe metadata, update, or remove one project credential. Secret values are write-only. |
+| GET | `/api/{api_version}/audit/events` | User | Query the caller's audit events. |
+| GET | `/api/{api_version}/audit/status` | Server administrator | Read audit subsystem status. |
+| GET, PUT, PATCH | `/api/{api_version}/audit/config` | Server administrator | Read or update audit retention configuration. |
+| POST | `/api/{api_version}/audit/cleanup` | Server administrator | Run audit retention cleanup. |
+| GET, POST | `/api/json` | Jenkins-compatible client authentication | Serve the Jenkins-compatible API discovery resource. |
+| GET, PUT, PATCH | `/api/{api_version}/compliance/config` | Server administrator | Read or update compliance configuration. |
+| GET | `/api/{api_version}/compliance/modes` | Server administrator | List available compliance modes. |
+| POST, PUT | `/api/{api_version}/compliance/mode` | Server administrator | Set the active compliance mode. |
+| GET | `/api/{api_version}/compliance/preset` | Server administrator | Read the active compliance preset. |
+| POST | `/api/{api_version}/compliance/check` | Server administrator | Run a compliance check. |
+| POST | `/users/settings` | User session + CSRF | Submit the account settings page as a standard HTML form when JavaScript is unavailable. |
+| GET, POST | `/users/security` | User session; POST requires CSRF | Review account security and change the password with a standard HTML form. |
+| GET, POST | `/users/security/sessions` | User session; POST requires CSRF | Review API sessions and revoke one session from a standard HTML form. |
 
 Compatibility interfaces are additional to these native routes: Jenkins REST and Blue Ocean resources, Jenkins crumb and CLI operations; GitHub Actions, GitLab CI, Travis CI, CircleCI, Azure Pipelines, Bitbucket Pipelines, Drone, Buildkite, Tekton, Woodpecker, and CodeFresh pipeline formats; and the provider-specific webhook event routes required to trigger those pipelines. Each protocol must preserve the compatibility level stated above while enforcing the same user ownership, build isolation, and secret boundaries.
