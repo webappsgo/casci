@@ -27,6 +27,8 @@ CASCI aims to support.
 - SQLite, PostgreSQL, and MySQL database drivers
 - User registration and login, named per-user `usr_` API tokens with one-time
   display and scoped revocation, project CRUD, and build lifecycle API handlers
+- First-run server administrator setup, separate administrator sessions and
+  `adm_` tokens, administrator token management, TOTP, and WebAuthn passkeys
 - Container executor and build queue, with local build-node management routes
 - Parsers for several common CI configuration formats; parser support does not
   mean full runtime compatibility with those CI systems
