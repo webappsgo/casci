@@ -64,6 +64,20 @@ The HTML login page is `/server/auth/login`; accounts requiring a second factor
 continue at `/server/auth/2fa`. The `/healthz` root alias is
 disabled unless `server.healthz.root.enabled` is true.
 
+Administrator API credentials can be managed from
+`/server/{admin_path}/security/tokens`. The page creates named credentials,
+shows each new value once, lists safe metadata, and revokes credentials with a
+CSRF-protected form. The API supports listing, revocation, and one-time
+rotation:
+
+| Method | Path | Access | Behavior |
+|--------|------|--------|----------|
+| GET | `/api/{api_version}/server/{admin_path}/security/tokens` | Administrator bearer token | List administrator token metadata; secret values are never returned |
+| DELETE | `/api/{api_version}/server/{admin_path}/security/tokens/{id}` | Administrator bearer token | Revoke a token owned by the authenticated administrator |
+| POST | `/api/{api_version}/server/{admin_path}/security/tokens/{id}/rotate` | Administrator bearer token | Replace the secret, preserving name, scope, and expiry; returns the new value once |
+| GET | `/api/{api_version}/server/{admin_path}/{admin_username}/profile/token` | Administrator bearer token | Read masked metadata for the setup-issued token belonging to the signed-in administrator |
+| POST | `/api/{api_version}/server/{admin_path}/{admin_username}/profile/token` | Administrator bearer token | Regenerate the setup-issued token; returns its new value once |
+
 ## Users
 
 | Method | Path | Access |
@@ -112,6 +126,25 @@ database stores a SHA-256 digest and the first eight characters for display.
 Authorization and ownership checks are in the handlers/services and are not
 fully represented by the routing table. Review the current source before
 exposing these operations to users.
+
+## Infrastructure connections and budgets
+
+These endpoints require an authenticated regular-user account and operate
+only on that account's records. Successful JSON responses use the standard
+`ok`/`data` envelope. Connection secrets are accepted during create or update,
+encrypted at rest, and never included in responses. Budget enforcement is
+best effort; provider spend is returned only when a value has been recorded in
+CASCI, because provider billing synchronization is not currently available.
+
+| Method | Path | Handler behavior |
+|--------|------|------------------|
+| GET, POST | `/api/v1/infrastructure/connections` | List or create cloud, private-server, or storage connection metadata |
+| GET, PATCH, DELETE | `/api/v1/infrastructure/connections/{connection_id}` | Read, update, or delete one caller-owned connection |
+| GET, PUT | `/api/v1/budgets` | Read or replace the caller's monthly and per-provider budget limits and available spend data |
+| POST | `/api/v1/infrastructure/hourly-instances/destroy-all` | Returns `503 MAINTENANCE` while no provider cleanup backend is configured |
+
+The corresponding no-JavaScript pages are `/users/infrastructure` and
+`/users/budgets`. Their state-changing forms use CSRF tokens.
 
 ## Nodes
 

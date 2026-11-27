@@ -79,8 +79,12 @@ secrets only in the instance, not in a repository. The API's test route is
 | `/crumbIssuer/api/json` | Jenkins-shaped crumb handler; not full Jenkins CSRF compatibility |
 
 CASCI does not currently load Jenkins plugins or implement the full Jenkins
-REST, Blue Ocean, CLI, or plugin API. It also does not provide cloud-provider
-capacity provisioning, external identity providers, or instance federation.
+REST, Blue Ocean, CLI, or plugin API. Users can manage encrypted cloud,
+private-server, and storage connection metadata, and set best-effort monthly
+budgets. CASCI does not yet synchronize provider billing data or provision
+cloud capacity. The hourly-instance destroy-all endpoint returns `503` until a
+provider cleanup backend is available. External identity providers and
+instance federation are not provided.
 
 ## Discovery
 

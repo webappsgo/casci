@@ -73,6 +73,13 @@ that file and keep a secure backup; losing the key makes encrypted credentials
 unreadable. The current key rotation and per-user key model do not meet all
 requirements in IDEA.md.
 
+Infrastructure connection credentials are encrypted with the configured
+credential encryptor and scoped to the owning user's key context. API and HTML
+responses expose only whether credentials are configured; replacement
+credentials are write-only. Budget limits are user scoped. Provider spend is
+not synchronized and is available only if a spend value has already been
+recorded locally.
+
 Do not put secrets in pipeline files, documentation, source control, or build
 logs. Secret injection, cleanup, and redaction are not yet complete end to end.
 
