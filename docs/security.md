@@ -16,10 +16,22 @@ API tokens and sets no cookie. Administrator API routes use hashed `adm_` tokens
 initial token once. Administrator accounts use the separate `admins` table
 and their own session issuer. The signing secret is
 loaded from configuration and must be at least 32 bytes. Administrator login
-locks the account for 15 minutes after five failed password attempts.
+locks the account for 15 minutes after five failed password attempts. Regular
+user login applies rolling account thresholds: five failures in 15 minutes
+locks for 15 minutes, ten in one hour locks for one hour, and fifteen in 24
+hours requires an administrator unlock or password reset. Administrators can
+review and unlock either account kind through the locked-accounts API.
 Both browser and API login also return HTTP 429 after five failed attempts
 from the same direct client address within 15 minutes. The handlers do not
 trust `X-Forwarded-For` without an explicit trusted-proxy policy.
+
+`server.security.allowlist` accepts IPv4, IPv6, and CIDR entries. Allowlisted
+addresses bypass login rate limiting and account lockout while authentication
+and token validation still apply. Duplicate and overlapping entries are
+retained; invalid and overly broad configuration entries are skipped with a
+warning. Administrators can manage and check entries on the security allowlist
+page or through the allowlist API. Changes are recorded as security audit
+events.
 
 Server administrators can enroll TOTP or multiple WebAuthn passkeys from the
 profile security page. Passkey registration requires the current password;

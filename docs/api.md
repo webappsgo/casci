@@ -339,6 +339,11 @@ untrusted clients or model contexts.
 | GET | `/api/v1/security/reports/{id}` | Authenticated |
 | GET | `/api/v1/security/statistics` | Authenticated |
 | GET, PUT | `/api/v1/security/config` | Administrator |
+| GET | `/api/v1/server/{admin_path}/security/locked-accounts` | Administrator Bearer token; list locked user and administrator accounts with `kind`, `id`, and `locked_until` |
+| DELETE | `/api/v1/server/{admin_path}/security/locked-accounts/{kind}/{id}` | Administrator Bearer token; unlock a `user` or `admin` account |
+| GET, POST | `/api/v1/server/{admin_path}/security/allowlist` | Administrator Bearer token; list entries or add an IP/CIDR with an optional description |
+| DELETE | `/api/v1/server/{admin_path}/security/allowlist/{id}` | Administrator Bearer token; remove an entry by its ID |
+| GET | `/api/v1/server/{admin_path}/security/allowlist/check/{ip}` | Administrator Bearer token; check an IPv4 or IPv6 address against configured entries |
 | GET | `/api/v1/server/{admin_path}/logs` | Administrator Bearer token; list log files |
 | GET | `/api/v1/server/{admin_path}/logs/{type}` | Administrator Bearer token; read entries with `limit`, `offset`, and `search` |
 | GET | `/api/v1/server/{admin_path}/logs/{type}/download` | Administrator Bearer token; download a log file |

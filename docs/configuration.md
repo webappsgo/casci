@@ -40,6 +40,20 @@ server:
     encryption_key: ""
     encryption_key_version: 1
     webhook_secret: ""
+    allowlist:
+      - cidr: 10.0.0.0/8
+        description: "Internal network"
+      - cidr: "2001:db8::/48"
+        description: "Office IPv6 prefix"
+    account_lockout:
+      soft_lock_attempts: 5
+      soft_lock_window: 15m
+      soft_lock_duration: 15m
+      hard_lock_attempts: 10
+      hard_lock_window: 1h
+      hard_lock_duration: 1h
+      permanent_lock_attempts: 15
+      permanent_lock_window: 24h
   contact:
     admin:
       email: ""
