@@ -21,13 +21,22 @@ Both browser and API login also return HTTP 429 after five failed attempts
 from the same direct client address within 15 minutes. The handlers do not
 trust `X-Forwarded-For` without an explicit trusted-proxy policy.
 
+Server administrators can enroll TOTP or multiple WebAuthn passkeys from the
+profile security page. Passkey registration requires the current password;
+registration and login ceremonies use expiring, single-use server-side
+challenges. First-factor passkey login and passkey second-factor login both
+issue the normal administrator session. Enabling the first security factor
+requires acknowledging one-time recovery codes before it becomes active.
+Recovery codes are stored as hashes and can be consumed only once. Regular-user
+MFA and WebAuthn are not implemented in the current user/auth system.
+
 Regular users can create named `usr_` API tokens from `/users/tokens` or
 `POST /api/v1/users/tokens`. Token values are shown once; the database stores
 the SHA-256 digest and display prefix. Users can list, inspect, and revoke only
 their own tokens. The supported scopes are `global`, `read-write`, and `read`;
 read-only tokens cannot make state-changing requests, and read-write tokens
 cannot delete resources or use server administration routes. The deprecated
-`X-API-Token` header is ignored. MFA, OAuth, OIDC, and LDAP integration are not
+`X-API-Token` header is ignored. OAuth, OIDC, and LDAP integration are not
 implemented in the current user/auth system.
 
 ## Authorization and tenant boundaries

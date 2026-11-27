@@ -53,15 +53,22 @@ scopes, rate limits, request IDs, or response-envelope rules from AI.md.
 | POST | `/api/v1/server/{admin_path}/setup/verify` | Setup token | Verify the one-time first-run setup token |
 | POST | `/api/v1/server/{admin_path}/setup/account` | Setup token | Create the primary administrator and return the one-time `adm_` API token |
 | POST | `/api/v1/server/{admin_path}/setup/complete` | Public | Report whether primary administrator creation is complete |
-| GET | `/api/v1/server/{admin_path}/{admin_username}/profile/security` | Administrator session | Read the administrator's TOTP and recovery-code status |
+| GET | `/api/v1/server/{admin_path}/{admin_username}/profile/security` | Administrator session | Read TOTP, passkey, and recovery-code status |
 | POST | `/api/v1/server/{admin_path}/{admin_username}/profile/security/totp/setup` | Administrator session | Start TOTP enrollment after current-password verification; return the secret and provisioning URI |
 | POST | `/api/v1/server/{admin_path}/{admin_username}/profile/security/totp/enable` | Administrator session | Verify TOTP and return one-time recovery codes; a separate acknowledgment enables TOTP |
 | POST | `/api/v1/server/{admin_path}/{admin_username}/profile/security/totp/disable` | Administrator session | Disable TOTP after verifying a current TOTP or recovery code |
+| POST | `/api/v1/server/{admin_path}/{admin_username}/profile/security/passkey/setup` | Administrator session | Verify the current password and begin WebAuthn registration |
+| POST | `/api/v1/server/{admin_path}/{admin_username}/profile/security/passkey/register` | Administrator session | Finish WebAuthn registration; first enrollment returns one-time recovery codes pending acknowledgment; the security page also posts rename/revoke actions here |
+| POST | `/api/v1/server/auth/passkey/challenge` | Public | Request a primary-login or partial-session passkey challenge |
+| POST | `/api/v1/server/auth/passkey/verify` | Public | Verify a passkey and issue an administrator session |
 | POST | `/api/v1/server/auth/2fa` | Partial administrator session | Complete login with a TOTP code |
 | POST | `/api/v1/server/auth/recovery/use` | Partial administrator session | Complete login with a one-time recovery code |
 
-The HTML login page is `/server/auth/login`; accounts requiring a second factor
-continue at `/server/auth/2fa`. The `/healthz` root alias is
+The HTML login page is `/server/auth/login`; administrator accounts can use a
+passkey as a primary credential. Accounts requiring a second factor continue
+at `/server/auth/2fa`, which accepts TOTP, a passkey, or a one-time recovery
+code. Passkey ceremonies use short-lived, one-use server-side challenges. The
+`/healthz` root alias is
 disabled unless `server.healthz.root.enabled` is true.
 
 Administrator API credentials can be managed from
