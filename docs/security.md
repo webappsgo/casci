@@ -149,14 +149,18 @@ The current public machine-readable endpoints include:
 
 The security contact link in `security.txt` carries a rotating 48-hour
 `security_id`; the form accepts the current and previous window and requires a
-review confirmation before storage. Each security report body and its
+review confirmation before storage. A review token binds the submitted fields,
+must be at least two seconds old, expires after 15 minutes, and can be consumed
+once per server process. Each security report body and its
 researcher contact details are encrypted separately with AES-256-GCM before
 they enter the database. Server administrators can
 decrypt reports from the authenticated security reports page, and every report
-view is audited without recording report content. SMTP delivery, PGP report
-encryption, researcher status links, and status-change messages are not yet
-implemented, so the website returns the tracking ID but does not send a
-researcher acknowledgment.
+view is audited without recording report content. The researcher status page
+is available at `/server/security/report/{tracking_id}` and its token is
+single-use per UTC day. SMTP delivery, status-token delivery, PGP report
+encryption, and status-change messages are not implemented, so the website
+returns the tracking ID but does not send a researcher acknowledgment or a
+usable status-page link.
 
 ## Reporting a vulnerability
 
