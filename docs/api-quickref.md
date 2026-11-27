@@ -28,7 +28,7 @@ legacy user API tokens only through `Authorization: Bearer`. Other token
 headers are ignored.
 
 ```bash
-curl -q -LSsf https://casci.casapps.us/api/v1/users/me \
+curl -q -LSsf https://casci.casapps.us/api/v1/users \
   -H 'Authorization: Bearer <bearer-token>'
 ```
 
@@ -36,7 +36,7 @@ curl -q -LSsf https://casci.casapps.us/api/v1/users/me \
 
 | Resource | Paths |
 |----------|-------|
-| Users | `/api/v1/users`, `/api/v1/users/me`, `/api/v1/users/{id}` |
+| Users | `/api/v1/users`, `/api/v1/users/tokens`, `/api/v1/users/tokens/{token_id}` |
 | Projects | `/api/v1/projects`, `/api/v1/projects/{id}`, `/api/v1/projects/{id}/pipelines[/{pipeline_id}]` |
 | Builds | `/api/v1/projects/{id}/builds`, `/api/v1/builds/{id}` and subroutes, including `/artifacts` |
 | Webhooks | `/api/v1/webhooks/{provider}` and legacy `/webhook` |

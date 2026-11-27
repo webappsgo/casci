@@ -151,7 +151,9 @@ The security contact link in `security.txt` carries a rotating 48-hour
 `security_id`; the form accepts the current and previous window and requires a
 review confirmation before storage. A review token binds the submitted fields,
 must be at least two seconds old, expires after 15 minutes, and can be consumed
-once per server process. Each security report body and its
+once per server process. The form's arithmetic CAPTCHA answer is stored as a
+hash, consumed on the first verification attempt, and expires after ten
+minutes. Each security report body and its
 researcher contact details are encrypted separately with AES-256-GCM before
 they enter the database. Server administrators can
 decrypt reports from the authenticated security reports page, and every report

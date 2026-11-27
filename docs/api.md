@@ -96,8 +96,6 @@ rotation:
 | Method | Path | Access |
 |--------|------|--------|
 | GET, PATCH | `/api/v1/users` | Authenticated user; reads or updates the caller's own profile |
-| GET | `/api/v1/users/me` | Authenticated user; compatibility alias for the caller profile |
-| POST | `/api/v1/users/me/token` | Authenticated user; regenerates the legacy API token |
 | GET, POST | `/api/v1/users/tokens` | Authenticated user; list token metadata or create a named `usr_` token (the value is returned once) |
 | GET, DELETE | `/api/v1/users/tokens/{token_id}` | Authenticated owner; inspect metadata or immediately revoke a token |
 | GET | `/api/v1/server/administration/users` | Administrator; lists accounts |

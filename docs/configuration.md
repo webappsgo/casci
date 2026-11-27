@@ -53,6 +53,9 @@ server:
     replica_urls: []
 web:
   cors: "*"
+  robots:
+    allow: ["/", "/api"]
+    deny: ["/server/administration"]
   security:
     report_url: https://github.com/webappsgo/casci/security/advisories/new
     contact: ""
@@ -86,9 +89,10 @@ authoritative audit.log; database rows are its best-effort query mirror.
 
 Regular-user accounts are disabled by default. Set `server.users.enabled` to
 `true` to enable them. `server.users.registration.mode` accepts `open` or
-`private`; it defaults to `open`, but public registration is available only
-when multi-user mode is enabled and the mode is `open`. The admin setup flow
-and settings UI for these values are not implemented yet.
+`private` and defaults to `open`. In open mode, `/server/auth/register` renders
+the public registration form and creates a signed-in account after successful
+submission. In private mode, public self-registration is unavailable; existing
+users can still sign in.
 
 ## Directories and environment
 
@@ -144,10 +148,18 @@ issuance or renewal.
 
 ## Public URL resolution
 
-The server builds URLs from the request host and connection scheme, with the
-configured domain as a fallback. It does not implement a trusted-proxy
-allowlist for forwarded headers. Serve the app at the root of its host rather
-than a URL subdirectory.
+The server builds public URLs from the request host and connection scheme. If a
+non-empty `DOMAIN` list is configured, only listed request hosts are used; an
+unlisted or invalid host falls back to the first configured domain. Forwarded
+host headers are ignored because trusted-proxy support is not implemented.
+Serve the app at the root of its host rather than a URL subdirectory.
+
+`/robots.txt`, `/sitemap.xml`, `/feed.xml`, and `/rss.xml` are always served; `/favicon.ico` serves the embedded site icon.
+Robots rules come from `web.robots.allow` and `web.robots.deny`; the defaults
+allow `/` and `/api` and disallow the configured admin path. The sitemap lists
+public pages allowed by those rules, with the generation timestamp as `lastmod`. Atom and RSS feeds are valid empty feeds
+while this application has no public per-item resource. All four routes support
+GET and HEAD, conditional requests, and five-minute public caching.
 
 ## Well-known files
 
