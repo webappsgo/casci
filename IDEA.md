@@ -193,6 +193,11 @@ These are CASCI product routes beyond the common server routes defined by AI.md.
 | POST | `/api/{api_version}/nodes/token` | Server administrator | Generate a node registration token. |
 | POST | `/api/{api_version}/nodes/{node_id}/heartbeat` | Node credential | Submit node health and capacity. |
 | POST | `/api/{api_version}/nodes/{node_id}/drain` | Server administrator | Drain a worker node from new work. |
+| GET, POST | `/api/{api_version}/server/{admin_path}/backup` | Server administrator | List safe archive metadata or create and verify a full backup; an optional password is write-only. |
+| GET, DELETE | `/api/{api_version}/server/{admin_path}/backup/{id}` | Server administrator | Read metadata or delete an archive; deletion is refused when an incremental depends on it. |
+| GET | `/api/{api_version}/server/{admin_path}/backup/{id}/download` | Server administrator | Download an archive as an attachment. |
+| POST | `/api/{api_version}/server/{admin_path}/backup/test` | Server administrator | Verify an existing archive's checksum, manifest, and encryption using its filename and optional password. |
+| POST | `/api/{api_version}/server/{admin_path}/backup/restore` | Server administrator | Verify and restore an archive, then restart through the supervisor; requires the backup password when encrypted and typed filename confirmation. |
 | GET | `/api/{api_version}/security/reports` | Owning user | List the caller's security scan reports. |
 | GET | `/api/{api_version}/security/reports/{report_id}` | Owning user | Read one owned security report. |
 | GET, PUT | `/api/{api_version}/security/config` | Server administrator | Read or update scanning configuration. |

@@ -30,6 +30,28 @@ such as `BUILD_ID`, `PROJECT_ID`, and `COMMIT_SHA` cannot be overridden by the
 repository. Job-scoped environment and provider secret expressions are not yet
 resolved with their full provider-specific semantics.
 
+## External identity providers
+
+Administrators configure OIDC, LDAP, and SAML providers under
+`/server/{admin_path}/security/auth/{oidc,ldap,saml}`. The browser flows are
+OIDC authorization-code with PKCE, LDAP bind/search, and signed SAML
+authentication. Provider settings can also be managed under
+`/api/{api_version}/server/{admin_path}/security/auth/{type}/providers`;
+secret fields are write-only and stored encrypted in `secrets.yml`.
+
+Browser entry routes are `/server/auth/oidc/{provider}`,
+`/server/auth/ldap/{provider}`, and `/server/auth/saml/{provider}`.
+OIDC and SAML support API initiation plus one-time request-ID polling and
+exchange routes. LDAP API login is a JSON POST. SAML publishes SP metadata
+and supports SP-initiated logout where the IdP has configured SLO.
+
+Existing local accounts are linked by stable provider subject. New external
+identities use the server's onboarding flow and must select a local username.
+Administrators must configure explicit group/role mappings before relying on
+external group membership for administrator access. Provider deletion removes
+the provider's account-link records. Federation between CASCI instances is
+not implemented.
+
 ## Source-control webhooks
 
 The versioned receiver is `POST /api/v1/webhooks/{provider}`; the legacy

@@ -80,6 +80,29 @@ privacy:
   hash_report_ips: true
 ```
 
+## External identity providers
+
+Provider definitions live in `server.auth.oidc.providers`,
+`server.auth.ldap.providers`, or `server.auth.saml.providers` in
+`server.yml`. Each entry has a unique `name`, `display_name`, and
+`enabled` flag. Provider secrets are moved to encrypted, name-keyed entries
+in `secrets.yml` and merged at startup; do not put secret values in source
+control.
+
+An OIDC provider needs an issuer, client ID, and client secret. It uses
+authorization code flow with PKCE and the configured `openid`, `profile`,
+and `email` scopes by default. LDAP needs a server, bind DN, bind password,
+base DN, user filter, and explicit TLS settings. SAML needs IdP metadata and
+SP entity/ACS settings; the server can generate SP signing credentials and
+stores the private key encrypted. Admin group and role mappings are provider
+settings and should be configured explicitly before granting external users
+administrator access. The admin panel has provider-specific list, edit, test,
+and delete forms; its configuration editor accepts the provider JSON
+structure.
+
+See [Integrations](integrations.md) for sign-in routes and protocol behavior.
+Secrets are never included in provider list/read responses.
+
 SMTP passwords are stored encrypted in `secrets.yml`; they are omitted from
 `server.yml`. `SMTP_*` environment variables override file values at startup,
 including the sender name and address. The defaults are port 587, automatic TLS

@@ -7,9 +7,10 @@ authorization and handler-specific behavior are summarized here.
 ## Base path and authentication
 
 The API version segment comes from `server.api_version` (default `v1`).
-`GET /api/{api_version}` returns the same discovery envelope as
-`GET /api/autodiscover`; its trailing-slash form permanently redirects to the
-canonical no-slash path. Some machine routes have unversioned aliases.
+`GET /api/{api_version}` returns the discovery envelope. The slash form
+`GET /api/{api_version}/` returns the API version information envelope.
+`GET /api/autodiscover` provides the public discovery document. Some machine
+routes have unversioned aliases.
 
 ## Frontend response formats
 
@@ -64,6 +65,18 @@ time-limited action and are never accepted as bearer credentials.
 | POST | `/api/v1/server/auth/password/reset` | One-time reset token | Set a new password and consume the reset token |
 | POST | `/api/v1/server/auth/username/forgot` | Public, rate-limited | Request a username reminder without revealing whether the email exists |
 | POST | `/api/v1/server/auth/verify` | One-time verification token | Verify the account email address |
+| GET | `/api/v1/server/auth/oidc/{provider}` | Public | Begin browser OIDC authorization with state, nonce, and PKCE |
+| GET | `/server/auth/oidc/{provider}/callback` | OIDC provider callback | Validate state/nonce, exchange the code, and establish or complete external account linking |
+| POST | `/api/v1/server/auth/oidc/{provider}/callback` | Public, one-time request ID | Poll an API-mode OIDC login transaction and consume its session result |
+| GET, POST | `/server/auth/ldap/{provider}` | Public; browser POST uses CSRF | Authenticate through a configured LDAP provider and establish or link an account |
+| POST | `/api/v1/server/auth/ldap/{provider}` | Public | Authenticate through a configured LDAP provider using JSON |
+| GET | `/server/auth/saml/{provider}` | Public | Start browser SAML sign-in |
+| POST | `/server/auth/saml/{provider}/acs` | SAML IdP response | Validate the signed assertion and establish or link an account |
+| GET | `/server/auth/saml/{provider}/metadata` | Public | Publish this provider's SAML service-provider metadata |
+| GET, POST | `/server/auth/saml/{provider}/slo/callback` | SAML IdP logout response | Complete service-provider initiated SAML logout |
+| GET | `/api/v1/server/auth/saml/{provider}` | Public | Start API-mode SAML sign-in |
+| POST | `/api/v1/server/auth/saml/{provider}/exchange` | Public, one-time request ID | Poll an API-mode SAML login transaction and consume its session result |
+| POST | `/api/v1/server/auth/external/username` | One-time pending identity | Confirm the local username for an external account link |
 | GET, POST | `/api/{api_version}/server/auth/invite/user/{token}` | One-time invite code | Validate or accept a regular-user invitation when user accounts are enabled |
 | GET, POST | `/api/{api_version}/server/auth/invite/server/{token}` | One-time invite code | Validate or accept a server-administrator invitation |
 | POST | `/api/v1/server/reports/{type}` | Public, anonymous, rate-limited | Accept allow-listed browser telemetry, sanitize it, and write only to operational logs; success returns 204 |
@@ -138,6 +151,14 @@ rotation:
 | GET, DELETE | `/api/{api_version}/server/{admin_path}/users/invites/{id}` | Administrator; inspect safe metadata or revoke an invitation |
 | GET, PATCH | `/api/{api_version}/server/{admin_path}/email` | Administrator; read safe SMTP settings or save settings (password is write-only) |
 | POST | `/api/{api_version}/server/{admin_path}/email/test` | Administrator; test settings without returning credentials |
+| GET, POST | `/api/{api_version}/server/{admin_path}/security/auth/{oidc,ldap,saml}/providers` | Administrator | List safe provider settings or create a provider |
+| GET, PATCH, DELETE | `/api/{api_version}/server/{admin_path}/security/auth/{oidc,ldap,saml}/providers/{name}` | Administrator | Read safe settings, update, or remove an identity provider |
+| POST | `/api/{api_version}/server/{admin_path}/security/auth/{oidc,ldap,saml}/providers/{name}/test` | Administrator | Test provider connectivity without returning credentials |
+| GET, POST | `/api/{api_version}/server/{admin_path}/backup` | Administrator | List safe archive metadata or create and verify a full backup; the optional password is never returned |
+| GET, DELETE | `/api/{api_version}/server/{admin_path}/backup/{id}` | Administrator | Read archive metadata or delete it when no retained incremental depends on it |
+| GET | `/api/{api_version}/server/{admin_path}/backup/{id}/download` | Administrator | Download a backup archive as an attachment |
+| POST | `/api/{api_version}/server/{admin_path}/backup/test` | Administrator | Verify an existing backup archive using its filename and optional password |
+| POST | `/api/{api_version}/server/{admin_path}/backup/restore` | Administrator | Verify and restore an archive, then restart the server; encrypted archives require a password and all restores require typing the exact filename in `confirmation` |
 
 User management routes are under the configured admin path in a running
 instance. Regular users cannot use the admin API path or read another user's

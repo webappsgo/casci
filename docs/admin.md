@@ -19,7 +19,7 @@ that segment. Registered admin routes include:
 | Network | `/server/administration/network/{tor,i2p,geoip,blocklists}` | Overlay and network section pages |
 | User operations | `/server/administration/moderation/users`, `/server/administration/users/invites` | Review moderation status and create/revoke expiring user or server-admin invitations |
 | Scheduler | `/server/administration/scheduler` | View, edit, and trigger scheduled tasks |
-| Backup | `/server/administration/backup` | View retention and archives, trigger a scheduled backup; restore and test-backup workflows are not yet available in the WebUI |
+| Backup | `/server/administration/backup` | Create, list, download, and verify archives; restore an archive after entering its password (when encrypted) and typing its exact filename to confirm; the server restarts through its supervisor |
 | Maintenance | `/server/administration/maintenance` | Current status and guidance; automatic critical-error recovery and manual mode controls are incomplete |
 | Updates | `/server/administration/updates` | Review status and change the persisted release channel |
 | Cluster | `/server/administration/nodes`, `/server/administration/nodes/add` | Node and enrollment section pages |
