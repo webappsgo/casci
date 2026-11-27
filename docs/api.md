@@ -47,15 +47,16 @@ scopes, rate limits, request IDs, or response-envelope rules from AI.md.
 | GET | `/api/v1/server/security/policy` | Public | Built-in coordinated disclosure policy in Markdown |
 | GET | `/api/v1/server/security/thanks` | Public | Credited researcher acknowledgments |
 | GET, POST | `/api/v1/server/preferences` | Public | Preference API handler |
-| GET, POST | `/api/v1/server/preferences/sync` | Public | Preference sync API handler |
-| GET, POST | `/api/v1/server/preferences/sync/import` | Public | Preference import API handler |
+| GET | `/api/v1/server/preferences/sync` | Public | Export the current preference snapshot |
+| GET | `/api/v1/server/preferences/sync/import` | Public | Import preferences from the URL query parameters |
 | POST | `/api/v1/server/auth/register` | Public when multi-user mode is enabled and registration is open | Register a regular-user account |
-| POST | `/api/v1/server/auth/login` | Public | Authenticate a server administrator or enabled regular user; sets the matching cookie and returns a bearer JWT for regular users |
+| POST | `/api/v1/server/auth/login` | Public | Authenticate a server administrator or enabled regular user; returns a revocable 24-hour `adm_` or `usr_` Bearer API token named `login` and sets no cookie |
+| GET | `/api/v1/server/auth/check` | Public; Bearer token required | Validate an administrator or user credential and return `data.kind` (`operator` or `user`) without returning the token; invalid or missing credentials return 401 |
 | POST | `/api/v1/server/auth/refresh` | Authenticated | Refresh a JWT |
-| GET | `/api/v1/server/{admin_path}/setup` | Public during first run | Report whether primary administrator setup is required |
+| GET | `/api/v1/server/{admin_path}/setup` | Public | Report setup requirement and primary-account recovery status |
 | POST | `/api/v1/server/{admin_path}/setup/verify` | Setup token | Verify the one-time first-run setup token |
 | POST | `/api/v1/server/{admin_path}/setup/account` | Setup token | Create the primary administrator and return the one-time `adm_` API token |
-| POST | `/api/v1/server/{admin_path}/setup/complete` | Public | Report whether primary administrator creation is complete |
+| POST | `/api/v1/server/{admin_path}/setup/complete` | Administrator session | Complete the first-run setup after the required steps are saved |
 | GET | `/api/v1/server/{admin_path}/{admin_username}/profile` | Administrator bearer token | Read the authenticated administrator profile |
 | PATCH | `/api/v1/server/{admin_path}/{admin_username}/profile` | Administrator bearer token | Update the account email after current-password verification |
 | POST | `/api/v1/server/{admin_path}/{admin_username}/profile/password` | Administrator bearer token | Change the administrator password after current-password verification |
@@ -70,8 +71,10 @@ scopes, rate limits, request IDs, or response-envelope rules from AI.md.
 | POST | `/api/v1/server/auth/2fa` | Partial administrator session | Complete login with a TOTP code |
 | POST | `/api/v1/server/auth/recovery/use` | Partial administrator session | Complete login with a one-time recovery code |
 
-The HTML login page is `/server/auth/login`; administrator accounts can use a
-passkey as a primary credential. Accounts requiring a second factor continue
+The HTML login page is `/server/auth/login`; the registration page is
+`/server/auth/register` when regular-user accounts are enabled and public
+registration is open. Administrator accounts can use a passkey as a primary
+credential. Accounts requiring a second factor continue
 at `/server/auth/2fa`, which accepts TOTP, a passkey, or a one-time recovery
 code. Passkey ceremonies use short-lived, one-use server-side challenges. The
 `/healthz` root alias is
@@ -98,8 +101,8 @@ rotation:
 | GET, PATCH | `/api/v1/users` | Authenticated user; reads or updates the caller's own profile |
 | GET, POST | `/api/v1/users/tokens` | Authenticated user; list token metadata or create a named `usr_` token (the value is returned once) |
 | GET, DELETE | `/api/v1/users/tokens/{token_id}` | Authenticated owner; inspect metadata or immediately revoke a token |
-| GET | `/api/v1/server/administration/users` | Administrator; lists accounts |
-| GET, PUT, PATCH, DELETE | `/api/v1/server/administration/users/{id}` | Administrator; manages one account |
+| GET | `/api/{api_version}/server/{admin_path}/users` | Administrator; lists accounts |
+| GET, PUT, PATCH, DELETE | `/api/{api_version}/server/{admin_path}/users/{id}` | Administrator; manages one account |
 
 User management routes are under the configured admin path in a running
 instance. Regular users cannot use the admin API path or read another user's

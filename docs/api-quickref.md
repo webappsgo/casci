@@ -22,10 +22,12 @@ the [full API reference](api.md) for access notes and limitations.
 
 ## Authentication
 
-Sign-in endpoints are `/api/v1/server/auth/register` and
-`/api/v1/server/auth/login`. Authenticated REST handlers accept user JWTs and
-legacy user API tokens only through `Authorization: Bearer`. Other token
-headers are ignored.
+Authentication endpoints are `/api/v1/server/auth/login` and, when public
+registration is enabled, `/api/v1/server/auth/register`. Use
+`/api/v1/server/auth/check` with a Bearer
+token to validate a server or user credential. Authenticated REST handlers
+require the credential type their route supports, sent as
+`Authorization: Bearer`. Other token headers are ignored.
 
 ```bash
 curl -q -LSsf https://casci.casapps.us/api/v1/users \
