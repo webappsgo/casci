@@ -152,6 +152,9 @@ the private vulnerability reporting URL published by `security.txt`.
 
 Use the repository's [GitHub private vulnerability reporting page](https://github.com/webappsgo/casci/security/advisories/new)
 for a source-code vulnerability. For a deployed instance, check that
-instance's `/server/security` page for its operator's reporting channel. Do not
-include live credentials or user data in a report submitted over an untrusted
-channel.
+instance's `/server/security` page for its operator's reporting channel and
+`/server/security/policy` for the coordinated-disclosure terms. The current
+server provides those public pages and `security.txt`, but its contact form
+does not yet accept or store security reports through the encrypted disclosure
+pipeline. Do not include live credentials or user data in a report submitted
+over an untrusted channel.
