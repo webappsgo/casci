@@ -106,12 +106,7 @@ logs. Secret injection, cleanup, and redaction are not yet complete end to end.
 
 ## Build execution
 
-Builds use a container executor and a per-build workspace. The executor does
-not currently provide the complete isolated VM/container boundary, network
-policy, clean host guarantees, secret handling, per-user quotas, fair
-scheduling, or signed artifact chain required by the product design. Pipeline
-commands are repository-controlled code. Run CASCI only on a host where that
-execution risk is acceptable.
+Builds run in per-build Docker containers with no network, a read-only root filesystem, dropped Linux capabilities, no-new-privileges, a non-root UID/GID, PID and memory limits, and a private temporary filesystem. The build workspace is mounted for pipeline output. The executor does not yet provide a VM boundary, per-user resource quotas, fair scheduling, or a signed artifact chain. Pipeline commands are repository-controlled code and can alter mounted workspace contents; isolate the host and review pipeline access accordingly.
 
 Build security scanning is enabled by default for vulnerability, SAST, secret,
 license, and SBOM checks. Scanners run before the executor reports a build as
@@ -172,10 +167,7 @@ they enter the database. Server administrators can
 decrypt reports from the authenticated security reports page, and every report
 view is audited without recording report content. The researcher status page
 is available at `/server/security/report/{tracking_id}` and its token is
-single-use per UTC day. SMTP delivery, status-token delivery, PGP report
-encryption, and status-change messages are not implemented, so the website
-returns the tracking ID but does not send a researcher acknowledgment or a
-usable status-page link.
+single-use per UTC day. When SMTP is configured, the server can send a researcher acknowledgment with a status-only tracking link and can send status-change messages without including report contents. The acknowledgment can be PGP-encrypted when a valid researcher public key is configured. Report-at-rest encryption currently uses AES-256-GCM; maintainer notification with per-admin PGP encryption and the AI.md-defined PGP-at-rest policy remain incomplete.
 
 ## Reporting a vulnerability
 

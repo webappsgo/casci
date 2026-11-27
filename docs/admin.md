@@ -19,8 +19,8 @@ that segment. Registered admin routes include:
 | Network | `/server/administration/network/{tor,i2p,geoip,blocklists}` | Overlay and network section pages |
 | User operations | `/server/administration/moderation/users`, `/server/administration/users/invites` | Review moderation status and create/revoke expiring user or server-admin invitations |
 | Scheduler | `/server/administration/scheduler` | View, edit, and trigger scheduled tasks |
-| Backup | `/server/administration/backup` | View retention and archives, trigger a scheduled backup |
-| Maintenance | `/server/administration/maintenance` | Show maintenance-mode availability |
+| Backup | `/server/administration/backup` | View retention and archives, trigger a scheduled backup; restore and test-backup workflows are not yet available in the WebUI |
+| Maintenance | `/server/administration/maintenance` | Current status and guidance; automatic critical-error recovery and manual mode controls are incomplete |
 | Updates | `/server/administration/updates` | Review status and change the persisted release channel |
 | Cluster | `/server/administration/nodes`, `/server/administration/nodes/add` | Node and enrollment section pages |
 | Metrics | `/server/administration/metrics` | System, build, node, security, and API measurements |
@@ -33,9 +33,7 @@ The admin path segment is configurable with `server.admin_path`. Guests are
 redirected to `/server/auth/login`; authenticated regular users are redirected
 to `/users`. Administrators use a separate account table and session cookie.
 The Email and Invitations pages use server-rendered forms with CSRF protection.
-Several other section routes remain informational rather than full management
-interfaces; see the relevant page descriptions and the corresponding AI.md
-requirements.
+Several section routes remain informational rather than full management interfaces. The Authentication section links to external provider configuration; firewall, allowlist, GeoIP, Tor, I2P, and some cluster controls are still incomplete.
 
 The audit log page is `/server/administration/logs/audit`. It supports
 category, severity, result, date, actor, and IP filters, 50-event pages,

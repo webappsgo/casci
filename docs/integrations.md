@@ -79,12 +79,7 @@ secrets only in the instance, not in a repository. The API's test route is
 | `/crumbIssuer/api/json` | Jenkins-shaped crumb handler; not full Jenkins CSRF compatibility |
 
 CASCI does not currently load Jenkins plugins or implement the full Jenkins
-REST, Blue Ocean, CLI, or plugin API. Users can manage encrypted cloud,
-private-server, and storage connection metadata, and set best-effort monthly
-budgets. CASCI does not yet synchronize provider billing data or provision
-cloud capacity. The hourly-instance destroy-all endpoint returns `503` until a
-provider cleanup backend is available. External identity providers and
-instance federation are not provided.
+REST, Blue Ocean, CLI, or plugin API. Users can manage encrypted cloud, private-server, and storage connection metadata, and set best-effort monthly budgets. CASCI does not yet synchronize provider billing data or provision cloud capacity. The hourly-instance destroy-all endpoint returns `503` until a provider cleanup backend is available. External OIDC, LDAP, and SAML identity providers are supported for browser and API sign-in; see the provider setup and limitations in [Security](security.md) and [Configuration](configuration.md). Instance federation is not provided.
 
 ## Discovery
 
@@ -101,5 +96,4 @@ versioned service worker. The worker caches same-origin static assets and
 successful public pages explicitly marked eligible for offline use; it does
 not cache API responses.
 
-Unimplemented paths under `/.well-known/` return `404`. WebFinger, OAuth/OIDC
-discovery, mobile app associations, and Tor/I2P discovery are not enabled.
+Unimplemented paths under `/.well-known/` return `404`. WebFinger, mobile app associations, and Tor/I2P discovery are not enabled. OIDC provider discovery is fetched from the configured identity provider and is not published by this server.
