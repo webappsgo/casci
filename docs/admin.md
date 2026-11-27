@@ -6,6 +6,8 @@ that segment. Registered admin routes include:
 | Page | Default path | Purpose |
 |------|-------------|---------|
 | Dashboard | `/server/administration` | Server overview |
+| Profile | `/server/administration/{admin_username}/profile` | Change the signed-in administrator's email or password |
+| Account security | `/server/administration/{admin_username}/profile/security` | Enroll and manage TOTP, passkeys, and recovery codes |
 | Settings | `/server/administration/settings` | Read the settings currently exposed by the server configuration model |
 | Branding | `/server/administration/branding` | Edit the application name and tagline |
 | SSL/TLS | `/server/administration/ssl` | Review the active TLS configuration |

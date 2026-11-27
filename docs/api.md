@@ -53,10 +53,13 @@ scopes, rate limits, request IDs, or response-envelope rules from AI.md.
 | POST | `/api/v1/server/{admin_path}/setup/verify` | Setup token | Verify the one-time first-run setup token |
 | POST | `/api/v1/server/{admin_path}/setup/account` | Setup token | Create the primary administrator and return the one-time `adm_` API token |
 | POST | `/api/v1/server/{admin_path}/setup/complete` | Public | Report whether primary administrator creation is complete |
+| GET | `/api/v1/server/{admin_path}/{admin_username}/profile` | Administrator bearer token | Read the authenticated administrator profile |
+| PATCH | `/api/v1/server/{admin_path}/{admin_username}/profile` | Administrator bearer token | Update the account email after current-password verification |
+| POST | `/api/v1/server/{admin_path}/{admin_username}/profile/password` | Administrator bearer token | Change the administrator password after current-password verification |
 | GET | `/api/v1/server/{admin_path}/{admin_username}/profile/security` | Administrator session | Read TOTP, passkey, and recovery-code status |
 | POST | `/api/v1/server/{admin_path}/{admin_username}/profile/security/totp/setup` | Administrator session | Start TOTP enrollment after current-password verification; return the secret and provisioning URI |
 | POST | `/api/v1/server/{admin_path}/{admin_username}/profile/security/totp/enable` | Administrator session | Verify TOTP and return one-time recovery codes; a separate acknowledgment enables TOTP |
-| POST | `/api/v1/server/{admin_path}/{admin_username}/profile/security/totp/disable` | Administrator session | Disable TOTP after verifying a current TOTP or recovery code |
+| POST | `/server/{admin_path}/{admin_username}/profile/security` | Administrator session + CSRF | Disable TOTP after verifying a current TOTP or recovery code |
 | POST | `/api/v1/server/{admin_path}/{admin_username}/profile/security/passkey/setup` | Administrator session | Verify the current password and begin WebAuthn registration |
 | POST | `/api/v1/server/{admin_path}/{admin_username}/profile/security/passkey/register` | Administrator session | Finish WebAuthn registration; first enrollment returns one-time recovery codes pending acknowledgment; the security page also posts rename/revoke actions here |
 | POST | `/api/v1/server/auth/passkey/challenge` | Public | Request a primary-login or partial-session passkey challenge |
