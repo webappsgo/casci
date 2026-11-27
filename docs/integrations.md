@@ -24,6 +24,12 @@ example, the Jenkinsfile parser currently handles only a minimal declarative
 shape. Unsupported syntax or provider-specific features may be ignored or fail.
 The parser does not yet implement every format listed in IDEA.md.
 
+Recognized project-detection defaults and top-level pipeline environment values
+are passed to the build container in deterministic order. CASCI-owned variables
+such as `BUILD_ID`, `PROJECT_ID`, and `COMMIT_SHA` cannot be overridden by the
+repository. Job-scoped environment and provider secret expressions are not yet
+resolved with their full provider-specific semantics.
+
 ## Source-control webhooks
 
 The shared receiver is `POST /webhook`. GitHub push and opened/synchronized
@@ -76,7 +82,18 @@ capacity provisioning, external identity providers, or instance federation.
 
 ## Discovery
 
-The server generates `/.well-known/security.txt` and serves `/.well-known/llms.txt`
-plus `/llms.txt`. Unimplemented well-known paths return `404`; no WebFinger,
-OAuth/OIDC discovery, mobile app associations, or Tor/I2P discovery is enabled
-in the current server.
+The server generates `/.well-known/security.txt` and serves
+`/.well-known/llms.txt` plus `/llms.txt`. It also exposes `GET
+/api/autodiscover`, which reports the API version, public origins, and
+published CLI/agent binary versions and checksums. Private and loopback hosts
+are omitted from autodiscovery. Binary download authorization depends on the
+binary type and the configured download policy; see [Configuration](configuration.md)
+and [Agent management](agents.md).
+
+`GET /manifest.json` publishes the PWA manifest and `GET /sw.js` serves the
+versioned service worker. The worker caches same-origin static assets and
+successful public pages explicitly marked eligible for offline use; it does
+not cache API responses.
+
+Unimplemented paths under `/.well-known/` return `404`. WebFinger, OAuth/OIDC
+discovery, mobile app associations, and Tor/I2P discovery are not enabled.

@@ -40,19 +40,27 @@ JSON/CSV exports for the current page, all matching events, or the full log,
 and displays the configured database retention period. Category and severity
 are persisted and filterable in the database. Each newly logged event is also
 appended as JSONL to `{log_dir}/audit.log`; the file chains entry hashes and
-uses a protected tail checkpoint and rotation anchor. It currently rotates
-daily and deletes closed files; AI.md's keep, compression, and event-category
-settings are not configurable yet. The admin viewer and exports currently read
-the database records. AI.md defines both database and file storage without
-specifying which is authoritative or how they stay in sync; that template
-issue is recorded in `~/Projects/github/webappsgo/TODO.SERVER.md`.
+uses a protected tail checkpoint and rotation anchor. Its rotation interval,
+size limit, retention, and compression follow server.logs.audit; defaults are
+daily rotation with no retained archives. Event-category controls are not
+configurable yet. `audit.log` is authoritative; the database
+table is a best-effort query mirror, and mirror failures create an
+`audit.mirror_failed` file event without blocking the original audit write.
+The admin viewer and exports read the database mirror. The active log stores a
+tail checkpoint to detect edits to its final record; the missing checkpoint
+requirement in AI.md is recorded in `~/Projects/github/webappsgo/TODO.SERVER.md`.
 
 The logs page shows access, error, and security files, supports type/search/page
 filters, optional 30-second refresh, downloads, and CSRF-protected clearing for
 non-audit files. Audit records remain append-only and link to the dedicated
-viewer. The API log routes require an administrator Bearer token. Server and
-debug output are not yet routed into persistent log files, and file-log search
-is bounded to the most recent 10,000 lines.
+viewer. The API log routes require an administrator Bearer token. Access,
+error, and security log formats, enable flags, rotation intervals, size limits,
+retention, and compression are read from server.logs; access supports Apache,
+Nginx, and JSON output, errors support text or JSON, and security supports
+fail2ban, syslog, CEF, JSON, or text. Application events are written to
+server.log and errors are also written to error.log. debug.log receives debug
+events only when explicitly enabled. File-log search is bounded to the most
+recent 10,000 lines.
 
 Both the API and browser login flows record admin and user successes and
 failures. Failed user events omit the attempted username; admin failures retain
@@ -66,10 +74,13 @@ The browser sign-in page is `/server/auth/login`. It authenticates server
 administrators first and, when regular users are enabled, regular users next.
 Administrator credentials are stored in the `admins` table; regular-user
 registration never grants server-administrator access. On first startup, the
-server prints a one-time setup token and serves `/server/{admin_path}/setup`.
-That page creates the primary administrator and stores only the token hash in
-`{config_dir}/setup_token.txt`. The current setup flow does not yet implement
-all setup wizard steps required by AI.md.
+server prints a one-time setup token directly to the console and serves
+`/server/{admin_path}/setup`; it does not persist the plaintext token in a log
+file. That page creates the primary administrator with the default username
+`steward` (`administrator` is reserved), and stores only the token hash in
+`{config_dir}/setup_token.txt`. Its no-JavaScript form submits to a
+CSRF-protected server-rendered route. The current setup flow does not yet
+implement all setup wizard steps required by AI.md.
 The setup response displays the initial `adm_` API token once; the database
 stores only its hash.
 

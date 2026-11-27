@@ -124,6 +124,7 @@ The current public machine-readable endpoints include:
 
 - `GET /.well-known/security.txt`
 - `GET /.well-known/llms.txt` and `GET /llms.txt`
+- `GET /api/autodiscover` (filters non-public hosts and publishes only binaries with matching checksums)
 - `GET /server/healthz`, `GET /readyz`, and `GET /livez`
 - Public sign-in and registration routes under `/api/{version}/server/auth/`
 - `POST /api/{version}/server/mcp`, which still requires bearer auth

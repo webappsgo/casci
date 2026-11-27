@@ -39,8 +39,8 @@ relevant reference pages before relying on them.
   maintenance commands, and staged update operations are implemented. Service
   manager support varies by operating system; see the [CLI](cli.md) and
   [service](services.md) references.
-- The configured build test gate requires at least 60% statement coverage.
-  The current suite has not yet met that threshold.
+- The configured test gate requires at least 60% statement coverage; run
+  `make test` for the current result.
 
 ## Documentation pages
 

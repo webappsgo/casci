@@ -4,7 +4,7 @@ CASCI reads `server.yml` from its resolved configuration directory and reads
 area settings from `yaml.d/` files, including MCP help from `pages.yml` and
 CLI binary distribution settings from `maintenance.yml`. The current file-backed
 configuration holds server, web, database, TLS, branding, footer,
-security-contact, encryption-key, and webhook-secret values. This
+security-contact, encryption-key, webhook-secret, and log-output values. This
 implementation does not yet provide the full database-backed configuration
 system or hot reload described in the product specification.
 
@@ -62,6 +62,27 @@ web:
 The example omits generated key material. Protect `server.yml` because it can
 contain the encryption and webhook secrets. Do not commit real configuration
 or credentials.
+
+## Logging
+
+server.logs.level accepts debug, info, warn, or error; when empty it follows
+the mode (info in production and debug in development/debug).
+server.logs.defaults.rotate and server.logs.defaults.keep apply to each log
+kind unless that kind overrides them. Rotation accepts a time interval, a size
+limit such as 50MB, or both (for example weekly,50MB). Retention accepts none,
+an archive count, a duration such as 14d, or forever.
+
+The supported file kinds are access, server, error, audit, security, and
+debug. Each has an enabled switch, format, rotation, and retention. audit
+supports JSON only and can optionally compress retained archives. debug is
+disabled by default. Access formats are Apache, Nginx, JSON, or custom;
+server/error/debug formats are text or JSON; security formats are fail2ban,
+syslog, CEF, JSON, or text. custom access output uses the format string from
+server.logs.defaults.custom or server.logs.access.custom.
+
+Server log files use ASCII output. Successful health checks and successful
+--status polls are omitted from request logs. Audit records are written to the
+authoritative audit.log; database rows are its best-effort query mirror.
 
 Regular-user accounts are disabled by default. Set `server.users.enabled` to
 `true` to enable them. `server.users.registration.mode` accepts `open` or
