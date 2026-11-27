@@ -11,8 +11,8 @@ Regular-user passwords and local administrator passwords are hashed with
 Argon2id. The shared login endpoint checks administrators first and then,
 when enabled, regular users. It sets an HTTP-only `admin_session` cookie for
 administrators (30-day default) or `user_session` cookie for regular users
-(7-day default). Regular-user API login returns a signed JWT. Administrator
-API routes use hashed `adm_` bearer tokens; first-run setup displays the
+(7-day default). API login returns opaque, revocable `adm_` or `usr_` bearer
+API tokens and sets no cookie. Administrator API routes use hashed `adm_` tokens; first-run setup displays the
 initial token once. Administrator accounts use the separate `admins` table
 and their own session issuer. The signing secret is
 loaded from configuration and must be at least 32 bytes. Administrator login
@@ -32,7 +32,14 @@ can enroll TOTP and passkeys from `/users/security`; registration and login use
 single-use challenges, and recovery-code acknowledgment is required before a
 factor becomes active. User login completes a pending TOTP challenge before
 issuing the session token. `/users/security/sessions` lists and revokes the
-caller's API-token sessions.
+caller's API-token sessions. Native API tokens are not JWTs.
+
+Password recovery is available through `/server/auth/password/forgot` and
+`/server/auth/password/reset`, with matching API endpoints. Recovery tokens
+are one-time, time-limited, and stored only as SHA-256 digests. The flow
+supports administrators and regular users. When SMTP works and email
+verification is required, new regular users must verify the current account
+email before login; verification codes are bound to that address.
 
 Regular users can create named `usr_` API tokens from `/users/tokens` or
 `POST /api/v1/users/tokens`. Token values are shown once; the database stores
@@ -40,8 +47,9 @@ the SHA-256 digest and display prefix. Users can list, inspect, and revoke only
 their own tokens. The supported scopes are `global`, `read-write`, and `read`;
 read-only tokens cannot make state-changing requests, and read-write tokens
 cannot delete resources or use server administration routes. The deprecated
-`X-API-Token` header is ignored. OAuth, OIDC, and LDAP integration are not
-implemented in the current user/auth system.
+`X-API-Token` header is ignored. The server does not currently expose OIDC,
+LDAP, or SAML sign-in flows; these are required by AI.md and remain an
+implementation gap until the provider routes are present.
 
 ## Authorization and tenant boundaries
 
@@ -120,7 +128,7 @@ reported as unavailable instead of silently dropping a scan.
 
 ## MCP
 
-The MCP endpoint requires a bearer JWT on every request, ignores browser
+The MCP endpoint requires a bearer API token on every request, ignores browser
 cookies, accepts POST only, checks the request Origin, and enforces a 1 MiB
 request-body limit. It currently exposes only a subset of API operations. MCP
 requests do not yet pass through a complete shared API limiter/audit pipeline,
@@ -147,6 +155,7 @@ The current public machine-readable endpoints include:
 - `GET /api/v1/server/security`, `/api/v1/server/security/policy`, and `/api/v1/server/security/thanks`
 - `GET /.well-known/llms.txt` and `GET /llms.txt`
 - `GET /api/autodiscover` (filters non-public hosts and publishes only binaries with matching checksums)
+- `POST /api/{version}/server/reports/{type}` (anonymous browser telemetry, bounded, sanitized, and rate-limited)
 - `GET /server/healthz`, `GET /readyz`, and `GET /livez`
 - Public sign-in and registration routes under `/api/{version}/server/auth/`
 - `POST /api/{version}/server/mcp`, which still requires bearer auth

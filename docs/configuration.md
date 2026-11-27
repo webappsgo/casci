@@ -24,6 +24,7 @@ server:
     enabled: false
     registration:
       mode: open
+      require_email_verification: true
   healthz:
     root:
       enabled: false
@@ -83,8 +84,11 @@ SMTP passwords are stored encrypted in `secrets.yml`; they are omitted from
 `server.yml`. `SMTP_*` environment variables override file values at startup,
 including the sender name and address. The defaults are port 587, automatic TLS
 mode, the application name as the sender name, and `no-reply@{fqdn}` as the
-sender address when a public FQDN is configured. Email remains disabled until
-the SMTP connection check succeeds.
+sender address when a public FQDN is configured. At startup, the server tests
+configured SMTP or autodetects a local SMTP endpoint with an eight-second total
+bound. Email-dependent features remain disabled unless the connection check
+succeeds. Admins can update and test SMTP settings at
+`/server/{admin_path}/email`.
 
 TLS mode `auto` uses implicit TLS on port 465 and otherwise starts in plain SMTP
 and upgrades with STARTTLS when the server offers it. `starttls` requires that
@@ -125,8 +129,11 @@ Regular-user accounts are disabled by default. Set `server.users.enabled` to
 `true` to enable them. `server.users.registration.mode` accepts `open` or
 `private` and defaults to `open`. In open mode, `/server/auth/register` renders
 the public registration form and creates a signed-in account after successful
-submission. In private mode, public self-registration is unavailable; existing
-users can still sign in.
+submission. In private mode, public self-registration is unavailable;
+invitations remain available from the admin panel, and existing users can
+still sign in. `require_email_verification` defaults to true; it gates
+registration only when working SMTP is enabled and sends a one-time link before
+the new account can sign in.
 
 ## Directories and environment
 

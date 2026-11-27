@@ -11,13 +11,13 @@ that segment. Registered admin routes include:
 | Settings | `/server/administration/settings` | Read the settings currently exposed by the server configuration model |
 | Branding | `/server/administration/branding` | Edit the application name and tagline |
 | SSL/TLS | `/server/administration/ssl` | Review the active TLS configuration |
-| Email | `/server/administration/email` | SMTP configuration status |
+| Email | `/server/administration/email` | Configure SMTP sender/connection details, test the SMTP connection, and save credentials to encrypted secrets storage |
 | Logs | `/server/administration/logs` | Filter recent access, error, security, or audit logs; download or clear non-audit logs |
 | Audit log | `/server/administration/logs/audit` | Review, filter, paginate, and export retained audit events as JSON or CSV |
 | Security | `/server/administration/security/{auth,tokens,ratelimit,firewall,allowlist}` | Security and access-control section pages |
 | Disclosure reports | `/server/administration/security/reports` and `/server/administration/security/reports/{tracking_id}` | Filter and sort encrypted researcher reports; view decrypted details in an authenticated, audited session; update status, severity, researcher comment, and expected disclosure date |
 | Network | `/server/administration/network/{tor,i2p,geoip,blocklists}` | Overlay and network section pages |
-| User operations | `/server/administration/moderation/users`, `/server/administration/users/invites` | Moderation and invitation section pages |
+| User operations | `/server/administration/moderation/users`, `/server/administration/users/invites` | Review moderation status and create/revoke expiring user or server-admin invitations |
 | Scheduler | `/server/administration/scheduler` | View, edit, and trigger scheduled tasks |
 | Backup | `/server/administration/backup` | View retention and archives, trigger a scheduled backup |
 | Maintenance | `/server/administration/maintenance` | Show maintenance-mode availability |
@@ -32,10 +32,10 @@ that segment. Registered admin routes include:
 The admin path segment is configurable with `server.admin_path`. Guests are
 redirected to `/server/auth/login`; authenticated regular users are redirected
 to `/users`. Administrators use a separate account table and session cookie.
-The admin panel is still incomplete. Branding, scheduler, backup, and update
-pages expose server-rendered actions; the other listed section routes currently
-provide status or overview content and do not implement the full management
-flows required by AI.md.
+The Email and Invitations pages use server-rendered forms with CSRF protection.
+Several other section routes remain informational rather than full management
+interfaces; see the relevant page descriptions and the corresponding AI.md
+requirements.
 
 The audit log page is `/server/administration/logs/audit`. It supports
 category, severity, result, date, actor, and IP filters, 50-event pages,
@@ -50,8 +50,7 @@ configurable yet. `audit.log` is authoritative; the database
 table is a best-effort query mirror, and mirror failures create an
 `audit.mirror_failed` file event without blocking the original audit write.
 The admin viewer and exports read the database mirror. The active log stores a
-tail checkpoint to detect edits to its final record; the missing checkpoint
-requirement in AI.md is recorded in `~/Projects/github/webappsgo/TODO.SERVER.md`.
+tail checkpoint to detect edits to its final record.
 
 The logs page shows access, error, and security files, supports type/search/page
 filters, optional 30-second refresh, downloads, and CSRF-protected clearing for
@@ -102,9 +101,9 @@ setup displays the initial administrator token once. The administrator cookie is
 ## Current settings page
 
 The settings page is read-only and reflects only fields currently carried by
-the server config model. It is not a full editor for application configuration,
-and settings do not generally hot-reload. The metrics and server information
-pages display live collector values and process metadata. Consult
+the server config model. It is not a full editor for application configuration.
+Settings do not generally hot-reload. The metrics and server information pages
+display live collector values and process metadata. Consult
 [Configuration](configuration.md) for the current configuration source and
 supported keys.
 
@@ -112,6 +111,12 @@ The Pages form currently edits only the Markdown project guidance on the MCP
 help page. It is saved under `server.pages.help.mcp` in
 `{config_dir}/yaml.d/pages.yml`, limited to 64 KiB, and rendered through
 Goldmark and the bluemonday allow-list policy with raw HTML disabled.
+
+SMTP settings are available at `/server/{admin_path}/email` and the matching
+`/api/{api_version}/server/{admin_path}/email` routes. Passwords are encrypted
+in `secrets.yml` and never returned. Invitation management is available at
+`/server/{admin_path}/users/invites` and its API routes; each raw invite code is
+shown only at creation.
 
 The API user-management routes are also scoped below the configured admin path.
 The public `/api/{api_version}/users` endpoint addresses only the authenticated
@@ -123,6 +128,8 @@ The following API route groups apply administrator checks in the current
 router:
 
 - `/api/v1/server/{admin_path}/users/**`
+- `/api/v1/server/{admin_path}/email` and `/email/test`
+- `/api/v1/server/{admin_path}/users/invites/**`
 - `GET /api/v1/nodes` and node CRUD/drain routes
 - `POST /api/v1/nodes/token`
 - `GET` and `PUT /api/v1/security/config`
@@ -137,8 +144,8 @@ page or route as proof that every server-management function is implemented.
 
 ## Roles
 
-The current user model has an `is_admin` flag. The complete product design has
-additional tenant isolation requirements that are not yet fully implemented.
-Administrators should not be assumed to have safe access boundaries over
-other users' projects, credentials, or build data until the relevant
-multi-user work is complete.
+Server administrators and regular users are separate account types. The
+complete product design has additional tenant-isolation requirements that are
+not yet fully implemented. Administrators should not be assumed to have safe
+access boundaries over other users' projects, credentials, or build data until
+the relevant multi-user work is complete.

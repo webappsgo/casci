@@ -162,6 +162,7 @@ CASCI must NOT:
 
 - There are no intentionally weaker authentication, authorization, transport, build-isolation, secret-handling, or abuse-control modes. Compatibility with an existing CI/CD format does not grant its pipeline access to another user's resources or relax build isolation.
 - Spending limits are explicitly best-effort because provider billing APIs can lag. This is a documented limitation, not a guarantee that a limit cannot be exceeded.
+- SAML service-provider support uses `github.com/supatype/saml` v0.7.0, a maintained fork of `crewjam/saml` based on upstream commit `3465403`. It carries the namespace-binding and assertion-validation fixes for GO-2026-6909, plus updated `goxmldsig` v1.6.1 and replay-cache support. This replaces the vulnerable upstream `crewjam/saml` module; review the Go vulnerability database findings for the exact pinned dependency graph before release.
 
 ### API routes
 

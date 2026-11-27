@@ -1,13 +1,15 @@
 # API reference
 
-This page documents the HTTP routes currently registered by the server. The
-route set is still changing, and the OpenAPI document is incomplete; verify a
-route against the running build before depending on it.
+This page describes the current HTTP API and its server-rendered counterparts.
+The generated OpenAPI document provides the machine-readable route inventory;
+authorization and handler-specific behavior are summarized here.
 
 ## Base path and authentication
 
-The default API prefix is `https://casci.casapps.us/api/v1`. The `v1` segment
-comes from `server.api_version`. Some machine routes have unversioned aliases.
+The API version segment comes from `server.api_version` (default `v1`).
+`GET /api/{api_version}` returns the same discovery envelope as
+`GET /api/autodiscover`; its trailing-slash form permanently redirects to the
+canonical no-slash path. Some machine routes have unversioned aliases.
 
 ## Frontend response formats
 
@@ -19,26 +21,27 @@ recognized command-line HTTP tools, or requests that explicitly accept
 `text/plain`, receive an 80-column text rendering of the page. API paths and
 static assets keep their own response formats.
 
-Authenticated handlers accept the account's bearer API token (or a signed user
-session token where that route explicitly supports it) in the `Authorization` header:
+Native API handlers accept an account's opaque bearer API token in the
+`Authorization` header:
 
 ```http
 Authorization: Bearer <bearer-token>
 ```
 
-Browser middleware also accepts the CASCI authentication cookie for routes
-that use the shared user middleware. API login returns a revocable, role-scoped
-`adm_` or `usr_` API token and does not set a cookie. MCP accepts only the bearer header.
+Browser middleware accepts the matching CASCI session cookie on browser routes.
+API login returns a revocable, role-scoped `adm_` or `usr_` token and does not
+set a cookie. MCP accepts only the bearer header.
 Login is public. Registration is mounted only when `server.users.enabled` is
 `true` and `server.users.registration.mode` is `open`; otherwise the route
-returns 404. User, admin, and node handlers apply different checks. The API
-does not yet implement the complete token types,
-scopes, rate limits, request IDs, or response-envelope rules from AI.md.
+returns 404. User, admin, and node handlers apply different checks. Bearer
+tokens are opaque values, not JWTs. One-time link codes identify a single
+time-limited action and are never accepted as bearer credentials.
 
 ## Health, help, preferences, and auth
 
 | Method | Path | Access | Behavior |
 |--------|------|--------|----------|
+| GET | `/api/{api_version}` | Public | API discovery envelope; same data as `/api/autodiscover` |
 | GET | `/api/v1/server/healthz` | Public | JSON health response |
 | GET | `/api/healthz` | Public alias | Same health handler |
 | GET | `/readyz` | Public | Readiness handler |
@@ -61,6 +64,8 @@ scopes, rate limits, request IDs, or response-envelope rules from AI.md.
 | POST | `/api/v1/server/auth/password/reset` | One-time reset token | Set a new password and consume the reset token |
 | POST | `/api/v1/server/auth/username/forgot` | Public, rate-limited | Request a username reminder without revealing whether the email exists |
 | POST | `/api/v1/server/auth/verify` | One-time verification token | Verify the account email address |
+| GET, POST | `/api/{api_version}/server/auth/invite/user/{token}` | One-time invite code | Validate or accept a regular-user invitation when user accounts are enabled |
+| GET, POST | `/api/{api_version}/server/auth/invite/server/{token}` | One-time invite code | Validate or accept a server-administrator invitation |
 | POST | `/api/v1/server/reports/{type}` | Public, anonymous, rate-limited | Accept allow-listed browser telemetry, sanitize it, and write only to operational logs; success returns 204 |
 | GET | `/api/v1/server/{admin_path}/setup` | Public | Report setup requirement and primary-account recovery status |
 | POST | `/api/v1/server/{admin_path}/setup/verify` | Setup token | Verify the one-time first-run setup token |
@@ -88,6 +93,11 @@ at `/server/auth/2fa`, which accepts TOTP, a passkey, or a one-time recovery
 code. Passkey ceremonies use short-lived, one-use server-side challenges. The
 `/healthz` root alias is
 disabled unless `server.healthz.root.enabled` is true.
+Password recovery and invitation acceptance also have no-JavaScript browser
+pages at `/server/auth/password/forgot`, `/server/auth/password/reset`,
+`/server/auth/invite/user/{code}`, and `/server/auth/invite/server/{code}`.
+Recovery and invite codes are stored as hashes, expire, and are redacted from
+request logs. Email-dependent actions require a working SMTP configuration.
 
 Administrator API credentials can be managed from
 `/server/{admin_path}/security/tokens`. The page creates named credentials,
@@ -120,8 +130,14 @@ rotation:
 | POST | `/api/v1/users/security/recovery/regenerate` | Authenticated user; replace recovery codes and return them once |
 | GET, POST | `/api/v1/users/security/passkeys` | Authenticated user; list passkeys or begin registration |
 | DELETE | `/api/v1/users/security/passkeys/{passkey_id}` | Authenticated owner; revoke one passkey |
+| GET, POST | `/users/consents` | User session; POST requires CSRF and supports a standard HTML form |
+| GET, PATCH | `/api/v1/users/consents` | User bearer token; read or update consent settings |
 | GET | `/api/{api_version}/server/{admin_path}/users` | Administrator; lists accounts |
 | GET, PUT, PATCH, DELETE | `/api/{api_version}/server/{admin_path}/users/{id}` | Administrator; manages one account |
+| GET, POST | `/api/{api_version}/server/{admin_path}/users/invites` | Administrator; list or create user/admin invitations (the raw code is returned once) |
+| GET, DELETE | `/api/{api_version}/server/{admin_path}/users/invites/{id}` | Administrator; inspect safe metadata or revoke an invitation |
+| GET, PATCH | `/api/{api_version}/server/{admin_path}/email` | Administrator; read safe SMTP settings or save settings (password is write-only) |
+| POST | `/api/{api_version}/server/{admin_path}/email/test` | Administrator; test settings without returning credentials |
 
 User management routes are under the configured admin path in a running
 instance. Regular users cannot use the admin API path or read another user's
@@ -137,6 +153,10 @@ The `/users/security` page supports password changes, TOTP enrollment,
 passkey management, and recovery-code acknowledgment. `/users/security/sessions`
 lists API-token sessions and provides CSRF-protected revoke forms. Both pages
 use no-store/noindex headers.
+`/users/consents` accepts both a CSRF-protected POST form and the PATCH JSON
+action. The administrator invitation page is
+`/server/{admin_path}/users/invites`; the SMTP settings page is
+`/server/{admin_path}/email` and provides save and connection-test forms.
 
 ## Projects and builds
 
@@ -198,7 +218,7 @@ The corresponding no-JavaScript pages are `/users/infrastructure` and
 
 Agent management is available to administrators under the configured admin
 path and to signed-in users under `/api/v1/users/agents`. Management requests
-require the matching account credential; user routes require a user bearer JWT.
+require the matching account credential; user routes require a user bearer token.
 Machine registration, heartbeat, report, and binary download requests require
 an agent-scoped `adm_` or `usr_` bearer token. The full route behavior and
 payload examples are in the [Agent guide](agents.md).
@@ -274,7 +294,7 @@ for the current tool list and request format.
 
 | Method | Path | Behavior |
 |--------|------|----------|
-| GET | `/api/v1/server/swagger` | OpenAPI JSON (generated route inventory is incomplete) |
+| GET | `/api/v1/server/swagger` | Generated OpenAPI JSON |
 | GET | `/api/swagger` | Unversioned OpenAPI JSON alias |
 | GET | `/server/docs/swagger` | Swagger UI |
 | GET, POST | `/api/v1/server/graphql` | GraphQL handler; resolver coverage is incomplete |
