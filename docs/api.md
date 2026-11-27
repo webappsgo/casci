@@ -53,8 +53,15 @@ scopes, rate limits, request IDs, or response-envelope rules from AI.md.
 | POST | `/api/v1/server/{admin_path}/setup/verify` | Setup token | Verify the one-time first-run setup token |
 | POST | `/api/v1/server/{admin_path}/setup/account` | Setup token | Create the primary administrator and return the one-time `adm_` API token |
 | POST | `/api/v1/server/{admin_path}/setup/complete` | Public | Report whether primary administrator creation is complete |
+| GET | `/api/v1/server/{admin_path}/{admin_username}/profile/security` | Administrator session | Read the administrator's TOTP and recovery-code status |
+| POST | `/api/v1/server/{admin_path}/{admin_username}/profile/security/totp/setup` | Administrator session | Start TOTP enrollment after current-password verification; return the secret and provisioning URI |
+| POST | `/api/v1/server/{admin_path}/{admin_username}/profile/security/totp/enable` | Administrator session | Verify TOTP and return one-time recovery codes; a separate acknowledgment enables TOTP |
+| POST | `/api/v1/server/{admin_path}/{admin_username}/profile/security/totp/disable` | Administrator session | Disable TOTP after verifying a current TOTP or recovery code |
+| POST | `/api/v1/server/auth/2fa` | Partial administrator session | Complete login with a TOTP code |
+| POST | `/api/v1/server/auth/recovery/use` | Partial administrator session | Complete login with a one-time recovery code |
 
-The HTML login page is `/server/auth/login`. The `/healthz` root alias is
+The HTML login page is `/server/auth/login`; accounts requiring a second factor
+continue at `/server/auth/2fa`. The `/healthz` root alias is
 disabled unless `server.healthz.root.enabled` is true.
 
 ## Users
@@ -75,7 +82,8 @@ profile through `/api/v1/users`.
 
 The server-rendered profile page is `/users`; it uses the same self-scoped
 account data and accepts a no-JavaScript form POST for email or password
-updates. `/users/tokens` lists the caller's tokens and supports no-JavaScript
+updates. `/users/tokens` and, when regular-user accounts are enabled,
+`/server/preferences/tokens` list the caller's tokens and support no-JavaScript
 create and revoke forms. Token values are returned only at creation; the
 database stores a SHA-256 digest and the first eight characters for display.
 
@@ -85,7 +93,9 @@ database stores a SHA-256 digest and the first eight characters for display.
 |--------|------|--------|------------------|
 | GET | `/api/v1/projects` | Authenticated | List projects |
 | POST | `/api/v1/projects` | Authenticated | Create project |
-| GET, PUT, PATCH, DELETE | `/api/v1/projects/{id}` | Authenticated | Project CRUD |
+| GET, PATCH, DELETE | `/api/v1/projects/{id}` | Authenticated owner | Read, update, or delete one owned project |
+| GET | `/api/v1/projects/{id}/pipelines` | Authenticated owner | List configured pipelines or detect workflows from an HTTPS repository |
+| GET | `/api/v1/projects/{id}/pipelines/{pipeline_id}` | Authenticated owner | Read one configured pipeline or detected workflow definition |
 | GET, POST | `/api/v1/projects/{id}/builds` | Authenticated | List or trigger builds |
 | GET | `/api/v1/projects/{id}/builds/stats` | Authenticated | Project build statistics |
 | GET | `/api/v1/projects/{id}/notifications` | Authenticated | Project notification configurations |
@@ -93,7 +103,8 @@ database stores a SHA-256 digest and the first eight characters for display.
 | GET | `/api/v1/builds/{id}` | Authenticated | Read a build |
 | GET | `/api/v1/builds/{id}/logs` | Authenticated | Read a build log |
 | POST | `/api/v1/builds/{id}/cancel` | Authenticated | Cancel a build |
-| POST | `/api/v1/builds/{id}/restart` | Authenticated | Restart a build |
+| GET | `/api/v1/builds/{id}/artifacts` | Authenticated owner | List safe metadata for the build's artifacts |
+| GET | `/api/v1/builds/{id}/artifacts/{artifact_id}` | Authenticated owner | Download an owned artifact with attachment and `nosniff` headers |
 | GET | `/api/v1/builds/{id}/security` | Authenticated | Read build security reports |
 | POST | `/api/v1/builds/{id}/security/scan` | Authenticated | Trigger a scan |
 | GET | `/api/v1/builds/{id}/notifications` | Authenticated | Read build notification data |
@@ -199,7 +210,8 @@ for the current tool list and request format.
 | GET | `/server/docs/graphql` | GraphQL playground |
 | GET | `/api/json` | Jenkins-shaped server response |
 | GET | `/crumbIssuer/api/json` | Jenkins-shaped crumb response |
-| POST | `/webhook` | Provider webhook handler |
+| POST | `/api/v1/webhooks/{provider}` | Provider-signature verified webhook; path provider must match provider headers |
+| POST | `/webhook` | Legacy provider webhook handler |
 | GET | `/ws` | WebSocket endpoint |
 
 OpenAPI uses JSON only. There is no YAML endpoint.

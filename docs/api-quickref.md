@@ -37,8 +37,9 @@ curl -q -LSsf https://casci.casapps.us/api/v1/users/me \
 | Resource | Paths |
 |----------|-------|
 | Users | `/api/v1/users`, `/api/v1/users/me`, `/api/v1/users/{id}` |
-| Projects | `/api/v1/projects`, `/api/v1/projects/{id}` |
-| Builds | `/api/v1/projects/{id}/builds`, `/api/v1/builds/{id}` and subroutes |
+| Projects | `/api/v1/projects`, `/api/v1/projects/{id}`, `/api/v1/projects/{id}/pipelines[/{pipeline_id}]` |
+| Builds | `/api/v1/projects/{id}/builds`, `/api/v1/builds/{id}` and subroutes, including `/artifacts` |
+| Webhooks | `/api/v1/webhooks/{provider}` and legacy `/webhook` |
 | Nodes | `/api/v1/nodes`, `/api/v1/nodes/{id}` and subroutes |
 | Credentials | `/api/v1/credentials/user/**`, `/api/v1/credentials/project/**` |
 | Notifications | `/api/v1/notifications` and subroutes |

@@ -32,7 +32,9 @@ resolved with their full provider-specific semantics.
 
 ## Source-control webhooks
 
-The shared receiver is `POST /webhook`. GitHub push and opened/synchronized
+The versioned receiver is `POST /api/v1/webhooks/{provider}`; the legacy
+`POST /webhook` path remains available. The provider path must match the
+provider headers. GitHub push and opened/synchronized
 pull request deliveries require `X-Hub-Signature-256`; GitLab push and merge
 request events use `X-GitLab-Token`; Bitbucket push and pull request events use
 `X-Hub-Signature: sha256=<hex>`; Gitea push and pull request events use
