@@ -26,7 +26,8 @@ that segment. Registered admin routes include:
 | Cluster | `/server/administration/nodes`, `/server/administration/nodes/add` | Node and enrollment section pages |
 | Metrics | `/server/administration/metrics` | System, build, node, security, and API measurements |
 | Server info | `/server/administration/info` | Runtime, version, process, and database driver details |
-| Pages | `/server/administration/pages/help` | Edit the MCP help page's project guidance |
+| Pages | `/server/administration/pages` | Edit the About, Privacy, Terms, Contact, and Help page settings |
+| Page editor | `/server/administration/pages/{about,privacy,terms,contact,help}` | Edit public page overrides or contact form settings; preview and reset supported content overrides |
 | Users | `/server/administration/users` | View accounts and update an account's email or password |
 | Agents | `/server/administration/agents`, `/server/administration/agents/add`, `/server/administration/agents/remove` | Create scoped agent credentials, review reports, rotate credentials, and confirm removals |
 
@@ -106,10 +107,16 @@ display live collector values and process metadata. Consult
 [Configuration](configuration.md) for the current configuration source and
 supported keys.
 
-The Pages form currently edits only the Markdown project guidance on the MCP
-help page. It is saved under `server.pages.help.mcp` in
-`{config_dir}/yaml.d/pages.yml`, limited to 64 KiB, and rendered through
-Goldmark and the bluemonday allow-list policy with raw HTML disabled.
+The Pages editor stores About, Privacy, and Terms content in
+`{config_dir}/yaml.d/branding.yml` under `server.branding.content`. Help page
+content is stored in `server.pages.help.content` in
+`{config_dir}/yaml.d/pages.yml`; MCP-specific guidance remains in the sibling
+`server.pages.help.mcp` setting. Contact page settings are stored under
+`server.pages.contact` in `pages.yml`. Page bodies are limited to 256 KiB,
+written atomically with owner-only permissions, and sanitized before preview
+and public rendering. The editor uses standard POST forms with CSRF tokens,
+so page editing and preview work without JavaScript. The API editor requires
+an administrator bearer token.
 
 SMTP settings are available at `/server/{admin_path}/email` and the matching
 `/api/{api_version}/server/{admin_path}/email` routes. Passwords are encrypted

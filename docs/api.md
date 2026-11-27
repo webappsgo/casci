@@ -38,6 +38,22 @@ returns 404. User, admin, and node handlers apply different checks. Bearer
 tokens are opaque values, not JWTs. One-time link codes identify a single
 time-limited action and are never accepted as bearer credentials.
 
+## Admin page management
+
+Page management uses `/api/{api_version}/server/{admin_path}/pages` and
+requires an administrator bearer token. `GET /pages` lists the managed pages.
+Each page can be read with `GET /pages/{page}`; supported page names are
+`about`, `privacy`, `terms`, `contact`, and `help`. `PATCH` updates page
+content with `{ "format": "md", "body": "..." }`, or contact form settings
+with `{ "settings": { "enabled": true, "captcha": "simple" } }`.
+`DELETE /pages/{page}` removes the About, Privacy, Terms, or Help override and
+restores its built-in content. Contact settings do not have a reset operation.
+`POST /pages/{page}/preview` accepts the same `format` and `body` fields and
+returns the sanitized HTML without saving it. Page bodies are limited to
+256 KiB. About, Privacy, and Terms overrides are stored in
+`yaml.d/branding.yml`; Help content and Contact settings are stored in
+`yaml.d/pages.yml`. Contact captcha secrets are never returned by the API.
+
 ## Health, help, preferences, and auth
 
 | Method | Path | Access | Behavior |
