@@ -40,6 +40,18 @@ server:
     encryption_key: ""
     encryption_key_version: 1
     webhook_secret: ""
+  contact:
+    admin:
+      email: ""
+    security:
+      email: "security@casci.example.test"
+    abuse:
+      email: ""
+    dpo:
+      name: ""
+      email: ""
+    general:
+      email: ""
   footer:
     tracking_id: ""
     custom_html: ""
@@ -69,7 +81,6 @@ web:
     deny: ["/server/administration"]
   security:
     report_url: https://github.com/webappsgo/casci/security/advisories/new
-    contact: ""
     expires: ""
   reports:
     rate_limit_per_minute: 60
@@ -112,7 +123,32 @@ server:
     contact:
       captcha: hcaptcha
       captcha_site_key: public-site-key
+      antispam:
+        honeypot: true
+        min_fill_seconds: 3
+        max_age_seconds: 43200
+        per_ip: 5
+        per_email: 3
+        global: 60
+        window: 1h
+        max_links: 10
+        reject_markup: true
+        blocked_words: []
+        blocked_email_domains: []
+        strikes: 3
+        ban_hours: 24
+        review_min_seconds: 2
+        review_max_seconds: 900
+        duplicate_window_hours: 24
 ```
+
+Contact recipients are configured under `server.contact` in `server.yml`.
+Security defaults to `security@{fqdn}` when omitted; explicitly setting it to
+an empty string suppresses the public security mailbox. Abuse falls back to
+the general address for public display; the admin address is never published.
+DPO display falls back to the general address, while internal report routing
+can fall back to the admin recipient. Webhook URLs are private and must not be
+exposed in public responses.
 
 ## External identity providers
 
