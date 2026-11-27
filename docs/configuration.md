@@ -39,6 +39,11 @@ server:
   trusted_proxies:
     additional: []
     client_ip_header: auto
+  geoip:
+    enabled: true
+    deny_countries: []
+    allow_countries: []
+    presets: {}
   security:
     encryption_key: ""
     encryption_key_version: 1
@@ -57,6 +62,13 @@ server:
       hard_lock_duration: 1h
       permanent_lock_attempts: 15
       permanent_lock_window: 24h
+    blocklists:
+      enabled: true
+      auto_update: true
+      action: reject
+      reject_message: ""
+      log_blocked: true
+      extra_sources: []
   contact:
     admin:
       email: ""
@@ -124,6 +136,30 @@ refreshed after five minutes. `client_ip_header` may be `auto` or one of
 `X-Real-IP`, or `X-Client-IP`. In production, pin this to the header your
 front proxy overwrites or appends. The resolver preserves the original TCP peer
 for trust checks and walks multi-hop chains from right to left.
+
+`server.geoip.enabled` defaults to `true`. The ASN, country, and IPv4/IPv6 city
+MMDB files download on first run and update weekly from ip-location-db. Country
+policy is deny-only: `deny_countries` blocks listed ISO 3166-1 alpha-2 codes;
+when `allow_countries` is non-empty, it takes precedence and allows only those
+codes. Both lists default to empty, so no country is blocked by default. Named
+country presets are operator-authored and start empty. Missing or stale data
+fails open and does not replace authentication or authorization checks.
+
+`server.security.blocklists` defaults to enabled with daily automatic updates.
+The built-in `firehol_level1` IP feed is always active while the feature is
+enabled. Add HTTPS feeds under `extra_sources` with an `id`, `type` (`ip` or
+`domain`), `url`, and `enabled` flag. Each source is stored separately in
+`{data_dir}/security/blocklists/`; its last successful update is tracked
+independently. Feeds are bounded to 64 MiB, parsed atomically, and retain their
+last good copy on download or validation errors. Data older than 72 hours is
+reported degraded and remains in use. IP rules exclude local/private ranges.
+Domain rules inspect Origin or Referer, submitted email addresses, and URL
+fields, never the request Host. Allowlisted requests bypass blocklist checks
+without bypassing authentication. Set `action` to `reject` for a translated
+403 response or `drop` to close the connection; `reject_message` overrides the
+translated message, and `log_blocked` controls security event logging. The
+admin network blocklists page manages settings and sources, reports feed
+health, triggers updates, and checks IP addresses.
 
 ## Page content and contact CAPTCHA
 

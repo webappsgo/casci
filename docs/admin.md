@@ -17,7 +17,7 @@ that segment. Registered admin routes include:
 | Audit log | `/server/administration/logs/audit` | Review, filter, paginate, and export retained audit events as JSON or CSV |
 | Security | `/server/administration/security/{auth,tokens,ratelimit,firewall,allowlist}` | Security and access-control section pages |
 | Disclosure reports | `/server/administration/security/reports` and `/server/administration/security/reports/{tracking_id}` | Filter and sort encrypted researcher reports; view decrypted details in an authenticated, audited session; update status, severity, researcher comment, and expected disclosure date |
-| Network | `/server/administration/network/{tor,i2p,geoip,blocklists}` | Overlay and network section pages |
+| Network | `/server/administration/network/{tor,i2p,geoip,blocklists}` | GeoIP country policy and freshness, external blocklist settings and source management, update controls, and IP checks |
 | User operations | `/server/administration/moderation/users`, `/server/administration/users/invites` | Review moderation status and create/revoke expiring user or server-admin invitations |
 | Scheduler | `/server/administration/scheduler` | View, edit, and trigger scheduled tasks |
 | Backup | `/server/administration/backup` | Configure schedule and retention, create, list, download, and verify archives; restore an archive after entering its password (when encrypted) and typing its exact filename to confirm; the server restarts through its supervisor |
@@ -27,7 +27,7 @@ that segment. Registered admin routes include:
 | Metrics | `/server/administration/metrics` | System, build, node, security, and API measurements |
 | Server info | `/server/administration/info` | Runtime, version, process, and database driver details |
 | Pages | `/server/administration/pages` | Edit the About, Privacy, Terms, Footer, Contact, and Help page settings |
-| Page editor | `/server/administration/pages/{about,privacy,terms,footer,contact,help}` | Edit public page overrides or contact form settings; CAPTCHA secrets are encrypted and write-only; preview and reset supported content overrides |
+| Page editor | `/server/administration/pages/{about,privacy,terms,footer,contact,help}` | Edit public page overrides or contact form settings; Footer uses the server-rendered form only; CAPTCHA secrets are encrypted and write-only; preview and reset supported content overrides |
 | Users | `/server/administration/users` | View accounts and update an account's email or password |
 | Agents | `/server/administration/agents`, `/server/administration/agents/add`, `/server/administration/agents/remove` | Create scoped agent credentials, review reports, rotate credentials, and confirm removals |
 
@@ -35,7 +35,7 @@ The admin path segment is configurable with `server.admin_path`. Guests are
 redirected to `/server/auth/login`; authenticated regular users are redirected
 to `/users`. Administrators use a separate account table and session cookie.
 The Email, Email templates, and Invitations pages use server-rendered forms with CSRF protection. Email templates use embedded defaults and store administrator overrides in `{config_dir}/template/email/` with owner-only file permissions. The editor lists account and operational messages, validates template variables, previews sample data, sends test mail to the entered address (defaulting to the signed-in administrator email), and restores a default after explicit confirmation.
-Several section routes remain informational rather than full management interfaces. The Authentication section links to external provider configuration; firewall, GeoIP, Tor, I2P, and some cluster controls are still incomplete. The allowlist page supports adding and removing trusted IP addresses and CIDR ranges, and checking an address against current entries; changes are audited, and allowlisted addresses still require authentication.
+Several section routes remain informational rather than full management interfaces. The Authentication section links to external provider configuration; Tor, I2P, and some cluster controls are still incomplete. The GeoIP page edits country deny/allow lists, saves and loads operator-authored presets, and displays database availability and freshness. Country filtering fails open when lookup data is unavailable. The blocklists page manages the built-in FireHOL feed and configured HTTPS IP/domain sources, toggles enforcement and scheduled updates, runs updates, and checks IP addresses. Feed status reports rule counts, last update, errors, and 72-hour freshness. The allowlist page supports adding and removing trusted IP addresses and CIDR ranges, and checking an address against current entries; changes are audited, and allowlisted addresses still require authentication.
 
 The audit log page is `/server/administration/logs/audit`. It supports
 category, severity, result, date, actor, and IP filters, 50-event pages,

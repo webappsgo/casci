@@ -41,9 +41,10 @@ time-limited action and are never accepted as bearer credentials.
 ## Admin page management
 
 Page management uses `/api/{api_version}/server/{admin_path}/pages` and
-requires an administrator bearer token. `GET /pages` lists the managed pages.
+requires an administrator bearer token. `GET /pages` lists the API-managed pages.
 Each page can be read with `GET /pages/{page}`; supported page names are
-`about`, `privacy`, `terms`, `footer`, `contact`, and `help`. `PATCH` updates page
+`about`, `privacy`, `terms`, `contact`, and `help`. Footer is managed only by its
+server-rendered editor and is not accepted by this API. `PATCH` updates page
 content with `{ "format": "md", "body": "..." }`, or contact form settings
 with `{ "settings": { "enabled": true, "captcha": "simple" } }`.
 `DELETE /pages/{page}` removes the About, Privacy, Terms, or Help override and
@@ -52,9 +53,8 @@ server-rendered editor; Contact settings do not have a reset operation.
 `POST /pages/{page}/preview` accepts the same `format` and `body` fields and
 returns the raw input, sanitized HTML, and whether sanitization changed the
 content without saving it. Page bodies are limited to
-256 KiB. Footer updates require `format: "html"`; all other content updates
-accept the documented `md`, `html`, or `txt` formats where enabled. About,
-Privacy, Terms, and Footer overrides are stored in
+256 KiB. API content updates accept the documented `md`, `html`, or `txt`
+formats where enabled. About, Privacy, Terms, and Footer overrides are stored in
 `yaml.d/branding.yml`; Help content and Contact settings are stored in
 `yaml.d/pages.yml`. Contact captcha secrets are never returned by the API.
 Contact settings may select `simple`, `recaptcha`, or `hcaptcha`. Supply a new

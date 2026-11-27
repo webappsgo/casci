@@ -121,14 +121,19 @@ hosts fall back to the configured primary domain.
 The IP allowlist is loaded from `server.security.allowlist` and persisted
 administrator entries. It supports IPv4, IPv6, CIDRs, duplicate and overlapping
 entries, and an administrator page/API for add, remove, and check operations.
-Allowlisted requests bypass the implemented login throttling/account-lockout
-checks and selected contact/report abuse limits; authentication and token
-validation still run. This is not yet the full AI.md network-defense pipeline:
-IP/domain blocklist source management and enforcement, global request rate
-limiting, GeoIP country filtering, and automatic IP blocking are unavailable.
-The admin pages for blocklists and GeoIP currently report those capabilities as
-unavailable, and scheduled update entries are placeholders. Do not treat the
-allowlist as bypassing a complete blocklist, rate-limit, or GeoIP layer.
+Allowlisted requests bypass configured network blocklists, GeoIP, the
+implemented login throttling/account-lockout checks, and selected contact/report
+abuse limits; authentication and token validation still run. The GeoIP core downloads and validates ASN, country, and
+IPv4/IPv6 city MMDBs, refreshes them on startup when missing or stale and through
+the weekly scheduler, and applies configured country deny/allow lists after the
+allowlist check. Country filtering fails open when the country database or
+lookup is unavailable; the admin page edits country policy and presets and
+displays database status. IP and domain feeds use independent atomic downloads,
+a built-in FireHOL IP source, and 72-hour freshness status. Domain matching
+examines Origin or Referer, submitted email addresses, and submitted URL fields;
+it does not use the server's own Host or perform reverse DNS. The administrator
+page and API manage sources, update feeds, and check IPs. The global request
+rate-limit and automatic-IP-blocking requirements remain incomplete.
 
 ## Encryption and secrets
 
