@@ -72,9 +72,9 @@ rotation:
 
 | Method | Path | Access | Behavior |
 |--------|------|--------|----------|
-| GET | `/api/{api_version}/server/{admin_path}/security/tokens` | Administrator bearer token | List administrator token metadata; secret values are never returned |
-| DELETE | `/api/{api_version}/server/{admin_path}/security/tokens/{id}` | Administrator bearer token | Revoke a token owned by the authenticated administrator |
-| POST | `/api/{api_version}/server/{admin_path}/security/tokens/{id}/rotate` | Administrator bearer token | Replace the secret, preserving name, scope, and expiry; returns the new value once |
+| GET | `/api/{api_version}/server/{admin_path}/security/tokens` | Administrator bearer token | List safe metadata for active administrator, user, and organization tokens; secret values are never returned |
+| DELETE | `/api/{api_version}/server/{admin_path}/security/tokens/{id}` | Administrator bearer token | Revoke a non-agent token across account types |
+| POST | `/api/{api_version}/server/{admin_path}/security/tokens/{id}/rotate` | Administrator bearer token | Replace a token secret, preserving owner, name, scope, and expiry; returns the new value once |
 | GET | `/api/{api_version}/server/{admin_path}/{admin_username}/profile/token` | Administrator bearer token | Read masked metadata for the setup-issued token belonging to the signed-in administrator |
 | POST | `/api/{api_version}/server/{admin_path}/{admin_username}/profile/token` | Administrator bearer token | Regenerate the setup-issued token; returns its new value once |
 
