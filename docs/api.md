@@ -43,6 +43,9 @@ scopes, rate limits, request IDs, or response-envelope rules from AI.md.
 | GET | `/livez` | Public | Liveness handler |
 | GET | `/api/v1/server/help` | Public | Help JSON and registered help pages |
 | GET | `/api/v1/server/help/mcp` | Public | MCP connection details, tools, and project text |
+| GET | `/api/v1/server/security` | Public | Security contact channels, policy and acknowledgment URLs, and PGP availability |
+| GET | `/api/v1/server/security/policy` | Public | Built-in coordinated disclosure policy in Markdown |
+| GET | `/api/v1/server/security/thanks` | Public | Credited researcher acknowledgments |
 | GET, POST | `/api/v1/server/preferences` | Public | Preference API handler |
 | GET, POST | `/api/v1/server/preferences/sync` | Public | Preference sync API handler |
 | GET, POST | `/api/v1/server/preferences/sync/import` | Public | Preference import API handler |

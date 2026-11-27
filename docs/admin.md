@@ -15,6 +15,7 @@ that segment. Registered admin routes include:
 | Logs | `/server/administration/logs` | Filter recent access, error, security, or audit logs; download or clear non-audit logs |
 | Audit log | `/server/administration/logs/audit` | Review, filter, paginate, and export retained audit events as JSON or CSV |
 | Security | `/server/administration/security/{auth,tokens,ratelimit,firewall,allowlist}` | Security and access-control section pages |
+| Disclosure reports | `/server/administration/security/reports` and `/server/administration/security/reports/{tracking_id}` | Filter and sort encrypted researcher reports; view decrypted details in an authenticated, audited session; update status, severity, researcher comment, and expected disclosure date |
 | Network | `/server/administration/network/{tor,i2p,geoip,blocklists}` | Overlay and network section pages |
 | User operations | `/server/administration/moderation/users`, `/server/administration/users/invites` | Moderation and invitation section pages |
 | Scheduler | `/server/administration/scheduler` | View, edit, and trigger scheduled tasks |

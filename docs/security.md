@@ -139,22 +139,30 @@ completed.
 The current public machine-readable endpoints include:
 
 - `GET /.well-known/security.txt`
+- `GET /server/security`, `/server/security/policy`, and `/server/security/thanks`
+- `GET /api/v1/server/security`, `/api/v1/server/security/policy`, and `/api/v1/server/security/thanks`
 - `GET /.well-known/llms.txt` and `GET /llms.txt`
 - `GET /api/autodiscover` (filters non-public hosts and publishes only binaries with matching checksums)
 - `GET /server/healthz`, `GET /readyz`, and `GET /livez`
 - Public sign-in and registration routes under `/api/{version}/server/auth/`
 - `POST /api/{version}/server/mcp`, which still requires bearer auth
 
-The contact form does not currently deliver reports. It is not a substitute for
-the private vulnerability reporting URL published by `security.txt`.
+The security contact link in `security.txt` carries a rotating 48-hour
+`security_id`; the form accepts the current and previous window and requires a
+review confirmation before storage. Each security report body and its
+researcher contact details are encrypted separately with AES-256-GCM before
+they enter the database. Server administrators can
+decrypt reports from the authenticated security reports page, and every report
+view is audited without recording report content. SMTP delivery, PGP report
+encryption, researcher status links, and status-change messages are not yet
+implemented, so the website returns the tracking ID but does not send a
+researcher acknowledgment.
 
 ## Reporting a vulnerability
 
 Use the repository's [GitHub private vulnerability reporting page](https://github.com/webappsgo/casci/security/advisories/new)
 for a source-code vulnerability. For a deployed instance, check that
 instance's `/server/security` page for its operator's reporting channel and
-`/server/security/policy` for the coordinated-disclosure terms. The current
-server provides those public pages and `security.txt`, but its contact form
-does not yet accept or store security reports through the encrypted disclosure
-pipeline. Do not include live credentials or user data in a report submitted
-over an untrusted channel.
+`/server/security/policy` for the coordinated-disclosure terms. For instance
+reports, use the security contact form linked from that page. Do not include
+live credentials or user data in a report submitted over an untrusted channel.
