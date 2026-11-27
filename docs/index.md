@@ -30,7 +30,12 @@ relevant reference pages before relying on them.
   other CI systems whose formats it parses.
 - The OpenAPI document is currently empty/incomplete, and GraphQL resolver
   coverage is incomplete.
-- The contact form currently validates a basic form but cannot deliver reports.
+- Public abuse, DMCA, and privacy submissions use CAPTCHA, one-time form and
+  review tokens, layered rate/content checks, and two-step confirmation. Delivery
+  requires configured SMTP and sends one message to the selected contact role.
+- Security reports are encrypted at rest and use the security report workflow;
+  maintainer notification with per-admin PGP encryption and the AI.md-defined
+  PGP-at-rest policy remain incomplete.
 - MCP tool routing covers only a subset of the API and does not yet implement
   all required token scopes, rate limits, or audit integration.
 - Build isolation, multi-user isolation, workload fairness, provider

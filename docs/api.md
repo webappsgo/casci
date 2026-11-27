@@ -66,6 +66,25 @@ forms. API submissions may send one provider `captcha_response`, or the fallback
 `captcha_id` and `captcha_answer`; CAPTCHA validation errors include a fresh
 descriptor in `details.captcha`.
 
+## Public contact submissions
+
+`GET /api/{api_version}/server/contact` returns the offered types, field
+constraints, a CAPTCHA descriptor, and a signed `form_token`. Post the selected
+type's fields, the token, and its CAPTCHA proof back to the same path. A valid
+first post returns a review summary, `review_token`, a fresh `form_token`, and
+`confirm_after_seconds`; it does not deliver an email. Confirm by posting the
+same fields with `step: "confirm"`, the review token, and `confirmed: true`.
+The review token binds the submitted fields and is single-use. Post
+`step: "edit"` to receive the fields with a fresh token and CAPTCHA challenge.
+
+Malformed fields and CAPTCHA failures return `VALIDATION_FAILED`; CAPTCHA
+failures include a fresh descriptor in `details.captcha`, and form-token
+failures include a fresh `details.form_token`. Rate-limit responses use HTTP
+429 and `Retry-After`. Honeypot and duplicate submissions use the normal review
+and success responses but are silently discarded. Delivery requires configured
+SMTP. Security reports use the separate `/server/contact?security_id=...`
+workflow linked from the public security policy.
+
 ## Health, help, preferences, and auth
 
 | Method | Path | Access | Behavior |

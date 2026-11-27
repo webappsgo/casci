@@ -157,11 +157,14 @@ The current public machine-readable endpoints include:
 
 The security contact link in `security.txt` carries a rotating 48-hour
 `security_id`; the form accepts the current and previous window and requires a
-review confirmation before storage. A review token binds the submitted fields,
+review confirmation before storage. The form also requires a signed, single-use
+fill-time token and applies the configured contact rate limits; honeypot and
+rate-limit state is held in memory. A review token binds the submitted fields,
 must be at least two seconds old, expires after 15 minutes, and can be consumed
 once per server process. The form's arithmetic CAPTCHA answer is stored as a
 hash, consumed on the first verification attempt, and expires after ten
-minutes. Each security report body and its
+minutes. Rejections and silent drops log a reason and client IP without the
+submitted report fields. Each security report body and its
 researcher contact details are encrypted separately with AES-256-GCM before
 they enter the database. Server administrators can
 decrypt reports from the authenticated security reports page, and every report

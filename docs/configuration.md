@@ -150,6 +150,23 @@ DPO display falls back to the general address, while internal report routing
 can fall back to the admin recipient. Webhook URLs are private and must not be
 exposed in public responses.
 
+Abuse, DMCA, and privacy submissions are reviewed and confirmed before
+delivery. Configure outbound SMTP under `server.email` for delivery; each
+accepted submission sends one plain-text notification, with the submitter's
+address in `Reply-To` and no automatic reply. Abuse and DMCA route to the abuse
+role, then general, then admin. Privacy requests route to DPO, then general,
+then admin. The security form follows the encrypted security-report workflow
+and requires a valid rotating `security_id` when opened from the security
+policy page.
+
+The contact antispam settings shown above default to a three-second minimum
+fill time, 12-hour form-token lifetime, limits of 5 per IP, 3 per email, and
+60 total per hour, a ten-link maximum, markup rejection, a three-strike
+24-hour ban, a two-second to 15-minute review window, and a 24-hour duplicate
+window. Settings are enforced server-side. Tor and I2P requests skip the
+per-IP limit and strike bans; per-email and global limits still apply, and
+those requests use the built-in simple CAPTCHA.
+
 ## External identity providers
 
 Provider definitions live in `server.auth.oidc.providers`,
