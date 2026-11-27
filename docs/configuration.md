@@ -80,6 +80,40 @@ privacy:
   hash_report_ips: true
 ```
 
+## Page content and contact CAPTCHA
+
+The server rendered Pages editor stores About, Privacy, Terms, and Footer
+content under `server.branding.content` in `yaml.d/branding.yml`. Help content
+and Contact settings live under `server.pages` in `yaml.d/pages.yml`. Footer
+content must use `format: html`; its editor sanitizes the fragment before
+preview and display. The older `server.footer.custom_html` value remains a
+fallback when there is no `server.branding.content.footer` entry.
+
+Contact CAPTCHA defaults to the built in simple challenge. `recaptcha` and
+`hcaptcha` require both `captcha_site_key` and `captcha_secret_key`; invalid or
+incomplete provider settings log a warning and use the simple challenge. The
+site key is stored in `pages.yml`. The secret is encrypted in `secrets.yml`,
+and the admin API and page never return it.
+
+```yaml
+# yaml.d/branding.yml
+server:
+  branding:
+    content:
+      footer:
+        format: html
+        body: '<p>Powered by <strong>Example</strong></p>'
+```
+
+```yaml
+# yaml.d/pages.yml
+server:
+  pages:
+    contact:
+      captcha: hcaptcha
+      captcha_site_key: public-site-key
+```
+
 ## External identity providers
 
 Provider definitions live in `server.auth.oidc.providers`,

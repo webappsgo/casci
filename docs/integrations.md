@@ -67,7 +67,9 @@ Matching repository URLs trigger queued builds and receive `202 Accepted`.
 Ping, ignored action, branch deletion, and unsupported event deliveries receive
 a successful empty or small response without queuing a build. Repository
 matching normalizes HTTPS, SSH, and `.git` URL spellings. A queued build does
-not prove that its pipeline completed successfully.
+not prove that its pipeline completed successfully. The queue applies global
+and per-user pending limits, runs at most one build per user at a time, and
+dispatches queued owners round-robin.
 
 ## Notifications
 

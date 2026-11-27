@@ -46,11 +46,15 @@ Each page can be read with `GET /pages/{page}`; supported page names are
 `about`, `privacy`, `terms`, `footer`, `contact`, and `help`. `PATCH` updates page
 content with `{ "format": "md", "body": "..." }`, or contact form settings
 with `{ "settings": { "enabled": true, "captcha": "simple" } }`.
-`DELETE /pages/{page}` removes the About, Privacy, Terms, Footer, or Help override and
-restores its built-in content. Contact settings do not have a reset operation.
+`DELETE /pages/{page}` removes the About, Privacy, Terms, or Help override and
+restores its built-in content. Footer reset is available from its CSRF-protected
+server-rendered editor; Contact settings do not have a reset operation.
 `POST /pages/{page}/preview` accepts the same `format` and `body` fields and
-returns the sanitized HTML without saving it. Page bodies are limited to
-256 KiB. About, Privacy, Terms, and Footer overrides are stored in
+returns the raw input, sanitized HTML, and whether sanitization changed the
+content without saving it. Page bodies are limited to
+256 KiB. Footer updates require `format: "html"`; all other content updates
+accept the documented `md`, `html`, or `txt` formats where enabled. About,
+Privacy, Terms, and Footer overrides are stored in
 `yaml.d/branding.yml`; Help content and Contact settings are stored in
 `yaml.d/pages.yml`. Contact captcha secrets are never returned by the API.
 Contact settings may select `simple`, `recaptcha`, or `hcaptcha`. Supply a new

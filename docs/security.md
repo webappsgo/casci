@@ -106,7 +106,7 @@ logs. Secret injection, cleanup, and redaction are not yet complete end to end.
 
 ## Build execution
 
-Builds run in per-build Docker containers with no network, a read-only root filesystem, dropped Linux capabilities, no-new-privileges, a non-root UID/GID, PID and memory limits, and a private temporary filesystem. The build workspace is mounted for pipeline output. The executor does not yet provide a VM boundary, per-user resource quotas, fair scheduling, or a signed artifact chain. Pipeline commands are repository-controlled code and can alter mounted workspace contents; isolate the host and review pipeline access accordingly.
+Builds run in per-build Docker containers with no network, a read-only root filesystem, dropped Linux capabilities, no-new-privileges, a non-root UID/GID, PID and memory limits, and a private temporary filesystem. The build workspace is mounted for pipeline output. The queue resolves project owners, bounds global and per-user pending builds, allows one running build per user, and dispatches owners round-robin. It does not provide per-user CPU or memory budgets, a VM boundary, or a signed artifact chain. Pipeline commands are repository-controlled code and can alter mounted workspace contents; isolate the host and review pipeline access accordingly.
 
 Build security scanning is enabled by default for vulnerability, SAST, secret,
 license, and SBOM checks. Scanners run before the executor reports a build as
