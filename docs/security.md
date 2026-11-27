@@ -96,7 +96,39 @@ fail preflight even when their origin is otherwise accepted.
 
 The server includes request security headers and a Content Security Policy.
 Review the live middleware before relying on a policy value as a deployment
-guarantee.
+guarantee. URL middleware assigns a UUIDv4 request ID (accepting validated
+`X-Request-ID`, `X-Correlation-ID`, or `X-Trace-ID`) and returns it in
+`X-Request-ID`; access logs can include that value. The path middleware rejects
+encoded or decoded traversal segments, and URL normalization collapses repeated
+slashes and redirects non-root trailing-slash paths (301 for GET/HEAD, 308 for
+other methods). These controls do not replace route authorization or input
+validation.
+
+## Client IP and network controls
+
+`server.trusted_proxies.additional` accepts proxy IPs, CIDRs, or DNS names, and
+`server.trusted_proxies.client_ip_header` selects `auto` or one supported client
+IP header. Proxy trust is based on the preserved immediate TCP peer, including
+the built-in loopback, private, link-local, and listen-subnet ranges. Only a
+trusted peer can supply forwarded client IP, host, scheme, or port values.
+Client IP resolution normalizes IPv4 and IPv6 (including IPv4-mapped IPv6),
+parses `X-Forwarded-For` and RFC 7239 `Forwarded` chains from right to left,
+skips trusted proxy hops, and caps chain traversal at 32 hops. Untrusted peers'
+proxy headers are ignored. Public URL hostnames are validated and, when
+`DOMAIN` is configured, constrained to that list; invalid or unlisted request
+hosts fall back to the configured primary domain.
+
+The IP allowlist is loaded from `server.security.allowlist` and persisted
+administrator entries. It supports IPv4, IPv6, CIDRs, duplicate and overlapping
+entries, and an administrator page/API for add, remove, and check operations.
+Allowlisted requests bypass the implemented login throttling/account-lockout
+checks and selected contact/report abuse limits; authentication and token
+validation still run. This is not yet the full AI.md network-defense pipeline:
+IP/domain blocklist source management and enforcement, global request rate
+limiting, GeoIP country filtering, and automatic IP blocking are unavailable.
+The admin pages for blocklists and GeoIP currently report those capabilities as
+unavailable, and scheduled update entries are placeholders. Do not treat the
+allowlist as bypassing a complete blocklist, rate-limit, or GeoIP layer.
 
 ## Encryption and secrets
 

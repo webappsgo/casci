@@ -35,7 +35,7 @@ The admin path segment is configurable with `server.admin_path`. Guests are
 redirected to `/server/auth/login`; authenticated regular users are redirected
 to `/users`. Administrators use a separate account table and session cookie.
 The Email, Email templates, and Invitations pages use server-rendered forms with CSRF protection. Email templates use embedded defaults and store administrator overrides in `{config_dir}/template/email/` with owner-only file permissions. The editor lists account and operational messages, validates template variables, previews sample data, sends test mail to the entered address (defaulting to the signed-in administrator email), and restores a default after explicit confirmation.
-Several section routes remain informational rather than full management interfaces. The Authentication section links to external provider configuration; firewall, GeoIP, Tor, I2P, and some cluster controls are still incomplete. The allowlist page supports adding and removing trusted IP addresses and CIDR ranges; these entries do not bypass authentication.
+Several section routes remain informational rather than full management interfaces. The Authentication section links to external provider configuration; firewall, GeoIP, Tor, I2P, and some cluster controls are still incomplete. The allowlist page supports adding and removing trusted IP addresses and CIDR ranges, and checking an address against current entries; changes are audited, and allowlisted addresses still require authentication.
 
 The audit log page is `/server/administration/logs/audit`. It supports
 category, severity, result, date, actor, and IP filters, 50-event pages,

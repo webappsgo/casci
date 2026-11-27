@@ -36,6 +36,9 @@ server:
     cert: ""
     key: ""
     min_version: TLS1.2
+  trusted_proxies:
+    additional: []
+    client_ip_header: auto
   security:
     encryption_key: ""
     encryption_key_version: 1
@@ -104,6 +107,23 @@ web:
 privacy:
   hash_report_ips: true
 ```
+
+`server.security.allowlist` accepts IP addresses and CIDR ranges. Entries with
+empty descriptions display as `(no description)`. Invalid addresses and
+overly broad IPv4 prefixes (`/0` through `/7`) or IPv6 prefixes (`/0` through
+`/15`) are skipped with a warning. Duplicate and overlapping entries are
+preserved. The admin allowlist page manages entries stored in the database;
+YAML entries are refreshed from configuration at startup while administrator
+entries remain intact.
+
+`server.trusted_proxies.additional` accepts proxy IP addresses, CIDR ranges, or
+DNS names. Loopback, private, link-local, and the configured listen-address
+subnet are trusted automatically. DNS proxy names are resolved at startup and
+refreshed after five minutes. `client_ip_header` may be `auto` or one of
+`X-Forwarded-For`, `Forwarded`, `CF-Connecting-IP`, `True-Client-IP`,
+`X-Real-IP`, or `X-Client-IP`. In production, pin this to the header your
+front proxy overwrites or appends. The resolver preserves the original TCP peer
+for trust checks and walks multi-hop chains from right to left.
 
 ## Page content and contact CAPTCHA
 
@@ -320,11 +340,15 @@ issuance or renewal.
 
 ## Public URL resolution
 
-The server builds public URLs from the request host and connection scheme. If a
-non-empty `DOMAIN` list is configured, only listed request hosts are used; an
-unlisted or invalid host falls back to the first configured domain. Forwarded
-host headers are ignored because trusted-proxy support is not implemented.
-Serve the app at the root of its host rather than a URL subdirectory.
+The server builds public URLs from validated request hosts and the connection
+scheme. If a non-empty `DOMAIN` list is configured, only listed hosts are used;
+an unlisted or invalid host falls back to the first configured domain. Forwarded
+host, scheme, and port headers are honored only when the immediate TCP peer is
+trusted by `server.trusted_proxies`. `X-Forwarded-For` resolution uses the same
+peer gate and walks the proxy chain from right to left. `server.baseurl` is
+available for path prefixes in rendered links; forwarded prefix detection and
+dynamic domain learning are not implemented. Serve the app at the root of its
+host unless a matching base path is configured.
 
 `/robots.txt`, `/sitemap.xml`, `/feed.xml`, and `/rss.xml` are always served; `/favicon.ico` serves the embedded site icon.
 Robots rules come from `web.robots.allow` and `web.robots.deny`; the defaults
