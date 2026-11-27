@@ -26,8 +26,8 @@ that segment. Registered admin routes include:
 | Cluster | `/server/administration/nodes`, `/server/administration/nodes/add` | Node and enrollment section pages |
 | Metrics | `/server/administration/metrics` | System, build, node, security, and API measurements |
 | Server info | `/server/administration/info` | Runtime, version, process, and database driver details |
-| Pages | `/server/administration/pages` | Edit the About, Privacy, Terms, Contact, and Help page settings |
-| Page editor | `/server/administration/pages/{about,privacy,terms,contact,help}` | Edit public page overrides or contact form settings; preview and reset supported content overrides |
+| Pages | `/server/administration/pages` | Edit the About, Privacy, Terms, Footer, Contact, and Help page settings |
+| Page editor | `/server/administration/pages/{about,privacy,terms,footer,contact,help}` | Edit public page overrides or contact form settings; CAPTCHA secrets are encrypted and write-only; preview and reset supported content overrides |
 | Users | `/server/administration/users` | View accounts and update an account's email or password |
 | Agents | `/server/administration/agents`, `/server/administration/agents/add`, `/server/administration/agents/remove` | Create scoped agent credentials, review reports, rotate credentials, and confirm removals |
 
@@ -107,7 +107,7 @@ display live collector values and process metadata. Consult
 [Configuration](configuration.md) for the current configuration source and
 supported keys.
 
-The Pages editor stores About, Privacy, and Terms content in
+The Pages editor stores About, Privacy, Terms, and Footer content in
 `{config_dir}/yaml.d/branding.yml` under `server.branding.content`. Help page
 content is stored in `server.pages.help.content` in
 `{config_dir}/yaml.d/pages.yml`; MCP-specific guidance remains in the sibling
