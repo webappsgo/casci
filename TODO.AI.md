@@ -29,6 +29,7 @@ Implementation order follows the dependencies in AI.md: foundation and configura
 - [ ] Complete server-rendered pages and matching APIs for projects, builds, nodes, credentials, notifications, security, audit, compliance, preferences, and all admin configuration areas; add page-conformance and route-drift coverage.
 - [ ] Implement email templates, SMTP detection and delivery, WebUI notification center, preferences, and required security/account messages from PART 18.
 - [ ] Implement the scheduler and required periodic work, failure handling, and admin controls from PART 19.
+- [ ] Complete maintenance mode from PART 14, including recoverable startup failures, configured self-healing retries, exhaustion audit/notification, disk-pressure cleanup, and successful-recovery checks.
 - [ ] Implement system and build metrics, Prometheus output, admin views, and required health/readiness/liveness behavior from PARTS 13 and 21.
 - [ ] Implement encrypted backup, restore validation, retention, scheduling, and UI/API management from PART 22.
 - [ ] Implement secure update discovery, staged update download/verification/apply, rollback safety, and user-facing update state from PART 23.

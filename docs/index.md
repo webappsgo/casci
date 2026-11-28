@@ -15,14 +15,16 @@ routes and components from planned product capabilities.
 
 ## Current application surface
 
-The server exposes a public web shell, sign-in, user profile, preference and
-help pages, an admin dashboard, settings, Pages → Help and user management,
-versioned API handlers, health and readiness endpoints, Swagger UI, GraphQL,
-MCP, webhooks, and Jenkins-shaped compatibility endpoints. The browser shell
-includes an installable PWA with versioned static assets, offline fallback for
-eligible public pages, and a user-controlled service worker update prompt.
-Several subsystems are incomplete; consult the limitations below and the
-relevant reference pages before relying on them.
+The server exposes a public web shell, local and configured external sign-in,
+user profile/security/preferences/help pages, user infrastructure and budget
+pages, an admin dashboard and configuration sections, versioned API handlers,
+health and readiness endpoints, Swagger UI, GraphQL, MCP, webhooks, and
+Jenkins-shaped compatibility endpoints. It includes coordinated security
+report intake and review. The browser shell has an installable PWA with
+versioned static assets, offline fallback for eligible public pages, and a
+user-controlled service worker update prompt. Several subsystems are
+incomplete; consult the limitations below and the relevant reference pages
+before relying on them.
 
 ## Current limitations
 
@@ -54,6 +56,7 @@ relevant reference pages before relying on them.
 - [API reference](api.md)
 - [API quick reference](api-quickref.md)
 - [CLI reference](cli.md)
+- [Agent management](agents.md)
 - [Admin panel](admin.md)
 - [Security](security.md)
 - [Integrations](integrations.md)

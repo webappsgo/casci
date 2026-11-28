@@ -33,14 +33,14 @@ resolved with their full provider-specific semantics.
 ## External identity providers
 
 Administrators configure OIDC, LDAP, and SAML providers under
-`/server/{admin_path}/security/auth/{oidc,ldap,saml}`. The browser flows are
+`https://casci.casapps.us/server/{admin_path}/security/auth/{oidc,ldap,saml}`. The browser flows are
 OIDC authorization-code with PKCE, LDAP bind/search, and signed SAML
 authentication. Provider settings can also be managed under
-`/api/{api_version}/server/{admin_path}/security/auth/{type}/providers`;
+`https://casci.casapps.us/api/{api_version}/server/{admin_path}/security/auth/{type}/providers`;
 secret fields are write-only and stored encrypted in `secrets.yml`.
 
-Browser entry routes are `/server/auth/oidc/{provider}`,
-`/server/auth/ldap/{provider}`, and `/server/auth/saml/{provider}`.
+Browser entry routes are `https://casci.casapps.us/server/auth/oidc/{provider}`,
+`https://casci.casapps.us/server/auth/ldap/{provider}`, and `https://casci.casapps.us/server/auth/saml/{provider}`.
 OIDC and SAML support API initiation plus one-time request-ID polling and
 exchange routes. LDAP API login is a JSON POST. SAML publishes SP metadata
 and supports SP-initiated logout where the IdP has configured SLO.
@@ -54,8 +54,8 @@ not implemented.
 
 ## Source-control webhooks
 
-The versioned receiver is `POST /api/v1/webhooks/{provider}`; the legacy
-`POST /webhook` path remains available. The provider path must match the
+The versioned receiver is `POST https://casci.casapps.us/api/v1/webhooks/{provider}`; the legacy
+`POST https://casci.casapps.us/webhook` path remains available. The provider path must match the
 provider headers. GitHub push and opened/synchronized
 pull request deliveries require `X-Hub-Signature-256`; GitLab push and merge
 request events use `X-GitLab-Token`; Bitbucket push and pull request events use
@@ -74,7 +74,7 @@ dispatches queued owners round-robin.
 ## Notifications
 
 The notification package defines these channel identifiers. The active API
-list is returned by `GET /api/v1/notifications/types`; availability and
+list is returned by `GET https://casci.casapps.us/api/v1/notifications/types`; availability and
 delivery behavior can vary by implementation.
 
 | Group | Channel identifiers |
@@ -86,36 +86,36 @@ delivery behavior can vary by implementation.
 | Incident response | `pagerduty`, `opsgenie`, `victorops` |
 | Other | `webhook`, `script` |
 
-Create and manage configurations through `/api/v1/notifications`. Configure
+Create and manage configurations through `https://casci.casapps.us/api/v1/notifications`. Configure
 secrets only in the instance, not in a repository. The API's test route is
-`POST /api/v1/notifications/test`.
+`POST https://casci.casapps.us/api/v1/notifications/test`.
 
 ## API and protocol endpoints
 
 | Route | Status |
 |-------|--------|
-| `/api/v1/server/swagger` | OpenAPI JSON route; generated document is incomplete |
-| `/server/docs/swagger` | Swagger UI |
-| `/api/v1/server/graphql` | GraphQL endpoint; resolver coverage is incomplete |
-| `/server/docs/graphql` | GraphQL playground |
-| `/api/v1/server/mcp` | Authenticated MCP Streamable HTTP endpoint; tool coverage is partial |
-| `/api/json` | Small Jenkins-shaped response; not the Jenkins REST API |
-| `/crumbIssuer/api/json` | Jenkins-shaped crumb handler; not full Jenkins CSRF compatibility |
+| `https://casci.casapps.us/api/v1/server/swagger` | OpenAPI JSON route; generated document is incomplete |
+| `https://casci.casapps.us/server/docs/swagger` | Swagger UI |
+| `https://casci.casapps.us/api/v1/server/graphql` | GraphQL endpoint; resolver coverage is incomplete |
+| `https://casci.casapps.us/server/docs/graphql` | GraphQL playground |
+| `https://casci.casapps.us/api/v1/server/mcp` | Authenticated MCP Streamable HTTP endpoint; tool coverage is partial |
+| `https://casci.casapps.us/api/json` | Small Jenkins-shaped response; not the Jenkins REST API |
+| `https://casci.casapps.us/crumbIssuer/api/json` | Jenkins-shaped crumb handler; not full Jenkins CSRF compatibility |
 
 CASCI does not currently load Jenkins plugins or implement the full Jenkins
 REST, Blue Ocean, CLI, or plugin API. Users can manage encrypted cloud, private-server, and storage connection metadata, and set best-effort monthly budgets. CASCI does not yet synchronize provider billing data or provision cloud capacity. The hourly-instance destroy-all endpoint returns `503` until a provider cleanup backend is available. External OIDC, LDAP, and SAML identity providers are supported for browser and API sign-in; see the provider setup and limitations in [Security](security.md) and [Configuration](configuration.md). Instance federation is not provided.
 
 ## Discovery
 
-The server generates `/.well-known/security.txt` and serves
-`/.well-known/llms.txt` plus `/llms.txt`. It also exposes `GET
-/api/autodiscover`, which reports the API version, public origins, and
+The server generates `https://casci.casapps.us/.well-known/security.txt` and serves
+`https://casci.casapps.us/.well-known/llms.txt` plus `https://casci.casapps.us/llms.txt`. It also exposes `GET
+https://casci.casapps.us/api/autodiscover`, which reports the API version, public origins, and
 published CLI/agent binary versions and checksums. Private and loopback hosts
 are omitted from autodiscovery. Binary download authorization depends on the
 binary type and the configured download policy; see [Configuration](configuration.md)
 and [Agent management](agents.md).
 
-`GET /manifest.json` publishes the PWA manifest and `GET /sw.js` serves the
+`GET https://casci.casapps.us/manifest.json` publishes the PWA manifest and `GET https://casci.casapps.us/sw.js` serves the
 versioned service worker. The worker caches same-origin static assets and
 successful public pages explicitly marked eligible for offline use; it does
 not cache API responses.

@@ -2,7 +2,6 @@
 
 [![CI](https://github.com/webappsgo/casci/actions/workflows/ci.yml/badge.svg)](https://github.com/webappsgo/casci/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/webappsgo/casci)](https://github.com/webappsgo/casci/releases)
-[![Documentation](https://readthedocs.org/projects/webappsgo-casci/badge/?version=latest)](https://webappsgo-casci.readthedocs.io)
 [![License](https://img.shields.io/github/license/webappsgo/casci)](LICENSE.md)
 
 ## About
@@ -29,6 +28,10 @@ CASCI aims to support.
   display and scoped revocation, project CRUD, and build lifecycle API handlers
 - First-run server administrator setup, separate administrator sessions and
   `adm_` tokens, administrator token management, TOTP, and WebAuthn passkeys
+- Configurable OIDC, LDAP, and SAML sign-in, with provider account linking and
+  explicit account-onboarding and role-mapping flows
+- Encrypted security-report intake and review, scheduled and manual backups,
+  user-managed infrastructure connection metadata, and best-effort budgets
 - Container executor and build queue, with local build-node management routes
 - Parsers for several common CI configuration formats; parser support does not
   mean full runtime compatibility with those CI systems
@@ -74,14 +77,25 @@ with `--service --install`, `start`, `stop`, `restart`, `reload`, `--disable`,
 and `--uninstall`. Review [Service management](docs/services.md) before using
 system-level actions; uninstall removes application data after confirmation.
 
+## Client
+
+The companion `casci-cli` supports health checks, owner-scoped project listing
+and creation, user login, and authenticated versioned API requests. Build it
+with `make dev` for the current platform or `make build` for release targets.
+For example, `casci-cli --server https://casci.casapps.us status` checks the
+official server. See the [CLI reference](docs/cli.md) for authentication,
+configuration, and command details.
+
 ## Configuration
 
-CASCI loads `server.yml` from its resolved configuration directory. Current
-configuration covers server address and port, mode, API and admin path
-segments, branding, TLS, database connection settings, CORS, security contacts,
-footer behavior, and the encryption and webhook keys. It does not yet provide
-the complete database-backed, hot-reloadable configuration interface described
-in the product specification.
+CASCI loads `server.yml` and `yaml.d/` overrides from its resolved
+configuration directory. Current configuration covers server address and
+port, mode, API and admin path segments, branding and page content, TLS,
+database connections, CORS, security contacts and policies, user registration,
+identity providers, SMTP, scheduler tasks, backups, updates, and per-kind log
+formats and rotation. Some server settings remain read-only in the admin UI;
+the complete database-backed, hot-reloadable configuration system described
+in the product specification is not implemented.
 
 See [Configuration](docs/configuration.md) for current paths, environment
 variables, and supported settings.
@@ -89,9 +103,10 @@ variables, and supported settings.
 ## API
 
 The default API prefix is `https://casci.casapps.us/api/v1`. The version segment
-is configurable. Current route groups include authentication, users, projects,
-builds, nodes, credentials, notifications, security reports, audit,
-compliance, metrics, server health/help/preferences, and MCP. The OpenAPI
+is configurable. Current route groups include authentication and external
+identity, users, projects, builds, nodes, credentials, notifications,
+infrastructure connections and budgets, security reports, audit, compliance,
+metrics, server health/help/preferences, and MCP. The OpenAPI
 document is currently incomplete; use the route list in the
 [API Reference](docs/api.md) as the current implemented surface.
 
@@ -109,6 +124,7 @@ document is currently incomplete; use the route list in the
 - [Configuration reference](docs/configuration.md)
 - [REST and GraphQL API reference](docs/api.md)
 - [CLI reference](docs/cli.md)
+- [Agent management](docs/agents.md)
 - [Admin panel](docs/admin.md)
 - [Security model and current limitations](docs/security.md)
 - [Integrations and protocol support](docs/integrations.md)

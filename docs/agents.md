@@ -4,8 +4,8 @@ CASCI includes a companion agent for collecting machine health and metrics.
 Its `--version` output reports the embedded release version, commit ID, and
 UTC build timestamp, matching the server and client binaries.
 Server administrators manage server agents at
-`/server/{admin_path}/agents`; regular users manage only their own agents at
-`/users/agents`. The default administrator path is `administration`.
+`https://casci.casapps.us/server/{admin_path}/agents`; regular users manage only their own agents at
+`https://casci.casapps.us/users/agents`. The default administrator path is `administration`.
 
 ## Create an agent
 
@@ -23,8 +23,8 @@ token must not be used for management calls.
 ## Agent API
 
 The administrator base path is
-`/api/{api_version}/server/{admin_path}/agents`; the user base path is
-`/api/{api_version}/users/agents`. Management routes require an administrator
+`https://casci.casapps.us/api/{api_version}/server/{admin_path}/agents`; the user base path is
+`https://casci.casapps.us/api/{api_version}/users/agents`. Management routes require an administrator
 or owner account token respectively.
 
 | Method | Suffix | Purpose |
@@ -35,7 +35,7 @@ or owner account token respectively.
 | PATCH | `/{id}` | Update its name, tags, or labels |
 | DELETE | `/{id}` | Revoke its token and remove its metrics and record |
 | POST | `/{id}/token` | Rotate its token |
-| GET | `/{id}/metrics` | Read up to 100 recent metric samples |
+| GET | `https://casci.casapps.us/api/{api_version}/server/{admin_path}/agents/{id}/metrics` | Read up to 100 recent metric samples |
 | POST | `/register` | Register the machine using its agent token |
 | POST | `/heartbeat` or `/report` | Submit agent health and metrics using its token |
 
@@ -64,9 +64,9 @@ object. The server records a metric sample and updates the last-seen time.
 Agents with no report for 90 seconds appear offline. An agent token cannot
 read metrics history, which is available only to its owner.
 
-Downloads from `/agent/binaries/{name}` require any valid agent-scoped bearer
+Downloads from `https://casci.casapps.us/agent/binaries/{name}` require any valid agent-scoped bearer
 token. The server serves only published agent binaries with a matching
-SHA-256 entry in the release checksum file. The `/api/autodiscover` response
+SHA-256 entry in the release checksum file. The `https://casci.casapps.us/api/autodiscover` response
 advertises available platform versions and checksums.
 
 ## Current limits

@@ -1,43 +1,43 @@
 # Admin panel
 
-The default admin root is `/server/administration`; `server.admin_path` changes
+The default admin root is `https://casci.casapps.us/server/administration`; `server.admin_path` changes
 that segment. Registered admin routes include:
 
 | Page | Default path | Purpose |
 |------|-------------|---------|
-| Dashboard | `/server/administration` | Server overview |
-| Profile | `/server/administration/{admin_username}/profile` | Change the signed-in administrator's email or password |
-| Account security | `/server/administration/{admin_username}/profile/security` | Enroll and manage TOTP, passkeys, and recovery codes |
-| Settings | `/server/administration/settings` | Read the settings currently exposed by the server configuration model |
-| Branding | `/server/administration/branding` | Edit the application name and tagline |
-| SSL/TLS | `/server/administration/ssl` | Review the active TLS configuration |
-| Email | `/server/administration/email` | Configure SMTP sender/connection details, send a test message, and save credentials to encrypted secrets storage |
-| Email templates | `/server/administration/email/templates` | Edit, preview, send a sample message, or reset embedded email templates |
-| Logs | `/server/administration/logs` | Filter recent access, error, security, or audit logs; download or clear non-audit logs |
-| Audit log | `/server/administration/logs/audit` | Review, filter, paginate, and export retained audit events as JSON or CSV |
-| Security | `/server/administration/security/{auth,tokens,ratelimit,firewall,allowlist}` | Security and access-control section pages |
-| Disclosure reports | `/server/administration/security/reports` and `/server/administration/security/reports/{tracking_id}` | Filter and sort encrypted researcher reports; view decrypted details in an authenticated, audited session; update status, severity, researcher comment, and expected disclosure date |
-| Network | `/server/administration/network/{tor,i2p,geoip,blocklists}` | GeoIP country policy and freshness, external blocklist settings and source management, update controls, and IP checks |
-| User operations | `/server/administration/moderation/users`, `/server/administration/users/invites` | Review moderation status and create/revoke expiring user or server-admin invitations |
-| Scheduler | `/server/administration/scheduler` | View, edit, and trigger scheduled tasks |
-| Backup | `/server/administration/backup` | Configure schedule and retention, create, list, download, and verify archives; restore an archive after entering its password (when encrypted) and typing its exact filename to confirm; the server restarts through its supervisor |
-| Maintenance | `/server/administration/maintenance` | Current status and guidance; automatic critical-error recovery and manual mode controls are incomplete |
-| Updates | `/server/administration/updates` | Review status and change the persisted release channel |
-| Cluster | `/server/administration/nodes`, `/server/administration/nodes/add` | Node and enrollment section pages |
-| Metrics | `/server/administration/metrics` | System, build, node, security, and API measurements |
-| Server info | `/server/administration/info` | Runtime, version, process, and database driver details |
-| Pages | `/server/administration/pages` | Edit the About, Privacy, Terms, Footer, Contact, and Help page settings |
-| Page editor | `/server/administration/pages/{about,privacy,terms,footer,contact,help}` | Edit public page overrides or contact form settings; Footer uses the server-rendered form only; CAPTCHA secrets are encrypted and write-only; preview and reset supported content overrides |
-| Users | `/server/administration/users` | View accounts and update an account's email or password |
-| Agents | `/server/administration/agents`, `/server/administration/agents/add`, `/server/administration/agents/remove` | Create scoped agent credentials, review reports, rotate credentials, and confirm removals |
+| Dashboard | `https://casci.casapps.us/server/administration` | Server overview |
+| Profile | `https://casci.casapps.us/server/administration/{admin_username}/profile` | Change the signed-in administrator's email or password |
+| Account security | `https://casci.casapps.us/server/administration/{admin_username}/profile/security` | Enroll and manage TOTP, passkeys, and recovery codes |
+| Settings | `https://casci.casapps.us/server/administration/settings` | Read the settings currently exposed by the server configuration model |
+| Branding | `https://casci.casapps.us/server/administration/branding` | Edit the application name and tagline |
+| SSL/TLS | `https://casci.casapps.us/server/administration/ssl` | Review the active TLS configuration |
+| Email | `https://casci.casapps.us/server/administration/email` | Configure SMTP sender/connection details, send a test message, and save credentials to encrypted secrets storage |
+| Email templates | `https://casci.casapps.us/server/administration/email/templates` | Edit, preview, send a sample message, or reset embedded email templates |
+| Logs | `https://casci.casapps.us/server/administration/logs` | Filter recent access, error, security, or audit logs; download or clear non-audit logs |
+| Audit log | `https://casci.casapps.us/server/administration/logs/audit` | Review, filter, paginate, and export retained audit events as JSON or CSV |
+| Security | `https://casci.casapps.us/server/administration/security/{auth,tokens,ratelimit,firewall,allowlist}` | Security and access-control section pages |
+| Disclosure reports | `https://casci.casapps.us/server/administration/security/reports` and `https://casci.casapps.us/server/administration/security/reports/{tracking_id}` | Filter and sort encrypted researcher reports; view decrypted details in an authenticated, audited session; update status, severity, researcher comment, and expected disclosure date |
+| Network | `https://casci.casapps.us/server/administration/network/{tor,i2p,geoip,blocklists}` | GeoIP country policy and freshness, external blocklist settings and source management, update controls, and IP checks |
+| User operations | `https://casci.casapps.us/server/administration/moderation/users`, `https://casci.casapps.us/server/administration/users/invites` | Review moderation status and create/revoke expiring user or server-admin invitations |
+| Scheduler | `https://casci.casapps.us/server/administration/scheduler` | View, edit, and trigger scheduled tasks |
+| Backup | `https://casci.casapps.us/server/administration/backup` | Configure schedule and retention, create, list, download, and verify archives; restore an archive after entering its password (when encrypted) and typing its exact filename to confirm; the server restarts through its supervisor |
+| Maintenance | `https://casci.casapps.us/server/administration/maintenance` | Current status and guidance for critical errors; startup database failures keep health and maintenance guidance available while configured retries run; manual mode controls remain incomplete |
+| Updates | `https://casci.casapps.us/server/administration/updates` | Review status and change the persisted release channel |
+| Cluster | `https://casci.casapps.us/server/administration/nodes`, `https://casci.casapps.us/server/administration/nodes/add` | Node and enrollment section pages |
+| Metrics | `https://casci.casapps.us/server/administration/metrics` | System, build, node, security, and API measurements |
+| Server info | `https://casci.casapps.us/server/administration/info` | Runtime, version, process, and database driver details |
+| Pages | `https://casci.casapps.us/server/administration/pages` | Edit the About, Privacy, Terms, Footer, Contact, and Help page settings |
+| Page editor | `https://casci.casapps.us/server/administration/pages/{about,privacy,terms,footer,contact,help}` | Edit public page overrides or contact form settings; Footer uses the server-rendered form only; CAPTCHA secrets are encrypted and write-only; preview and reset supported content overrides |
+| Users | `https://casci.casapps.us/server/administration/users` | View accounts and update an account's email or password |
+| Agents | `https://casci.casapps.us/server/administration/agents`, `https://casci.casapps.us/server/administration/agents/add`, `https://casci.casapps.us/server/administration/agents/remove` | Create scoped agent credentials, review reports, rotate credentials, and confirm removals |
 
 The admin path segment is configurable with `server.admin_path`. Guests are
-redirected to `/server/auth/login`; authenticated regular users are redirected
-to `/users`. Administrators use a separate account table and session cookie.
+redirected to `https://casci.casapps.us/server/auth/login`; authenticated regular users are redirected
+to `https://casci.casapps.us/users`. Administrators use a separate account table and session cookie.
 The Email, Email templates, and Invitations pages use server-rendered forms with CSRF protection. Email templates use embedded defaults and store administrator overrides in `{config_dir}/template/email/` with owner-only file permissions. The editor lists account and operational messages, validates template variables, previews sample data, sends test mail to the entered address (defaulting to the signed-in administrator email), and restores a default after explicit confirmation.
 Several section routes remain informational rather than full management interfaces. The Authentication section links to external provider configuration; Tor, I2P, and some cluster controls are still incomplete. The GeoIP page edits country deny/allow lists, saves and loads operator-authored presets, and displays database availability and freshness. Country filtering fails open when lookup data is unavailable. The blocklists page manages the built-in FireHOL feed and configured HTTPS IP/domain sources, toggles enforcement and scheduled updates, runs updates, and checks IP addresses. Feed status reports rule counts, last update, errors, and 72-hour freshness. The allowlist page supports adding and removing trusted IP addresses and CIDR ranges, and checking an address against current entries; changes are audited, and allowlisted addresses still require authentication.
 
-The audit log page is `/server/administration/logs/audit`. It supports
+The audit log page is `https://casci.casapps.us/server/administration/logs/audit`. It supports
 category, severity, result, date, actor, and IP filters, 50-event pages,
 JSON/CSV exports for the current page, all matching events, or the full log,
 and displays the configured database retention period. Category and severity
@@ -72,12 +72,12 @@ Rate-limit rejections are recorded as security events.
 
 ## Sign in
 
-The browser sign-in page is `/server/auth/login`. It authenticates server
+The browser sign-in page is `https://casci.casapps.us/server/auth/login`. It authenticates server
 administrators first and, when regular users are enabled, regular users next.
 Administrator credentials are stored in the `admins` table; regular-user
 registration never grants server-administrator access. On first startup, the
 server prints a one-time setup token directly to the console and serves
-`/server/{admin_path}/setup`; it does not persist the plaintext token in a log
+`https://casci.casapps.us/server/{admin_path}/setup`; it does not persist the plaintext token in a log
 file. That page creates the primary administrator with the default username
 `steward` (`administrator` is reserved), and stores only the token hash in
 `{config_dir}/setup_token.txt`. Its no-JavaScript form submits to a
@@ -86,13 +86,13 @@ implement all setup wizard steps required by AI.md.
 The setup response displays the initial `adm_` API token once; the database
 stores only its hash.
 
-The Agents page is also available to signed-in users at `/users/agents` for
+The Agents page is also available to signed-in users at `https://casci.casapps.us/users/agents` for
 their own agents. Admin and user agent management APIs are described in the
 [Agent guide](agents.md). Organization agent management is not currently
 registered.
 
 Successful browser logins set role-specific HTTP-only cookies. The API login
-route is `POST /api/{api_version}/server/auth/login`; it returns a revocable,
+route is `POST https://casci.casapps.us/api/{api_version}/server/auth/login`; it returns a revocable,
 role-scoped `adm_` or `usr_` bearer API token and sets no cookie. First-run
 setup displays the initial administrator token once. The administrator cookie is
 `admin_session` (30-day default); the regular-user cookie is `user_session`
@@ -118,13 +118,13 @@ and public rendering. The editor uses standard POST forms with CSRF tokens,
 so page editing and preview work without JavaScript. The API editor requires
 an administrator bearer token.
 
-SMTP settings are available at `/server/{admin_path}/email` and the matching
-`/api/{api_version}/server/{admin_path}/email` routes. Passwords are encrypted
+SMTP settings are available at `https://casci.casapps.us/server/{admin_path}/email` and the matching
+`https://casci.casapps.us/api/{api_version}/server/{admin_path}/email` routes. Passwords are encrypted
 in `secrets.yml` and never returned. Invitation management is available at
-`/server/{admin_path}/users/invites` and its API routes; each raw invite code is
+`https://casci.casapps.us/server/{admin_path}/users/invites` and its API routes; each raw invite code is
 shown only at creation.
 
-With multi-user mode enabled, `POST /api/{api_version}/server/{admin_path}/users`
+With multi-user mode enabled, `POST https://casci.casapps.us/api/{api_version}/server/{admin_path}/users`
 creates a pending user record from the username and optional email, then returns
 a single-use activation URL. The Users page provides the same flow with a
 CSRF-protected form; when SMTP is configured, the activation link is emailed
@@ -134,24 +134,24 @@ record cannot be accessed with a password until the new user chooses one by
 redeeming the link. The link expires after seven days.
 
 The API user-management routes are also scoped below the configured admin path.
-The public `/api/{api_version}/users` endpoint addresses only the authenticated
-caller's profile, shown on `/users`.
+The public `https://casci.casapps.us/api/{api_version}/users` endpoint addresses only the authenticated
+caller's profile, shown on `https://casci.casapps.us/users`.
 
 ## Admin API routes
 
 The following API route groups apply administrator checks in the current
 router:
 
-- `/api/v1/server/{admin_path}/users/**`
-- `/api/v1/server/{admin_path}/email` and `/email/test`
-- `/api/v1/server/{admin_path}/users/invites/**`
-- `GET /api/v1/nodes` and node CRUD/drain routes
-- `POST /api/v1/nodes/token`
-- `GET` and `PUT /api/v1/security/config`
-- `/api/v1/audit/status`, `/api/v1/audit/config`, and
-  `/api/v1/audit/cleanup`
-- `/api/v1/compliance/**`
-- `/metrics`, `/metrics/json`, and `/api/v1/metrics/**`
+- `https://casci.casapps.us/api/v1/server/{admin_path}/users/**`
+- `https://casci.casapps.us/api/v1/server/{admin_path}/email` and `https://casci.casapps.us/api/v1/server/{admin_path}/email/test`
+- `https://casci.casapps.us/api/v1/server/{admin_path}/users/invites/**`
+- `GET https://casci.casapps.us/api/v1/nodes` and node CRUD/drain routes
+- `POST https://casci.casapps.us/api/v1/nodes/token`
+- `GET` and `PUT https://casci.casapps.us/api/v1/security/config`
+- `https://casci.casapps.us/api/v1/audit/status`, `https://casci.casapps.us/api/v1/audit/config`, and
+  `https://casci.casapps.us/api/v1/audit/cleanup`
+- `https://casci.casapps.us/api/v1/compliance/**`
+- `https://casci.casapps.us/metrics`, `https://casci.casapps.us/metrics/json`, and `https://casci.casapps.us/api/v1/metrics/**`
 
 See [API Reference](api.md) for methods and route details. API behavior and
 authorization are still being completed; do not treat the presence of an admin

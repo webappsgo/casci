@@ -22,9 +22,9 @@ the [full API reference](api.md) for access notes and limitations.
 
 ## Authentication
 
-Authentication endpoints are `/api/v1/server/auth/login` and, when public
-registration is enabled, `/api/v1/server/auth/register`. Use
-`/api/v1/server/auth/check` with a Bearer
+Authentication endpoints are `https://casci.casapps.us/api/v1/server/auth/login` and, when public
+registration is enabled, `https://casci.casapps.us/api/v1/server/auth/register`. Use
+`https://casci.casapps.us/api/v1/server/auth/check` with a Bearer
 token to validate a server or user credential. Authenticated REST handlers
 require the credential type their route supports, sent as
 `Authorization: Bearer`. Other token headers are ignored.
@@ -38,17 +38,17 @@ curl -q -LSsf https://casci.casapps.us/api/v1/users \
 
 | Resource | Paths |
 |----------|-------|
-| Users | `/api/v1/users`, `/api/v1/users/tokens`, `/api/v1/users/tokens/{token_id}` |
-| Projects | `/api/v1/projects`, `/api/v1/projects/{id}`, `/api/v1/projects/{id}/pipelines[/{pipeline_id}]` |
-| Builds | `/api/v1/projects/{id}/builds`, `/api/v1/builds/{id}` and subroutes, including `/artifacts` |
-| Webhooks | `/api/v1/webhooks/{provider}` and legacy `/webhook` |
-| Nodes | `/api/v1/nodes`, `/api/v1/nodes/{id}` and subroutes |
-| Credentials | `/api/v1/credentials/user/**`, `/api/v1/credentials/project/**` |
-| Notifications | `/api/v1/notifications` and subroutes |
-| Security | `/api/v1/security/**`, `/api/v1/builds/{id}/security/**` |
-| Audit | `/api/v1/audit/**` |
-| Compliance | `/api/v1/compliance/**` |
-| Metrics | `/metrics`, `/metrics/json`, `/api/v1/metrics/**` |
-| Preferences/help | `/api/v1/server/preferences/**`, `/api/v1/server/help/**` |
+| Users | `https://casci.casapps.us/api/v1/users`, `https://casci.casapps.us/api/v1/users/tokens`, `https://casci.casapps.us/api/v1/users/tokens/{token_id}` |
+| Projects | `https://casci.casapps.us/api/v1/projects`, `https://casci.casapps.us/api/v1/projects/{id}`, `https://casci.casapps.us/api/v1/projects/{id}/pipelines[/{pipeline_id}]` |
+| Builds | `https://casci.casapps.us/api/v1/projects/{id}/builds`, `https://casci.casapps.us/api/v1/builds/{id}` and subroutes, including `/artifacts` |
+| Webhooks | `https://casci.casapps.us/api/v1/webhooks/{provider}` and legacy `https://casci.casapps.us/webhook` |
+| Nodes | `https://casci.casapps.us/api/v1/nodes`, `https://casci.casapps.us/api/v1/nodes/{id}` and subroutes |
+| Credentials | `https://casci.casapps.us/api/v1/credentials/user/**`, `https://casci.casapps.us/api/v1/credentials/project/**` |
+| Notifications | `https://casci.casapps.us/api/v1/notifications` and subroutes |
+| Security | `https://casci.casapps.us/api/v1/security/**`, `https://casci.casapps.us/api/v1/builds/{id}/security/**` |
+| Audit | `https://casci.casapps.us/api/v1/audit/**` |
+| Compliance | `https://casci.casapps.us/api/v1/compliance/**` |
+| Metrics | `https://casci.casapps.us/metrics`, `https://casci.casapps.us/metrics/json`, `https://casci.casapps.us/api/v1/metrics/**` |
+| Preferences/help | `https://casci.casapps.us/api/v1/server/preferences/**`, `https://casci.casapps.us/api/v1/server/help/**` |
 
 For the full method and access matrix, use [API Reference](api.md).

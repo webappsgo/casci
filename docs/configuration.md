@@ -87,7 +87,7 @@ server:
     custom_html: ""
     cookie_consent: true
     cookie_message: "This site uses cookies for functionality and analytics."
-    cookie_policy_url: /server/privacy
+    cookie_policy_url: https://casci.casapps.us/server/privacy
   database:
     driver: sqlite
     url: ""
@@ -117,8 +117,8 @@ server:
 web:
   cors: "*"
   robots:
-    allow: ["/", "/api"]
-    deny: ["/server/administration"]
+    allow: ["/", "https://casci.casapps.us/api"]
+    deny: ["https://casci.casapps.us/server/administration"]
   security:
     report_url: https://github.com/webappsgo/casci/security/advisories/new
     expires: ""
@@ -177,10 +177,22 @@ database recovery attempts and defaults to `30s`; values shorter than one
 second are rejected. `max_attempts: 0` retries without a limit. A positive
 value limits failed retries, after which the server remains in maintenance
 mode until an operator restarts it. During database startup failures, the
-server keeps its listener available for `/server/healthz` and the configured
-`/server/{admin_path}` guidance page; other routes receive a canonical 503
+server keeps its listener available for `https://casci.casapps.us/server/healthz` and the configured
+`https://casci.casapps.us/server/{admin_path}` guidance page; other routes receive a canonical 503
 maintenance response. Health responses report the current retry state without
-exposing database connection details.
+exposing database connection details. A successful `database.New` retry has
+already pinged the database and applied startup migrations before the server
+switches to its full handler.
+
+Disk cleanup runs only when the filesystem used by a cleanup target exceeds
+`disk_threshold`. It removes non-audit log files older than
+`log_retention_days`, stale regular files in CASCI-owned temporary paths after
+24 hours, and backups according to the configured `server.backup.retention`
+policy. Audit-ledger files and unrelated temporary paths are preserved.
+Maintenance entry and recovery are recorded in the append-only audit ledger
+when audit logging is enabled. Entry and recovery email notifications respect
+`notify.on_enter` and `notify.on_exit`; exhaustion also sends an operator
+message when SMTP and an admin or general contact address are configured.
 
 ## Page content and contact CAPTCHA
 
@@ -289,7 +301,7 @@ sender address when a public FQDN is configured. At startup, the server tests
 configured SMTP or autodetects a local SMTP endpoint with an eight-second total
 bound. Email-dependent features remain disabled unless the connection check
 succeeds. Admins can update and test SMTP settings at
-`/server/{admin_path}/email`.
+`https://casci.casapps.us/server/{admin_path}/email`.
 
 TLS mode `auto` uses implicit TLS on port 465 and otherwise starts in plain SMTP
 and upgrades with STARTTLS when the server offers it. `starttls` requires that
@@ -328,7 +340,7 @@ authoritative audit.log; database rows are its best-effort query mirror.
 
 Regular-user accounts are disabled by default. Set `server.users.enabled` to
 `true` to enable them. `server.users.registration.mode` accepts `open` or
-`private` and defaults to `open`. In open mode, `/server/auth/register` renders
+`private` and defaults to `open`. In open mode, `https://casci.casapps.us/server/auth/register` renders
 the public registration form and creates a signed-in account after successful
 submission. In private mode, public self-registration is unavailable;
 the admin can invite a username or directly create a pending record from the
@@ -410,26 +422,26 @@ available for path prefixes in rendered links; forwarded prefix detection and
 dynamic domain learning are not implemented. Serve the app at the root of its
 host unless a matching base path is configured.
 
-`/robots.txt`, `/sitemap.xml`, `/feed.xml`, and `/rss.xml` are always served; `/favicon.ico` serves the embedded site icon.
+`https://casci.casapps.us/robots.txt`, `https://casci.casapps.us/sitemap.xml`, `https://casci.casapps.us/feed.xml`, and `https://casci.casapps.us/rss.xml` are always served; `https://casci.casapps.us/favicon.ico` serves the embedded site icon.
 Robots rules come from `web.robots.allow` and `web.robots.deny`; the defaults
-allow `/` and `/api` and disallow the configured admin path. The sitemap lists
+allow `/` and `https://casci.casapps.us/api` and disallow the configured admin path. The sitemap lists
 public pages allowed by those rules, with the generation timestamp as `lastmod`. Atom and RSS feeds are valid empty feeds
 while this application has no public per-item resource. All four routes support
 GET and HEAD, conditional requests, and five-minute public caching.
 
 ## Well-known files
 
-`/.well-known/security.txt` is generated from `web.security.report_url`,
-`web.security.contact`, and `web.security.expires`. `/.well-known/llms.txt`
-and `/llms.txt` are also served. Other paths under `/.well-known/` return
+`https://casci.casapps.us/.well-known/security.txt` is generated from `web.security.report_url`,
+`web.security.contact`, and `web.security.expires`. `https://casci.casapps.us/.well-known/llms.txt`
+and `https://casci.casapps.us/llms.txt` are also served. Other paths under `/.well-known/` return
 `404` unless implemented by a handler.
 
 ## CLI binary downloads
 
 The server publishes only CLI binaries found in `{data_dir}/cli` whose hashes
 match the colocated `sha256.txt` file. `version.txt` supplies the release
-version. `/api/autodiscover` includes the verified platform, version, and
-SHA-256 values; `/cli/binaries/{project}-cli-{os}-{arch}` streams a matching
+version. `https://casci.casapps.us/api/autodiscover` includes the verified platform, version, and
+SHA-256 values; `https://casci.casapps.us/cli/binaries/{project}-cli-{os}-{arch}` streams a matching
 binary. The server does not build or modify release files.
 
 These settings belong in `{config_dir}/yaml.d/maintenance.yml`:
@@ -448,11 +460,11 @@ path.
 
 ## Admin settings
 
-The admin settings page is mounted at `/server/{admin_path}/settings` and is
+The admin settings page is mounted at `https://casci.casapps.us/server/{admin_path}/settings` and is
 read-only. It displays only fields currently carried by the server config
 model; it is not a complete configuration editor.
 
-The admin Pages form is mounted at `/server/{admin_path}/pages/help`. It edits
+The admin Pages form is mounted at `https://casci.casapps.us/server/{admin_path}/pages/help`. It edits
 `server.pages.help.mcp`, the Markdown project guidance shown on the public MCP
 help page and in its API response. The key belongs in
 `{config_dir}/yaml.d/pages.yml`:
