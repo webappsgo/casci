@@ -25,6 +25,7 @@ server:
     registration:
       mode: open
       require_email_verification: true
+      invite_expiration: 7d
   healthz:
     root:
       enabled: false
@@ -93,6 +94,16 @@ server:
     max_conns: 25
     max_idle: 5
     replica_urls: []
+  maintenance:
+    self_healing:
+      retry_interval: 30s
+      max_attempts: 0
+    cleanup:
+      disk_threshold: 90
+      log_retention_days: 7
+    notify:
+      on_enter: true
+      on_exit: true
   notifications:
     email:
       smtp:
@@ -160,6 +171,16 @@ without bypassing authentication. Set `action` to `reject` for a translated
 translated message, and `log_blocked` controls security event logging. The
 admin network blocklists page manages settings and sources, reports feed
 health, triggers updates, and checks IP addresses.
+
+`server.maintenance.self_healing.retry_interval` controls the delay between
+database recovery attempts and defaults to `30s`; values shorter than one
+second are rejected. `max_attempts: 0` retries without a limit. A positive
+value limits failed retries, after which the server remains in maintenance
+mode until an operator restarts it. During database startup failures, the
+server keeps its listener available for `/server/healthz` and the configured
+`/server/{admin_path}` guidance page; other routes receive a canonical 503
+maintenance response. Health responses report the current retry state without
+exposing database connection details.
 
 ## Page content and contact CAPTCHA
 
@@ -310,8 +331,11 @@ Regular-user accounts are disabled by default. Set `server.users.enabled` to
 `private` and defaults to `open`. In open mode, `/server/auth/register` renders
 the public registration form and creates a signed-in account after successful
 submission. In private mode, public self-registration is unavailable;
-invitations remain available from the admin panel, and existing users can
-still sign in. `require_email_verification` defaults to true; it gates
+the admin can invite a username or directly create a pending record from the
+Users page, and existing users can still sign in. Both paths let the user set
+their own password from a single-use activation link. `invite_expiration`
+accepts `1h`, `6h`, `24h`, `48h`, or `7d` and defaults to `7d`.
+`require_email_verification` defaults to true; it gates
 registration only when working SMTP is enabled and sends a one-time link before
 the new account can sign in.
 

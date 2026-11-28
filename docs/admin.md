@@ -124,6 +124,15 @@ in `secrets.yml` and never returned. Invitation management is available at
 `/server/{admin_path}/users/invites` and its API routes; each raw invite code is
 shown only at creation.
 
+With multi-user mode enabled, `POST /api/{api_version}/server/{admin_path}/users`
+creates a pending user record from the username and optional email, then returns
+a single-use activation URL. The Users page provides the same flow with a
+CSRF-protected form; when SMTP is configured, the activation link is emailed
+automatically if an email address was supplied, and otherwise the page shows a
+link for manual delivery. The
+record cannot be accessed with a password until the new user chooses one by
+redeeming the link. The link expires after seven days.
+
 The API user-management routes are also scoped below the configured admin path.
 The public `/api/{api_version}/users` endpoint addresses only the authenticated
 caller's profile, shown on `/users`.

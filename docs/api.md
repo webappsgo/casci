@@ -193,6 +193,7 @@ rotation:
 | GET, POST | `/users/consents` | User session; POST requires CSRF and supports a standard HTML form |
 | GET, PATCH | `/api/v1/users/consents` | User bearer token; read or update consent settings |
 | GET | `/api/{api_version}/server/{admin_path}/users` | Administrator; lists accounts |
+| POST | `/api/{api_version}/server/{admin_path}/users` | Administrator; creates a pending user record, emails or returns its single-use activation URL, and lets the user set their password (multi-user mode) |
 | GET, PUT, PATCH, DELETE | `/api/{api_version}/server/{admin_path}/users/{id}` | Administrator; manages one account |
 | GET, POST | `/api/{api_version}/server/{admin_path}/users/invites` | Administrator; list or create user/admin invitations (the raw code is returned once) |
 | GET, DELETE | `/api/{api_version}/server/{admin_path}/users/invites/{id}` | Administrator; inspect safe metadata or revoke an invitation |
